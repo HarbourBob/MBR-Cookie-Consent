@@ -268,7 +268,7 @@ Please ensure:
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
-### Latest: Version 1.0.7 (February 2026)
+### Latest: Version 1.4.1 (February 2026)
 - ✨ Added 3 new banner layouts (corner boxes + center popup)
 - 🎨 Enhanced layout system with animations
 - 📱 Improved mobile responsiveness
