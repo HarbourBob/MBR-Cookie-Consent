@@ -289,7 +289,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 - [Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions) - Questions & ideas
 
 ### Professional Support
-Need customization or implementation help? Contact [Made by Robert](https://madebyrobert.com)
+Need customization or implementation help? Contact [Made by Robert](https://madebyrobert.co.uk)
 
 ---
 
@@ -315,7 +315,7 @@ This plugin:
 
 **Made by Robert** specializes in creating professional WordPress solutions that are accessible to everyone.
 
-- 🌐 Website: [madebyrobert.com](https://madebyrobert.com)
+- 🌐 Website: [madebyrobert.com](https://madebyrobert.co.uk)
 - 🔧 Plugin Hub: [Little Web Shack](https://littlewebshack.com)
 - 💼 Available for custom WordPress development
 
