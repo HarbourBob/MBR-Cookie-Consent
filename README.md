@@ -3,7 +3,7 @@
 [![WordPress Plugin Downloads](https://img.shields.io/badge/downloads-0-blue.svg)](https://github.com/harbourbob/mbr-cookie-consent)
 [![WordPress Plugin Version](https://img.shields.io/badge/version-1.4.1-green.svg)](https://github.com/harbourbob/mbr-cookie-consent/releases)
 [![License](https://img.shields.io/badge/license-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Made by Robert](https://img.shields.io/badge/made%20by-Robert-orange.svg)](https://madebyrobert.com)
+[![Made by Robert](https://img.shields.io/badge/made%20by-Robert-orange.svg)](https://madebyrobert.co.uk)
 
 **The completely free, professional-grade cookie consent solution for WordPress.** 
 
