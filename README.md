@@ -315,7 +315,7 @@ This plugin:
 
 **Made by Robert** specializes in creating professional WordPress solutions that are accessible to everyone.
 
-- 🌐 Website: [madebyrobert.com](https://madebyrobert.co.uk)
+- 🌐 Website: [madebyrobert.co.uk](https://madebyrobert.co.uk)
 - 🔧 Plugin Hub: [Little Web Shack](https://littlewebshack.com)
 - 💼 Available for custom WordPress development
 
