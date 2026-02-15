@@ -46,7 +46,8 @@ class MBR_CC_Database {
      */
     private function __construct() {
         global $wpdb;
-        $this->consent_table = $wpdb->prefix . 'mbr_cc_consent_logs';
+        // Use base_prefix for network-wide table
+        $this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
     }
     
     /**
@@ -56,10 +57,13 @@ class MBR_CC_Database {
         global $wpdb;
         
         $charset_collate = $wpdb->get_charset_collate();
-        $table_name = $wpdb->prefix . 'mbr_cc_consent_logs';
+        
+        // Use base_prefix for network-wide table
+        $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            blog_id bigint(20) UNSIGNED NOT NULL DEFAULT 1,
             user_id bigint(20) UNSIGNED DEFAULT NULL,
             ip_address varchar(45) NOT NULL,
             user_agent text NOT NULL,
@@ -69,6 +73,7 @@ class MBR_CC_Database {
             timestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             cookie_hash varchar(64) NOT NULL,
             PRIMARY KEY (id),
+            KEY blog_id (blog_id),
             KEY user_id (user_id),
             KEY timestamp (timestamp),
             KEY cookie_hash (cookie_hash)
@@ -78,7 +83,7 @@ class MBR_CC_Database {
         dbDelta($sql);
         
         // Store database version.
-        update_option('mbr_cc_db_version', MBR_CC_VERSION);
+        update_site_option('mbr_cc_db_version', '1.5.0');
     }
     
     /**
@@ -91,6 +96,7 @@ class MBR_CC_Database {
         global $wpdb;
         
         $defaults = array(
+            'blog_id' => get_current_blog_id(),
             'user_id' => get_current_user_id(),
             'ip_address' => $this->get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
@@ -117,6 +123,7 @@ class MBR_CC_Database {
         $result = $wpdb->insert(
             $this->consent_table,
             array(
+                'blog_id' => $data['blog_id'],
                 'user_id' => $data['user_id'],
                 'ip_address' => $data['ip_address'],
                 'user_agent' => $data['user_agent'],
@@ -126,7 +133,7 @@ class MBR_CC_Database {
                 'timestamp' => $data['timestamp'],
                 'cookie_hash' => $data['cookie_hash'],
             ),
-            array('%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s')
+            array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s')
         );
         
         return $result ? $wpdb->insert_id : false;

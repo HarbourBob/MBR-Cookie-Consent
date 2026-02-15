@@ -213,9 +213,9 @@ class MBR_CC_Banner {
                     
                     <?php if ($enable_ccpa) : ?>
                         <p class="mbr-cc-banner__ccpa">
-                            <a href="#" class="mbr-cc-ccpa-link" id="mbr-cc-ccpa-optout">
+                            <button type="button" class="mbr-cc-ccpa-link" id="mbr-cc-ccpa-optout">
                                 <?php echo esc_html($ccpa_text); ?>
-                            </a>
+                            </button>
                         </p>
                     <?php endif; ?>
                 </div>
