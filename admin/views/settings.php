@@ -162,6 +162,7 @@ if (!defined('ABSPATH')) {
                         <input type="checkbox" name="mbr_cc_enable_ccpa" value="1" <?php checked(get_option('mbr_cc_enable_ccpa', false)); ?>>
                         <?php esc_html_e('Enable CCPA "Do Not Sell" Link', 'mbr-cookie-consent'); ?>
                     </label>
+                    <p class="description"><?php esc_html_e('Shows a clickable link in the banner that allows users to opt out of data selling/sharing. When clicked, it rejects all Marketing and Analytics cookies (CCPA compliance for California users).', 'mbr-cookie-consent'); ?></p>
                 </div>
             </div>
             
@@ -169,6 +170,7 @@ if (!defined('ABSPATH')) {
                 <div class="mbr-cc-form-field">
                     <label for="ccpa_link_text"><?php esc_html_e('CCPA Link Text', 'mbr-cookie-consent'); ?></label>
                     <input type="text" name="mbr_cc_ccpa_link_text" id="ccpa_link_text" value="<?php echo esc_attr(get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information')); ?>">
+                    <p class="description"><?php esc_html_e('Customize the text shown for the CCPA opt-out link. The default wording is legally compliant with California law.', 'mbr-cookie-consent'); ?></p>
                 </div>
             </div>
         </div>
