@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com
  * Description: GDPR, CCPA, and global privacy law compliant cookie consent management with automatic script blocking and consent logging.
- * Version: 1.4.1
+ * Version: 1.5.0
  * Author: Made by Robert
  * Author URI: https://madeberobert.com
  * License: GPL v2 or later
@@ -12,6 +12,7 @@
  * Domain Path: /languages
  * Requires at least: 5.8
  * Requires PHP: 7.4
+ * Network: true
  *
  * LEGAL DISCLAIMER: This plugin provides technical tools to help implement cookie consent
  * mechanisms. It does not constitute legal advice. Users are responsible for ensuring
@@ -46,7 +47,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '1.4.1');
+define('MBR_CC_VERSION', '1.5.0');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -102,14 +103,26 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-privacy-policy-generator.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-admin.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-settings.php';
+        
+        // Load network admin for multisite
+        if (is_multisite()) {
+            require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-network-admin.php';
+        }
     }
     
     /**
      * Initialize WordPress hooks.
      */
     private function init_hooks() {
+        // Multisite-aware activation
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
+        
+        // Handle new site creation in multisite
+        add_action('wpmu_new_blog', array($this, 'activate_new_site'), 10, 1);
+        
+        // Handle site deletion in multisite
+        add_action('delete_blog', array($this, 'delete_site_data'), 10, 1);
         
         add_action('plugins_loaded', array($this, 'init'));
         add_action('init', array($this, 'load_textdomain'));
@@ -149,6 +162,11 @@ class MBR_Cookie_Consent {
         // Initialize banner display.
         MBR_CC_Banner::get_instance();
         
+        // Initialize network admin (multisite only)
+        if (is_multisite() && is_network_admin()) {
+            MBR_CC_Network_Admin::get_instance();
+        }
+        
         // Initialize admin interface.
         if (is_admin()) {
             MBR_CC_Admin::get_instance();
@@ -179,18 +197,70 @@ class MBR_Cookie_Consent {
     /**
      * Plugin activation.
      */
-    public function activate() {
-        // Create database tables.
+    public function activate($network_wide = false) {
+        global $wpdb;
+        
+        if (is_multisite() && $network_wide) {
+            // Network activation - activate for all sites
+            $blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+            
+            foreach ($blog_ids as $blog_id) {
+                switch_to_blog($blog_id);
+                $this->activate_single_site();
+                restore_current_blog();
+            }
+            
+            // Set network-wide default options
+            $this->set_network_default_options();
+        } else {
+            // Single site activation
+            $this->activate_single_site();
+        }
+    }
+    
+    /**
+     * Activate plugin for a single site.
+     */
+    private function activate_single_site() {
+        // Create database tables (network-wide tables)
         MBR_CC_Database::create_tables();
         
-        // Set default options.
+        // Set default options for this site
         $this->set_default_options();
         
-        // Update existing installations.
+        // Update existing installations
         $this->maybe_update_options();
         
-        // Flush rewrite rules.
+        // Flush rewrite rules
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Activate plugin for newly created site in network.
+     *
+     * @param int $blog_id Blog ID of the new site.
+     */
+    public function activate_new_site($blog_id) {
+        if (is_plugin_active_for_network(MBR_CC_PLUGIN_BASENAME)) {
+            switch_to_blog($blog_id);
+            $this->activate_single_site();
+            restore_current_blog();
+        }
+    }
+    
+    /**
+     * Delete site data when a site is deleted from network.
+     *
+     * @param int $blog_id Blog ID being deleted.
+     */
+    public function delete_site_data($blog_id) {
+        global $wpdb;
+        
+        // Delete consent logs for this site
+        $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+        $wpdb->delete($table_name, array('blog_id' => $blog_id), array('%d'));
+        
+        // Note: We don't delete the tables themselves as they're network-wide
     }
     
     /**
@@ -285,6 +355,39 @@ class MBR_Cookie_Consent {
         
         // Create default cookie categories if they don't exist.
         $this->create_default_categories();
+    }
+    
+    /**
+     * Set network-wide default options (multisite).
+     */
+    private function set_network_default_options() {
+        // Enable multisite mode
+        if (false === get_site_option('mbr_cc_multisite_enabled')) {
+            add_site_option('mbr_cc_multisite_enabled', true);
+        }
+        
+        // Network-wide settings (can be overridden per-site)
+        $network_defaults = array(
+            'network_banner_position' => 'bottom',
+            'network_banner_layout' => 'bar',
+            'network_primary_color' => '#0073aa',
+            'network_accept_button_color' => '#00a32a',
+            'network_reject_button_color' => '#d63638',
+            'network_text_color' => '#ffffff',
+            'network_show_reject_button' => true,
+            'network_show_customize_button' => true,
+            'network_show_close_button' => false,
+            'network_cookie_expiry_days' => 365,
+            'network_enable_ccpa' => false,
+            'network_banner_heading' => 'We value your privacy',
+            'network_banner_description' => 'We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.',
+        );
+        
+        foreach ($network_defaults as $key => $value) {
+            if (false === get_site_option('mbr_cc_' . $key)) {
+                add_site_option('mbr_cc_' . $key, $value);
+            }
+        }
     }
     
     /**
