@@ -10,8 +10,6 @@ MBR Cookie Consent provides a complete solution for managing cookie consent on y
 
 ## Features
 
-### Phase 1, 2 & 3 (Current Version)
-
 #### Consent Management
 - **Cookie Consent Banner**: Customizable banner with Accept/Reject/Customize options
 - **Automatic Script Blocking**: Blocks non-essential cookies until explicit consent
@@ -20,6 +18,7 @@ MBR Cookie Consent provides a complete solution for managing cookie consent on y
 - **CCPA "Do Not Sell"**: Optional link for California residents
 - **Consent Logging**: Records and exports user consent in CSV format
 - **GDPR-Compliant Storage**: IP anonymization and proper data handling
+- **Multi-site support
 
 #### Consent Mode Integration (Phase 2)
 - **Google Consent Mode v2**: Full integration with Google's consent framework
@@ -383,6 +382,9 @@ For support, feature requests, or bug reports:
 
 ## Changelog
 
+### 1.5.0 - Multi-Site Support
+- **Automatic Detection of multi-site set-up
+
 ### 1.4.1 - Privacy Policy Generator
 - **Intelligent Privacy Policy Generator**
   - Analyzes site configuration and generates comprehensive privacy policy
@@ -521,7 +523,7 @@ GPL v2 or later
 ## Credits
 
 **Author**: Made by Robert  
-**Website**: [madeberobert.com](https://madeberobert.com)  
+**Website**: [madeberobert.com](https://madeberobert.co.uk)  
 **Plugin Home**: [Little Web Shack](https://littlewebshack.com)
 
 ---
