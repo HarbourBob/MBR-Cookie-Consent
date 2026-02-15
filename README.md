@@ -289,7 +289,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 - [Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions) - Questions & ideas
 
 ### Professional Support
-Need customization or implementation help? Contact [Made by Robert](https://madebyrobert.co.uk)
+Need customization or implementation help? Contact Robert](https://littlewebshack.com/contact/)
 
 ---
 
@@ -347,6 +347,6 @@ If this plugin has helped you achieve GDPR/CCPA compliance without breaking the 
 
 ---
 
-**Built with ❤️ by [Robert](https://madebyrobert.com) • Empowering websites with privacy compliance since 2026**
+**Built with ❤️ by [Robert](https://littlewebshack.com) • Empowering websites with privacy compliance since 2014**
 
 
