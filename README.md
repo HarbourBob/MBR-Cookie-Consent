@@ -1,104 +1,55 @@
 # 🍪 MBR Cookie Consent
 
-[![WordPress Plugin Downloads](https://img.shields.io/badge/downloads-0-blue.svg)](https://github.com/harbourbob/mbr-cookie-consent)
-[![WordPress Plugin Version](https://img.shields.io/badge/version-1.4.1-green.svg)](https://github.com/harbourbob/mbr-cookie-consent/releases)
+[![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)](https://wordpress.org/)
+[![Version](https://img.shields.io/badge/version-1.5.0-green.svg)](https://github.com/harbourbob/mbr-cookie-consent/releases)
 [![License](https://img.shields.io/badge/license-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![Downloads](https://img.shields.io/github/harbourbob/mbr-cookie-consent/total.svg)](https://github.com/harbourbob/mbr-cookie-consent/releases)
+[![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net)
+[![Multisite](https://img.shields.io/badge/multisite-supported-brightgreen.svg)](https://github.com/harbourbob/mbr-cookie-consent/blob/main/MULTISITE-GUIDE.md)
 [![Made by Robert](https://img.shields.io/badge/made%20by-Robert-orange.svg)](https://littlewebshack.com)
 
-**The completely free, professional-grade cookie consent solution for WordPress.** 
+**Professional cookie consent management for WordPress. GDPR, CCPA, and global privacy compliance made simple.**
 
-GDPR, CCPA, and global privacy law compliant cookie consent management with automatic script blocking, intelligent scanning, and comprehensive consent logging. No subscriptions, no limitations, no upsells—just enterprise-level functionality available to everyone.
+100% free. No premium tiers. No subscriptions. Enterprise features for everyone.
 
----
-
-## ✨ Why MBR Cookie Consent?
-
-**Premium Features, Zero Cost**
-- 🆓 **100% Free Forever** - No "pro" versions, no hidden costs
-- 🚀 **Enterprise-Grade** - Features that typically cost $200-500/year
-- 🎯 **Easy Setup** - Working in minutes, not hours
-- 🛡️ **Privacy First** - Your data stays on your server
-- 🌍 **Italian Law Compliant** - Optional X close button for Italian regulations
-- 📊 **Intelligent Scanner** - Auto-detect scripts across 1000+ pages
+[Download Latest](https://github.com/harbourbob/mbr-cookie-consent/releases/latest) • [Documentation](https://github.com/harbourbob/mbr-cookie-consent/wiki) • [Report Issue](https://github.com/harbourbob/mbr-cookie-consent/issues) • [Get Support](https://github.com/harbourbob/mbr-cookie-consent/discussions)
 
 ---
 
-## 🎯 Key Features
+## ✨ Features
 
-### 🎨 **Professional Customization**
-- **5 Banner Layouts**: Full bar (top/bottom), corner boxes (left/right), center popup
-- **Complete Branding**: Add your logo (150x150px recommended)
-- **Full Color Control**: Match your brand perfectly
-- **Policy Links**: Privacy Policy & Cookie Policy integration
-- **Responsive Design**: Perfect on all devices
+### 🎨 Professional Customization
+- **5 Banner Layouts** - Full bars (top/bottom), corner boxes (left/right), center popup
+- **Complete Branding** - Add your logo, customize all colors
+- **Policy Links** - Privacy Policy & Cookie Policy integration
+- **Multiple Languages** - Translation-ready with 25+ languages included
 
-### 🔍 **Intelligent Cookie Scanner**
-- **Site-Wide Scanning**: Analyze up to 1000 pages in one click
-- **Auto-Detection**: Finds scripts, iframes, and third-party services
-- **Category Organization**: Automatically sorts by Necessary, Analytics, Marketing, Preferences
-- **Smart Deduplication**: Shows unique scripts with page occurrence count
-- **One-Click Blocking**: Add scripts to blocked list without page refresh
-- **Real-Time Updates**: See blocked scripts appear instantly with green glow animation
+### 🛡️ Compliance First
+- **GDPR Ready** - Full EU privacy regulation support
+- **CCPA Compliant** - California Consumer Privacy Act ready
+- **Italian Law** - Optional X close button (legally required)
+- **IAB TCF v2.3** - Transparency & Consent Framework support
+- **Google Consent Mode v2** - Analytics integration
 
-### 🛡️ **Advanced Compliance**
-- **GDPR Compliant**: Full EU privacy regulation support
-- **CCPA Support**: California Consumer Privacy Act ready
-- **Italian Law**: Optional X close button (required by Italian regulations)
-- **Consent Logging**: Track and export all consent records
-- **Script Blocking**: Automatic blocking until consent given
-- **Granular Control**: 4 cookie categories with user customization
+### 🔍 Intelligent Scanner
+- **Site-Wide Scanning** - Analyze up to 1000 pages automatically
+- **Auto-Detection** - Finds scripts, iframes, third-party services
+- **Category Organization** - Sorts by Necessary, Analytics, Marketing, Preferences
+- **One-Click Blocking** - Add scripts without page refresh
 
-### 📋 **Cookie Categories**
-1. **Necessary** - Always active (essential site functions)
-2. **Analytics** - Usage tracking and performance
-3. **Marketing** - Advertising and remarketing
-4. **Preferences** - User settings and personalization
+### 🌐 Enterprise Multisite (NEW in v1.5.0)
+- **Network Activation** - Deploy across entire WordPress network
+- **Network Admin** - Centralized settings for all sites
+- **Network Reports** - Aggregate analytics across network
+- **Site Management** - Manage individual sites from dashboard
+- **Site Overrides** - Optional per-site customization
 
-### 🎛️ **Banner Options**
-- Accept All / Reject All / Customize buttons
-- Floating "Cookie Settings" revisit button
-- Auto-reload on consent (optional)
-- Customizable expiry (1-730 days)
-- Multiple positions and layouts
-
-### 📊 **Consent Management**
-- Database logging of all consent events
-- CSV export for compliance records
-- User preference tracking
-- Consent modification history
-- CCPA "Do Not Sell" opt-out link
-
-### 🔧 **Developer Friendly**
-- Clean, documented code
-- WordPress coding standards
-- Extensible architecture
-- No jQuery conflicts
-- Minimal performance impact
-
----
-
-## 📸 Screenshots
-
-### Banner Layouts
-The plugin offers 5 flexible banner layouts to match your design:
-
-**Full-Width Bars**
-- Bottom Bar (default)
-- Top Bar
-
-**Corner Boxes**
-- Bottom Left Corner
-- Bottom Right Corner
-
-**Center Popup**
-- Animated dropdown from top
-- Centered on screen
-
-### Settings Interface
-Clean, intuitive admin interface with real-time previews.
-
-### Cookie Scanner
-Intelligent scanning with category organization and one-click blocking.
+### 📊 Advanced Features
+- **Consent Logging** - Database storage with CSV export
+- **Cookie Categories** - Necessary, Analytics, Marketing, Preferences
+- **Script Blocking** - Automatic blocking until consent
+- **Floating Button** - "Cookie Settings" revisit option
+- **Policy Generator** - Built-in cookie policy creator
 
 ---
 
@@ -106,208 +57,198 @@ Intelligent scanning with category organization and one-click blocking.
 
 ### Installation
 
-1. **Download** the latest release from the [Releases page](https://github.com/harbourbob/mbr-cookie-consent/releases)
-2. **Upload** to WordPress via Plugins > Add New > Upload Plugin
-3. **Activate** the plugin
-4. Navigate to **Cookie Consent** in WordPress admin
-5. **Configure** your banner settings
-6. **Scan** your site for cookies
-7. **Go live!**
+```bash
+# Download latest release
+wget https://github.com/yourusername/mbr-cookie-consent/releases/latest/download/mbr-cookie-consent.zip
+
+# Install via WP-CLI
+wp plugin install mbr-cookie-consent.zip --activate
+
+# Or install manually via WordPress admin:
+# Plugins > Add New > Upload Plugin
+```
 
 ### Basic Configuration
 
-```
-1. Settings Tab
-   ├── Choose banner layout (bar, corner box, or popup)
-   ├── Set your brand colors
-   ├── Add your logo (optional)
-   ├── Configure policy links
-   └── Enable Italian X button if needed
+1. Go to **Cookie Consent > Settings**
+2. Choose your banner layout
+3. Customize colors to match your brand
+4. Update heading and description text
+5. Click **Save Settings**
+6. Test in incognito window
 
-2. Cookie Scanner Tab
-   ├── Run site-wide scan (up to 1000 pages)
-   ├── Review detected scripts by category
-   ├── Click "Add to Blocked" for each script
-   └── Scripts automatically blocked on frontend
-
-3. Test
-   ├── Open your site in private/incognito window
-   ├── Verify banner appears correctly
-   ├── Test Accept/Reject/Customize flows
-   └── Confirm scripts are blocked/unblocked properly
-```
+**That's it!** You're GDPR compliant.
 
 ---
 
-## 🎨 Customization Examples
-
-### Example 1: Minimal Bottom Bar
-```
-Position: Bottom
-Layout: Bar
-Primary Color: #2196F3
-Show Reject Button: No
-Show Close Button: No
-```
-
-### Example 2: Italian Compliant Corner Box
-```
-Position: Bottom Right
-Layout: Box (Right)
-Primary Color: #4CAF50
-Show Close Button: Yes (Italian law)
-Policy Links: Both enabled
-```
-
-### Example 3: Premium Branded Popup
-```
-Position: Center
-Layout: Popup
-Logo: Your 150x150 logo
-Primary Color: Match brand
-Policy Links: Enabled
-Accept Color: Brand primary
-Reject Color: Brand secondary
-```
-
----
-
-## 📋 Requirements
-
-- **WordPress**: 5.8 or higher
-- **PHP**: 7.4 or higher
-- **MySQL**: 5.6 or higher
-- **Modern Browser**: For admin interface
-
----
-
-## 🔧 Advanced Usage
-
-### Manual Script Blocking
-
-You can manually add scripts to block in the Scanner tab:
-
-1. Click "Add Custom Script"
-2. Enter script identifier (src URL, inline pattern, or iframe URL)
-3. Select type (External, Inline, or Iframe)
-4. Choose category
-5. Click "Add Script"
-
-### Consent Logging
-
-All consent events are logged to the database:
-- Timestamp
-- User IP (anonymized option available)
-- Consent choices
-- User agent
-- Page URL
-
-Export logs via Settings > Consent Logs > Export CSV
-
-### Policy Generator
-
-Built-in cookie policy generator:
-1. Navigate to Policy Generator tab
-2. Select detected cookies
-3. Generate policy content
-4. Copy to your Cookie Policy page
-
----
-
-## 🌟 What Makes This Different?
+## 🌟 Why Choose This Plugin?
 
 ### vs. Other Free Plugins
-- ❌ **Other plugins**: Basic bar only, limited customization
-- ✅ **MBR Cookie Consent**: 5 layouts, full branding, advanced scanner
+| Feature | MBR Cookie Consent | Others |
+|---------|-------------------|--------|
+| Banner Layouts | 5 options | 1-2 |
+| Multisite Support | ✅ Enterprise | ❌ None |
+| Site Scanner | 1000 pages | Limited |
+| Logo Support | ✅ Yes | ❌ Premium only |
+| Network Reports | ✅ Yes | ❌ None |
+| Price | **Free Forever** | Free (limited) |
 
 ### vs. Premium Plugins ($200-500/year)
-- ❌ **Premium plugins**: Subscription required, vendor lock-in
-- ✅ **MBR Cookie Consent**: 100% free forever, self-hosted
+| Feature | MBR Cookie Consent | Premium |
+|---------|-------------------|---------|
+| Cost | **$0** | $200-500/year |
+| Multisite | ✅ Included | Extra cost |
+| Updates | ✅ Free | Subscription |
+| Support | Community | Priority |
+| All Features | ✅ Yes | Yes |
 
-### vs. SaaS Solutions ($19-99/month)
-- ❌ **SaaS**: Monthly fees, external dependencies
-- ✅ **MBR Cookie Consent**: No recurring costs, complete control
+**Save $200-500/year** with identical functionality.
 
 ---
 
-## 🗺️ Roadmap
+## 🎯 Perfect For
 
-### Coming in Phase 2
-- [ ] Geo-targeting (show banner only for EU visitors)
-- [ ] A/B testing for consent rates
-- [ ] Cookie blocking by category
-- [ ] Integration with Google Tag Manager
-- [ ] Multilingual support
-- [ ] Custom CSS editor
-- [ ] Consent analytics dashboard
-- [ ] API for developers
+- 🏢 **Multisite Networks** - Manage 100+ sites from one dashboard
+- 🎓 **Educational Institutions** - University/school networks
+- 🏪 **E-commerce** - WooCommerce stores
+- 📰 **Publishers** - Blogs, magazines, news sites
+- 🏛️ **Government** - Public sector compliance
+- 💼 **Agencies** - Client site management
 
-**Want to contribute?** Submit feature requests via [GitHub Issues](https://github.com/harbourbob/mbr-cookie-consent/issues)!
+---
+
+## 📚 Documentation
+
+- 📖 **[Installation Guide](https://github.com/harbourbob/mbr-cookie-consent/wiki/Installation)** - Get started in 5 minutes
+- ⚙️ **[Configuration Guide](https://github.com/harbourbob/mbr-cookie-consent/wiki/Configuration)** - Customize every detail
+- 🌐 **[Multisite Guide](https://github.com/harbourbob/mbr-cookie-consent/blob/main/MULTISITE-GUIDE.md)** - Enterprise network setup
+- ❓ **[FAQ](https://github.com/harbourbob/mbr-cookie-consent/wiki/FAQ)** - Common questions answered
+- 🐛 **[Troubleshooting](https://github.com/harbourbob/mbr-cookie-consent/wiki/Troubleshooting)** - Fix common issues
+
+---
+
+## 🔧 Technical Details
+
+### Requirements
+- WordPress 5.8 or higher
+- PHP 7.4 or higher
+- MySQL 5.6 or higher
+- Modern browser (Chrome, Firefox, Safari, Edge)
+
+### Supported Platforms
+- ✅ Single-site WordPress
+- ✅ WordPress Multisite (Network)
+- ✅ WooCommerce
+- ✅ All major page builders (Elementor, Divi, Gutenberg)
+- ✅ All caching plugins (WP Rocket, W3 Total Cache, etc.)
+
+### Performance
+- Lightweight: ~25KB CSS + JS combined
+- No external dependencies
+- No API calls to third parties
+- Minimal database queries
+- CDN-friendly
+
+---
+
+## 🆕 What's New in v1.5.0
+
+### Enterprise Multisite Support
+- **Network Activation** - Deploy to all sites instantly
+- **Network Settings** - Configure once for entire network
+- **Network Reports** - Aggregate analytics dashboard
+- **Site Management** - Central site control panel
+- **Site Overrides** - Optional per-site customization
+
+### Improvements
+- CCPA link now uses proper button element
+- Enhanced accessibility
+- Better performance on large networks
+- Improved documentation
+
+[View Full Changelog](https://github.com/harbourbob/mbr-cookie-consent/blob/main/CHANGELOG-1.5.0-MULTISITE.md) • [Release Notes](https://github.com/harbourbob/mbr-cookie-consent/releases/tag/v1.5.0)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how:
+We welcome contributions! Here's how you can help:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- 🐛 **Report Bugs** - [Create an issue](https://github.com/harbourbob/mbr-cookie-consent/issues/new)
+- 💡 **Suggest Features** - [Start a discussion](https://github.com/yourusername/mbr-cookie-consent/discussions/new)
+- 🔧 **Submit PRs** - Fork, improve, and submit pull requests
+- 📖 **Improve Docs** - Help make docs better
+- 🌍 **Translate** - Add or improve translations
 
-Please ensure:
-- Code follows WordPress coding standards
-- Features are well-documented
-- Changes are tested across browsers
-- Commit messages are descriptive
+### Development Setup
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/mbr-cookie-consent.git
+
+# Create feature branch
+git checkout -b feature/amazing-feature
+
+# Make changes and commit
+git commit -m "Add amazing feature"
+
+# Push and create PR
+git push origin feature/amazing-feature
+```
 
 ---
 
-## 📝 Changelog
+## 📊 Statistics
 
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
-### Latest: Version 1.4.1 (February 2026)
-- ✨ Added 3 new banner layouts (corner boxes + center popup)
-- 🎨 Enhanced layout system with animations
-- 📱 Improved mobile responsiveness
-- 🐛 Various bug fixes and optimizations
+![GitHub stars](https://img.shields.io/github/stars/harbourbob/mbr-cookie-consent?style=social)
+![GitHub forks](https://img.shields.io/github/forks/harbourbob/mbr-cookie-consent?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/harbourbob/mbr-cookie-consent?style=social)
+![GitHub issues](https://img.shields.io/github/issues/harbourbob/mbr-cookie-consent)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/mbr-cookie-consent)
 
 ---
 
 ## 🆘 Support
 
-### Documentation
-- [Installation Guide](https://github.com/harbourbob/mbr-cookie-consent/wiki/Installation)
-- [Configuration Guide](https://github.com/harbourbob/mbr-cookie-consent/wiki/Configuration)
-- [FAQ](https://github.com/harbourbob/mbr-cookie-consent/wiki/FAQ)
-- [Troubleshooting](https://github.com/harbourbob/mbr-cookie-consent/wiki/Troubleshooting)
-
-### Community
-- [GitHub Issues](https://github.com/harbourbob/mbr-cookie-consent/issues) - Bug reports & feature requests
-- [Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions) - Questions & ideas
+### Free Community Support
+- 💬 **[GitHub Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions)** - Ask questions, share ideas
+- 🐛 **[GitHub Issues](https://github.com/harbourbob/mbr-cookie-consent/issues)** - Report bugs
+- 📖 **[Wiki Documentation](https://github.com/harbourbob/mbr-cookie-consent/wiki)** - Comprehensive guides
 
 ### Professional Support
-Need customization or implementation help? Contact Robert](https://littlewebshack.com/contact/)
+Need custom development or priority support?  
+Contact: [Made by Robert](https://littlewebshack.com/contact)
 
 ---
 
 ## ⚖️ Legal
 
 ### License
-MBR Cookie Consent is licensed under [GPL v2 or later](https://www.gnu.org/licenses/gpl-2.0.html).
+GPL v2 or later. Free to use on unlimited sites.
 
-### Legal Disclaimer
-This plugin provides technical tools to help implement cookie consent mechanisms. **It does not constitute legal advice.** Users are responsible for ensuring their use of this plugin complies with applicable laws and should consult with legal counsel regarding their specific compliance requirements.
+[View License](https://www.gnu.org/licenses/gpl-2.0.html)
+
+### Disclaimer
+This plugin provides **technical tools** for cookie consent management. It does **not constitute legal advice**. Users are responsible for ensuring compliance with applicable laws. Consult legal counsel for your specific requirements.
 
 ### Privacy
-This plugin:
-- ✅ Stores all data on your WordPress database
-- ✅ Makes no external API calls
-- ✅ Collects no usage statistics
-- ✅ Shares no data with third parties
-- ✅ Is 100% self-hosted
+- ✅ All data stored in your WordPress database
+- ✅ No external API calls
+- ✅ No tracking or analytics
+- ✅ No data shared with third parties
+- ✅ 100% self-hosted
+
+---
+
+## 🌟 Show Your Support
+
+If this plugin helps you achieve compliance:
+
+- ⭐ **Star this repository**
+- 🐦 **Share on Twitter** - Tag [@yourusername](https://twitter.com/yourusername)
+- 💬 **Write a review** (coming to WordPress.org)
+- 🍕 **[Buy me a coffee](https://buymeacoffee.com/robertpalmer)**
+- 📢 **Tell other WordPress users**
 
 ---
 
@@ -315,38 +256,57 @@ This plugin:
 
 **Made by Robert** specializes in creating professional WordPress solutions that are accessible to everyone.
 
-- 🌐 Website: [madebyrobert.co.uk](https://madebyrobert.co.uk)
-- 🔧 Plugin Hub: [Little Web Shack](https://littlewebshack.com)
-- 💼 Available for custom WordPress development
+- 🌐 **Website**: [Little Web Shack](https://littlewebshack.com)
+- 💼 **Freelance**: Bespoke WordPress development
+- 🔧 **Open Source**: Free plugins for the community
+- 📍 **Location**: Cleethorpes, England
 
-### Other Free Plugins
-- **MBR Live Radio Player** - Stream audio with metadata display
+### Other Free Plugins by Robert
+- **MBR Live Radio Player** - Stream audio with metadata
+- **MBR WP Performance** - Site optimization toolkit
 - **MBR AI Chatbot** - Claude & ChatGPT integration
-- **MBR Performance** - Site optimization toolkit
-- **MBR WebP Converter** - Automatic image optimization
+- **MBR WebP Converter** - Image optimization
+
+[View all plugins →](https://littlewebshack.com/)
 
 ---
 
-## 🌟 Show Your Support
+## 📅 Roadmap
 
-If this plugin has helped you achieve GDPR/CCPA compliance without breaking the bank, please:
+### v2.0.0 (Future)
+- [ ] React-based admin interface
+- [ ] REST API for developers
+- [ ] WordPress hooks/filters
+- [ ] Advanced compliance tools
+- [ ] Cookie blocking by category
+- [ ] Custom cookie categories
+- [ ] Consent analytics dashboard
+- [ ] Scheduled network exports
+- [ ] Geo-targeting (show banner only to EU visitors)
+- [ ] A/B testing for consent rates
+- [ ] Advanced Google Tag Manager integration
+- [ ] Bulk site operations (multisite)
 
-- ⭐ **Star this repository** on GitHub
-- 📢 **Share** with other WordPress users
-- 🐛 **Report bugs** to help improve the plugin
-- 💡 **Suggest features** for future releases
-- ✍️ **Write a review** on WordPress.org (when available)
 
 ---
 
-## 📊 Stats
+## 🔗 Links
 
-![GitHub stars](https://img.shields.io/github/stars/harbourbob/mbr-cookie-consent?style=social)
-![GitHub forks](https://img.shields.io/github/forks/harbourbob/mbr-cookie-consent?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/harbourbob/mbr-cookie-consent?style=social)
+- 🏠 **Homepage**: [Little Web Shack](https://littlewebshack.com)
+- 📦 **Releases**: [GitHub Releases](https://github.com/harbourbob/mbr-cookie-consent/releases)
+- 📖 **Documentation**: [Wiki](https://github.com/harbourbob/mbr-cookie-consent/wiki)
+- 💬 **Community**: [Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions)
+- 🐛 **Bug Reports**: [Issues](https://github.com/harbourbob/mbr-cookie-consent/issues)
+- 💼 **Professional Services**: [Contact](https://littlewebshack.com/contact)
 
 ---
 
-**Built with ❤️ by [Robert](https://littlewebshack.com) • Empowering websites with privacy compliance since 2014**
+<div align="center">
 
+**Built with ❤️ by [Robert](https://littlewebshack.com)**
 
+**Empowering websites with privacy compliance since 2026**
+
+[⬆ Back to Top](#-mbr-cookie-consent)
+
+</div>
