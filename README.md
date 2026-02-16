@@ -1,10 +1,10 @@
 # MBR Cookie Consent
 
-[![WordPress Plugin](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)](https://wordpress.org/)
-[![PHP Version](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
-[![License](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
-[![Version](https://img.shields.io/badge/Version-1.5.0-orange.svg)](https://github.com/harbourbob/mbr-cookie-consent/)
-[![Downloads](https://img.shields.io/github/downloads/harbourbob/mbr-cookie-consent/total)](https://github.com/harbourbob/mbr-cookie-consent/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/harbourbob/MBR-Cookie-Consent/total)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/harbourbob/MBR-Cookie-Consent?style=social)](https://github.com/harbourbob/MBR-Cookie-Consent)
+[![GitHub Forks](https://img.shields.io/github/forks/harbourbob/MBR-Cookie-Consent?style=social)](https://github.com/harbourbob/MBR-Cookie-Consent)
+[![GitHub Issues](https://img.shields.io/github/issues/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/issues)
 
 A comprehensive WordPress cookie consent plugin supporting GDPR, CCPA, and global privacy compliance.
 
