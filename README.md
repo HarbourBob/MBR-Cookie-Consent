@@ -2,7 +2,6 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
 [![GitHub Downloads](https://img.shields.io/github/downloads/harbourbob/MBR-Cookie-Consent/total)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/harbourbob/MBR-Cookie-Consent?style=social)](https://github.com/harbourbob/MBR-Cookie-Consent)
 [![GitHub Forks](https://img.shields.io/github/forks/harbourbob/MBR-Cookie-Consent?style=social)](https://github.com/harbourbob/MBR-Cookie-Consent)
 [![GitHub Issues](https://img.shields.io/github/issues/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/issues)
 
