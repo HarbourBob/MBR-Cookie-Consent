@@ -12,7 +12,7 @@ A comprehensive WordPress cookie consent plugin supporting GDPR, CCPA, and globa
 
 MBR Cookie Consent provides a complete solution for managing cookie consent on your WordPress website. The plugin automatically blocks non-essential scripts until user consent is given and maintains detailed consent logs for compliance auditing.
 
-Version 1.5.0 now offers multi-site enterprize-level support.
+From version 1.5.0 the plugin now offers multi-site enterprise-level support.
 
 **Legal Disclaimer:** This plugin provides technical tools to help implement cookie consent mechanisms. It does not constitute legal advice. You are responsible for ensuring your use of this plugin complies with applicable laws and should consult with legal counsel regarding your specific compliance requirements.
 
@@ -389,6 +389,9 @@ For support, feature requests, or bug reports:
 - A/B testing for banner variations
 
 ## Changelog
+
+### 1.5.1 - Minor Bug Fixing
+- **Minor bug fixing to the Consent Log
 
 ### 1.5.0 - Multi-Site Support
 - **Automatic Detection of multi-site set-up
