@@ -46,8 +46,12 @@ class MBR_CC_Database {
      */
     private function __construct() {
         global $wpdb;
-        // Use base_prefix for network-wide table
-        $this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+        // Use base_prefix for multisite, regular prefix for single-site
+        if (is_multisite()) {
+            $this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+        } else {
+            $this->consent_table = $wpdb->prefix . 'mbr_cc_consent_logs';
+        }
     }
     
     /**
@@ -58,8 +62,12 @@ class MBR_CC_Database {
         
         $charset_collate = $wpdb->get_charset_collate();
         
-        // Use base_prefix for network-wide table
-        $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+        // Use base_prefix for multisite, regular prefix for single-site
+        if (is_multisite()) {
+            $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+        } else {
+            $table_name = $wpdb->prefix . 'mbr_cc_consent_logs';
+        }
         
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -83,7 +91,11 @@ class MBR_CC_Database {
         dbDelta($sql);
         
         // Store database version.
-        update_site_option('mbr_cc_db_version', '1.5.0');
+        if (is_multisite()) {
+            update_site_option('mbr_cc_db_version', '1.5.1');
+        } else {
+            update_option('mbr_cc_db_version', '1.5.1');
+        }
     }
     
     /**
@@ -156,11 +168,17 @@ class MBR_CC_Database {
             'user_id' => null,
             'date_from' => null,
             'date_to' => null,
+            'blog_id' => get_current_blog_id(), // Filter by current site
         );
         
         $args = wp_parse_args($args, $defaults);
         
         $where = array('1=1');
+        
+        // Always filter by blog_id (critical for multisite)
+        if (!is_null($args['blog_id'])) {
+            $where[] = $wpdb->prepare('blog_id = %d', $args['blog_id']);
+        }
         
         if (!is_null($args['user_id'])) {
             $where[] = $wpdb->prepare('user_id = %d', $args['user_id']);
@@ -198,7 +216,18 @@ class MBR_CC_Database {
     public function get_consent_count($args = array()) {
         global $wpdb;
         
+        $defaults = array(
+            'blog_id' => get_current_blog_id(), // Filter by current site
+        );
+        
+        $args = wp_parse_args($args, $defaults);
+        
         $where = array('1=1');
+        
+        // Always filter by blog_id (critical for multisite)
+        if (!empty($args['blog_id'])) {
+            $where[] = $wpdb->prepare('blog_id = %d', $args['blog_id']);
+        }
         
         if (!empty($args['user_id'])) {
             $where[] = $wpdb->prepare('user_id = %d', $args['user_id']);
@@ -250,7 +279,11 @@ class MBR_CC_Database {
         
         // Create CSV header.
         $csv = array();
-        $csv[] = array('ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
+        if (is_multisite()) {
+            $csv[] = array('ID', 'Blog ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
+        } else {
+            $csv[] = array('ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
+        }
         
         // Add data rows.
         foreach ($logs as $log) {
@@ -259,15 +292,28 @@ class MBR_CC_Database {
                 $categories = implode(', ', $categories);
             }
             
-            $csv[] = array(
-                $log['id'],
-                $log['user_id'] ?: 'Guest',
-                $log['ip_address'],
-                $log['consent_given'] ? 'Yes' : 'No',
-                $categories,
-                $log['consent_method'],
-                $log['timestamp'],
-            );
+            if (is_multisite()) {
+                $csv[] = array(
+                    $log['id'],
+                    $log['blog_id'],
+                    $log['user_id'] ?: 'Guest',
+                    $log['ip_address'],
+                    $log['consent_given'] ? 'Yes' : 'No',
+                    $categories,
+                    $log['consent_method'],
+                    $log['timestamp'],
+                );
+            } else {
+                $csv[] = array(
+                    $log['id'],
+                    $log['user_id'] ?: 'Guest',
+                    $log['ip_address'],
+                    $log['consent_given'] ? 'Yes' : 'No',
+                    $categories,
+                    $log['consent_method'],
+                    $log['timestamp'],
+                );
+            }
         }
         
         // Convert to CSV string.
