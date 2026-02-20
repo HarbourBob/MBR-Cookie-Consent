@@ -12,7 +12,7 @@ MBR Cookie Consent provides a complete solution for managing cookie consent on y
 
 From version 1.6.0 the plugin provides full, automatic geolocation support.
 
-From version 1.5.0 the plugin now offers multi-site enterprise-level support.
+From version 1.5.0 the plugin now offers multisite enterprise-level support.
 
 **Legal Disclaimer:** This plugin provides technical tools to help implement cookie consent mechanisms. It does not constitute legal advice. You are responsible for ensuring your use of this plugin complies with applicable laws and should consult with legal counsel regarding your specific compliance requirements.
 
