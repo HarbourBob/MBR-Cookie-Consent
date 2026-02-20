@@ -5,7 +5,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, goog
 Requires at least: 5.8
 Tested up to: 6.9.1
 Requires PHP: 7.4
-Stable tag: 1.4.1
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -819,3 +819,4 @@ The plugin developer is not liable for regulatory penalties, legal issues, or mi
 
 
 Generated privacy and cookie policies are templates requiring professional legal review before publication.
+
