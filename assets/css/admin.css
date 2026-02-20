@@ -1,7 +1,35 @@
-/* MBR Cookie Consent Admin Styles */
+/* MBR Cookie Consent Admin Styles - ENHANCED */
 
 .mbr-cc-admin-wrap {
     max-width: 1200px;
+}
+
+/* Enhanced Section Headers */
+.mbr-cc-settings-section h2 {
+    margin: 0 0 15px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f1;
+    color: #1d2327;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mbr-cc-settings-section h2::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: #2271b1;
+    border-radius: 2px;
+}
+
+.mbr-cc-settings-section h3 {
+    color: #1d2327;
+    font-size: 16px;
+    margin: 20px 0 15px 0;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f1;
 }
 
 /* Dashboard Stats */
@@ -15,8 +43,9 @@
 .mbr-cc-stat-card {
     background: #fff;
     padding: 20px;
-    border-left: 4px solid #0073aa;
+    border-left: 4px solid #2271b1;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
 }
 
 .mbr-cc-stat-card h3 {
@@ -25,6 +54,8 @@
     color: #666;
     text-transform: uppercase;
     font-weight: 600;
+    border: none;
+    padding: 0;
 }
 
 .mbr-cc-stat-card .stat-value {
@@ -33,20 +64,17 @@
     color: #333;
 }
 
-/* Settings Form */
+/* Settings Sections */
 .mbr-cc-settings-section {
     background: #fff;
-    padding: 20px;
+    padding: 25px;
     margin: 20px 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    border-left: 4px solid #2271b1;
 }
 
-.mbr-cc-settings-section h2 {
-    margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
+/* Form Fields */
 .mbr-cc-form-row {
     margin-bottom: 20px;
     display: flex;
@@ -63,14 +91,27 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
+    color: #1d2327;
 }
 
 .mbr-cc-form-field input[type="text"],
 .mbr-cc-form-field input[type="number"],
+.mbr-cc-form-field input[type="url"],
 .mbr-cc-form-field textarea,
 .mbr-cc-form-field select {
     width: 100%;
     max-width: 400px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+.mbr-cc-form-field input:focus,
+.mbr-cc-form-field textarea:focus,
+.mbr-cc-form-field select:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    outline: none;
 }
 
 .mbr-cc-form-field textarea {
@@ -79,13 +120,58 @@
 
 .mbr-cc-form-field .description {
     font-size: 13px;
-    color: #666;
-    margin-top: 5px;
+    color: #646970;
+    margin: 5px 0 0 0;
+    line-height: 1.5;
+}
+
+/* Info boxes */
+.mbr-cc-info-box {
+    background: #f0f6fc;
+    border: 1px solid #c3e0f7;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.mbr-cc-info-box p {
+    margin: 0;
+    color: #1d2327;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.mbr-cc-info-box ul {
+    margin: 10px 0 0 20px;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* Enhanced checkbox styling */
+.mbr-cc-form-field > label:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mbr-cc-form-field > label:has(input[type="checkbox"]):hover {
+    background: #f0f6fc;
+    border-color: #2271b1;
+}
+
+.mbr-cc-form-field label input[type="checkbox"] {
+    margin-right: 8px;
 }
 
 /* Color Picker */
 .mbr-cc-color-picker {
-    width: 100px;
+    width: 100px !important;
+    max-width: 100px !important;
 }
 
 /* Scanner Results */
@@ -94,23 +180,16 @@
     background: #fff;
     padding: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
 }
 
-#mbr-cc-scan-results table {
-    margin-top: 10px;
-}
-
-#mbr-cc-scan-results .mbr-cc-add-script {
-    font-size: 12px;
-    padding: 4px 12px;
-}
-
-/* Blocked Scripts List */
+/* Blocked Scripts */
 .mbr-cc-blocked-scripts {
     background: #fff;
     padding: 20px;
     margin: 20px 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
 }
 
 .mbr-cc-script-item {
@@ -121,6 +200,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.2s;
+}
+
+.mbr-cc-script-item:hover {
+    border-color: #2271b1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .mbr-cc-script-info h4 {
@@ -133,31 +218,23 @@
     color: #666;
 }
 
-.mbr-cc-script-meta {
-    font-size: 12px;
-    color: #999;
-    margin-top: 5px;
-}
-
-.mbr-cc-script-actions {
-    display: flex;
-    gap: 10px;
-}
-
-/* Categories Page */
+/* Categories */
 .mbr-cc-category-item {
     background: #fff;
     padding: 20px;
     margin-bottom: 15px;
-    border-left: 4px solid #0073aa;
+    border-left: 4px solid #2271b1;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
 }
 
 .mbr-cc-category-item h3 {
     margin: 0 0 15px 0;
+    border: none;
+    padding: 0;
 }
 
-/* Consent Logs Table */
+/* Consent Logs */
 .mbr-cc-logs-filters {
     background: #fff;
     padding: 15px;
@@ -166,14 +243,11 @@
     gap: 15px;
     align-items: flex-end;
     flex-wrap: wrap;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.mbr-cc-logs-table {
-    background: #fff;
-    padding: 20px;
-}
-
-/* Legal Disclaimer Box */
+/* Legal Disclaimer */
 .mbr-cc-disclaimer {
     background: #fff3cd;
     border: 1px solid #ffc107;
@@ -185,6 +259,8 @@
 .mbr-cc-disclaimer h3 {
     margin-top: 0;
     color: #856404;
+    border: none;
+    padding: 0;
 }
 
 .mbr-cc-disclaimer p {
@@ -192,48 +268,84 @@
     color: #856404;
 }
 
-/* Buttons */
-.mbr-cc-btn-primary {
-    background: #0073aa;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
+/* Responsive */
+@media (max-width: 782px) {
+    .mbr-cc-form-row {
+        flex-direction: column;
+    }
+    
+    .mbr-cc-form-field {
+        min-width: 100%;
+    }
+    
+    .mbr-cc-stats {
+        grid-template-columns: 1fr;
+    }
 }
 
-.mbr-cc-btn-primary:hover {
-    background: #005a87;
-}
+/* ============================================
+   TAB NAVIGATION
+   ============================================ */
 
-.mbr-cc-btn-danger {
-    background: #dc3545;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.mbr-cc-btn-danger:hover {
-    background: #c82333;
-}
-
-/* Quick Actions */
-.mbr-cc-quick-actions {
-    background: #fff;
-    padding: 20px;
+.mbr-cc-tab-nav {
+    display: flex;
+    gap: 0;
     margin: 20px 0;
+    border-bottom: 2px solid #ddd;
+    background: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.mbr-cc-quick-actions h3 {
-    margin-top: 0;
+.mbr-cc-tab-button {
+    flex: 1;
+    padding: 15px 20px;
+    background: #f0f0f1;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #50575e;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.mbr-cc-quick-actions .button {
-    margin-right: 10px;
-    margin-bottom: 10px;
+.mbr-cc-tab-button:hover {
+    background: #fff;
+    color: #2271b1;
+}
+
+.mbr-cc-tab-button.active {
+    background: #fff;
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+}
+
+.mbr-cc-tab-button .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+/* TAB CONTENT - CRITICAL FIX */
+div.mbr-cc-tab-content {
+    display: none !important;
+}
+
+div.mbr-cc-tab-content.active {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hide WordPress admin footer on settings page to prevent overlay */
+.mbr-cc-admin-wrap + #wpfooter {
+    display: none;
 }

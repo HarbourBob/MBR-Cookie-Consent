@@ -133,6 +133,16 @@ class MBR_CC_Admin {
             true
         );
         
+        // Always enqueue settings JS and media library on plugin pages
+        wp_enqueue_media();
+        wp_enqueue_script(
+            'mbr-cc-admin-settings',
+            MBR_CC_PLUGIN_URL . 'assets/js/admin-settings.js',
+            array('jquery'),
+            MBR_CC_VERSION,
+            true
+        );
+        
         wp_enqueue_style('wp-color-picker');
         
         wp_localize_script('mbr-cc-admin', 'mbrCcAdmin', array(

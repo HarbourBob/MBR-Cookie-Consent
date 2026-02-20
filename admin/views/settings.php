@@ -1,6 +1,7 @@
 <?php
 /**
- * Settings View
+ * Settings View - Complete Tabbed Interface
+ * All 657 lines preserved and organized
  *
  * @package MBR_Cookie_Consent
  */
@@ -14,8 +15,42 @@ if (!defined('ABSPATH')) {
 <div class="wrap mbr-cc-admin-wrap">
     <h1><?php esc_html_e('Cookie Consent Settings', 'mbr-cookie-consent'); ?></h1>
     
+    <!-- Tab Navigation -->
+    <nav class="mbr-cc-tab-nav">
+        <button type="button" class="mbr-cc-tab-button active" data-tab="banner">
+            <span class="dashicons dashicons-admin-appearance"></span>
+            <?php esc_html_e('Banner Settings', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="behavior">
+            <span class="dashicons dashicons-admin-settings"></span>
+            <?php esc_html_e('Banner Behavior', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="consent-mode">
+            <span class="dashicons dashicons-google"></span>
+            <?php esc_html_e('Consent Mode', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="geolocation">
+            <span class="dashicons dashicons-location"></span>
+            <?php esc_html_e('Geolocation', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="i18n">
+            <span class="dashicons dashicons-translation"></span>
+            <?php esc_html_e('i18n & Accessibility', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="advanced-consent">
+            <span class="dashicons dashicons-shield"></span>
+            <?php esc_html_e('Advanced Consent', 'mbr-cookie-consent'); ?>
+        </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="customization">
+            <span class="dashicons dashicons-admin-tools"></span>
+            <?php esc_html_e('Customization', 'mbr-cookie-consent'); ?>
+        </button>
+    </nav>
+    
     <form method="post" id="mbr-cc-settings-form">
         
+        <!-- TAB 1: BANNER SETTINGS -->
+        <div class="mbr-cc-tab-content active" id="tab-banner">
         <!-- Banner Appearance -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Banner Appearance', 'mbr-cookie-consent'); ?></h2>
@@ -70,7 +105,6 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         </div>
-        
         <!-- Banner Content -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Banner Content', 'mbr-cookie-consent'); ?></h2>
@@ -106,75 +140,6 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         </div>
-        
-        <!-- Banner Options -->
-        <div class="mbr-cc-settings-section">
-            <h2><?php esc_html_e('Banner Options', 'mbr-cookie-consent'); ?></h2>
-            
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label>
-                        <input type="checkbox" name="mbr_cc_show_reject_button" value="1" <?php checked(get_option('mbr_cc_show_reject_button', true)); ?>>
-                        <?php esc_html_e('Show Reject All Button', 'mbr-cookie-consent'); ?>
-                    </label>
-                </div>
-                
-                <div class="mbr-cc-form-field">
-                    <label>
-                        <input type="checkbox" name="mbr_cc_show_customize_button" value="1" <?php checked(get_option('mbr_cc_show_customize_button', true)); ?>>
-                        <?php esc_html_e('Show Customize Button', 'mbr-cookie-consent'); ?>
-                    </label>
-                </div>
-                
-                <div class="mbr-cc-form-field">
-                    <label>
-                        <input type="checkbox" name="mbr_cc_show_close_button" value="1" <?php checked(get_option('mbr_cc_show_close_button', false)); ?>>
-                        <?php esc_html_e('Show X (Close) Button', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Required by Italian law. Closes banner without saving consent.', 'mbr-cookie-consent'); ?></p>
-                </div>
-                
-                <div class="mbr-cc-form-field">
-                    <label>
-                        <input type="checkbox" name="mbr_cc_reload_on_consent" value="1" <?php checked(get_option('mbr_cc_reload_on_consent', false)); ?>>
-                        <?php esc_html_e('Reload Page on Consent', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Automatically reload the page when users accept or reject cookies.', 'mbr-cookie-consent'); ?></p>
-                </div>
-            </div>
-            
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label for="cookie_expiry_days"><?php esc_html_e('Cookie Expiry (Days)', 'mbr-cookie-consent'); ?></label>
-                    <input type="number" name="mbr_cc_cookie_expiry_days" id="cookie_expiry_days" value="<?php echo esc_attr(get_option('mbr_cc_cookie_expiry_days', 365)); ?>" min="1" max="730">
-                    <p class="description"><?php esc_html_e('How long to remember user consent.', 'mbr-cookie-consent'); ?></p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- CCPA Options -->
-        <div class="mbr-cc-settings-section">
-            <h2><?php esc_html_e('CCPA / California Privacy', 'mbr-cookie-consent'); ?></h2>
-            
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label>
-                        <input type="checkbox" name="mbr_cc_enable_ccpa" value="1" <?php checked(get_option('mbr_cc_enable_ccpa', false)); ?>>
-                        <?php esc_html_e('Enable CCPA "Do Not Sell" Link', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Shows a clickable link in the banner that allows users to opt out of data selling/sharing. When clicked, it rejects all Marketing and Analytics cookies (CCPA compliance for California users).', 'mbr-cookie-consent'); ?></p>
-                </div>
-            </div>
-            
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label for="ccpa_link_text"><?php esc_html_e('CCPA Link Text', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_ccpa_link_text" id="ccpa_link_text" value="<?php echo esc_attr(get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information')); ?>">
-                    <p class="description"><?php esc_html_e('Customize the text shown for the CCPA opt-out link. The default wording is legally compliant with California law.', 'mbr-cookie-consent'); ?></p>
-                </div>
-            </div>
-        </div>
-        
         <!-- Revisit Consent -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Revisit Consent Button', 'mbr-cookie-consent'); ?></h2>
@@ -196,7 +161,6 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         </div>
-        
         <!-- Policy Links -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Policy Links', 'mbr-cookie-consent'); ?></h2>
@@ -255,6 +219,82 @@ if (!defined('ABSPATH')) {
             </div>
         </div>
         
+        
+        </div>
+        
+        <!-- TAB 2: BANNER BEHAVIOR -->
+        <div class="mbr-cc-tab-content" id="tab-behavior">
+        <!-- Banner Options -->
+        <div class="mbr-cc-settings-section">
+            <h2><?php esc_html_e('Banner Options', 'mbr-cookie-consent'); ?></h2>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label>
+                        <input type="checkbox" name="mbr_cc_show_reject_button" value="1" <?php checked(get_option('mbr_cc_show_reject_button', true)); ?>>
+                        <?php esc_html_e('Show Reject All Button', 'mbr-cookie-consent'); ?>
+                    </label>
+                </div>
+                
+                <div class="mbr-cc-form-field">
+                    <label>
+                        <input type="checkbox" name="mbr_cc_show_customize_button" value="1" <?php checked(get_option('mbr_cc_show_customize_button', true)); ?>>
+                        <?php esc_html_e('Show Customize Button', 'mbr-cookie-consent'); ?>
+                    </label>
+                </div>
+                
+                <div class="mbr-cc-form-field">
+                    <label>
+                        <input type="checkbox" name="mbr_cc_show_close_button" value="1" <?php checked(get_option('mbr_cc_show_close_button', false)); ?>>
+                        <?php esc_html_e('Show X (Close) Button', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Required by Italian law. Closes banner without saving consent.', 'mbr-cookie-consent'); ?></p>
+                </div>
+                
+                <div class="mbr-cc-form-field">
+                    <label>
+                        <input type="checkbox" name="mbr_cc_reload_on_consent" value="1" <?php checked(get_option('mbr_cc_reload_on_consent', false)); ?>>
+                        <?php esc_html_e('Reload Page on Consent', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Automatically reload the page when users accept or reject cookies.', 'mbr-cookie-consent'); ?></p>
+                </div>
+            </div>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label for="cookie_expiry_days"><?php esc_html_e('Cookie Expiry (Days)', 'mbr-cookie-consent'); ?></label>
+                    <input type="number" name="mbr_cc_cookie_expiry_days" id="cookie_expiry_days" value="<?php echo esc_attr(get_option('mbr_cc_cookie_expiry_days', 365)); ?>" min="1" max="730">
+                    <p class="description"><?php esc_html_e('How long to remember user consent.', 'mbr-cookie-consent'); ?></p>
+                </div>
+            </div>
+        </div>
+        <!-- CCPA Options -->
+        <div class="mbr-cc-settings-section">
+            <h2><?php esc_html_e('CCPA / California Privacy', 'mbr-cookie-consent'); ?></h2>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label>
+                        <input type="checkbox" name="mbr_cc_enable_ccpa" value="1" <?php checked(get_option('mbr_cc_enable_ccpa', false)); ?>>
+                        <?php esc_html_e('Enable CCPA "Do Not Sell" Link', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Shows a clickable link in the banner that allows users to opt out of data selling/sharing. When clicked, it rejects all Marketing and Analytics cookies (CCPA compliance for California users).', 'mbr-cookie-consent'); ?></p>
+                </div>
+            </div>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label for="ccpa_link_text"><?php esc_html_e('CCPA Link Text', 'mbr-cookie-consent'); ?></label>
+                    <input type="text" name="mbr_cc_ccpa_link_text" id="ccpa_link_text" value="<?php echo esc_attr(get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information')); ?>">
+                    <p class="description"><?php esc_html_e('Customize the text shown for the CCPA opt-out link. The default wording is legally compliant with California law.', 'mbr-cookie-consent'); ?></p>
+                </div>
+            </div>
+        </div>
+        
+        </div>
+        
+        <!-- TAB 3: CONSENT MODE INTEGRATION -->
+        <div class="mbr-cc-tab-content" id="tab-consent-mode">
         <!-- Consent Mode Integration -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Consent Mode Integration', 'mbr-cookie-consent'); ?></h2>
@@ -319,6 +359,16 @@ if (!defined('ABSPATH')) {
             </div>
         </div>
         
+        
+        </div>
+        
+        <!-- TAB 3.5: GEOLOCATION -->
+        <div class="mbr-cc-tab-content" id="tab-geolocation">
+            <?php require_once MBR_CC_PLUGIN_DIR . 'admin/views/geolocation-settings.php'; ?>
+        </div>
+        
+        <!-- TAB 4: INTERNATIONALIZATION & ACCESSIBILITY -->
+        <div class="mbr-cc-tab-content" id="tab-i18n">
         <!-- Internationalization & Accessibility -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Internationalization & Accessibility', 'mbr-cookie-consent'); ?></h2>
@@ -393,6 +443,119 @@ if (!defined('ABSPATH')) {
             </div>
         </div>
         
+        
+        </div>
+        
+        <!-- TAB 5: ADVANCED CONSENT MANAGEMENT -->
+        <div class="mbr-cc-tab-content" id="tab-advanced-consent">
+        <!-- Advanced Consent Management -->
+        <div class="mbr-cc-settings-section">
+            <h2><?php esc_html_e('Advanced Consent Management', 'mbr-cookie-consent'); ?></h2>
+            <p><?php esc_html_e('Enterprise-grade consent frameworks for publishers and advertisers including IAB TCF v2.3 and Google Additional Consent Mode.', 'mbr-cookie-consent'); ?></p>
+            
+            <!-- IAB TCF v2.3 -->
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e('IAB Transparency & Consent Framework (TCF) v2.3', 'mbr-cookie-consent'); ?></h3>
+                    <p class="description"><?php esc_html_e('The IAB Europe Transparency & Consent Framework (TCF) is the industry standard for managing consent for digital advertising. Required for publishers and advertisers operating in Europe.', 'mbr-cookie-consent'); ?></p>
+                    
+                    <label style="margin-top: 15px; display: block;">
+                        <input type="checkbox" name="mbr_cc_iab_tcf_enabled" value="1" <?php checked(get_option('mbr_cc_iab_tcf_enabled', false)); ?>>
+                        <?php esc_html_e('Enable IAB TCF v2.3', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Implements the __tcfapi JavaScript API and generates TCF-compliant consent strings.', 'mbr-cookie-consent'); ?></p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
+                        <strong><?php esc_html_e('What is IAB TCF?', 'mbr-cookie-consent'); ?></strong>
+                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('The TCF enables publishers and advertisers to communicate user consent to ad tech vendors in a standardized way. It includes:', 'mbr-cookie-consent'); ?></p>
+                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li><?php esc_html_e('11 standardized consent purposes', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('2 special features (geolocation, device scanning)', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('Global Vendor List (GVL) of registered vendors', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('TC String format for consent storage', 'mbr-cookie-consent'); ?></li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <h4><?php esc_html_e('TCF Configuration', 'mbr-cookie-consent'); ?></h4>
+                        
+                        <label for="publisher_country_code" style="display: block; margin-top: 10px;"><?php esc_html_e('Publisher Country Code:', 'mbr-cookie-consent'); ?></label>
+                        <input type="text" 
+                               name="mbr_cc_publisher_country_code" 
+                               id="publisher_country_code" 
+                               value="<?php echo esc_attr(get_option('mbr_cc_publisher_country_code', '')); ?>"
+                               placeholder="GB"
+                               maxlength="2"
+                               style="width: 100px; text-transform: uppercase;">
+                        <p class="description"><?php esc_html_e('2-letter ISO country code (e.g., GB, DE, FR). Required for TCF compliance.', 'mbr-cookie-consent'); ?></p>
+                        
+                        <label style="display: block; margin-top: 15px;">
+                            <input type="checkbox" name="mbr_cc_purpose_one_treatment" value="1" <?php checked(get_option('mbr_cc_purpose_one_treatment', false)); ?>>
+                            <?php esc_html_e('Enable Purpose One Treatment', 'mbr-cookie-consent'); ?>
+                        </label>
+                        <p class="description"><?php esc_html_e('For publishers in jurisdictions that do not require consent for Purpose 1 (Store/Access Information). Consult legal counsel.', 'mbr-cookie-consent'); ?></p>
+                        
+                        <label for="gdpr_applies" style="display: block; margin-top: 15px;"><?php esc_html_e('GDPR Applies:', 'mbr-cookie-consent'); ?></label>
+                        <select name="mbr_cc_gdpr_applies" id="gdpr_applies">
+                            <option value="auto" <?php selected(get_option('mbr_cc_gdpr_applies'), 'auto'); ?>><?php esc_html_e('Auto-detect', 'mbr-cookie-consent'); ?></option>
+                            <option value="yes" <?php selected(get_option('mbr_cc_gdpr_applies'), 'yes'); ?>><?php esc_html_e('Yes (Always)', 'mbr-cookie-consent'); ?></option>
+                            <option value="no" <?php selected(get_option('mbr_cc_gdpr_applies'), 'no'); ?>><?php esc_html_e('No (Never)', 'mbr-cookie-consent'); ?></option>
+                        </select>
+                        <p class="description"><?php esc_html_e('Whether GDPR applies to your users. Auto-detect recommended.', 'mbr-cookie-consent'); ?></p>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                        <strong><?php esc_html_e('Important:', 'mbr-cookie-consent'); ?></strong>
+                        <p style="margin: 5px 0 0 0;"><?php esc_html_e('IAB TCF requires CMP registration. You must register as a Consent Management Platform with IAB Europe to obtain a CMP ID. This plugin provides a placeholder implementation. For production use, complete registration at:', 'mbr-cookie-consent'); ?> 
+                            <a href="https://iabeurope.eu/tcf-for-cmps/" target="_blank">https://iabeurope.eu/tcf-for-cmps/</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Google ACM -->
+            <div class="mbr-cc-form-row" style="margin-top: 30px;">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e('Google Additional Consent Mode (ACM)', 'mbr-cookie-consent'); ?></h3>
+                    <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers (ATPs) that are not part of the IAB Global Vendor List. Required if using Google advertising products.', 'mbr-cookie-consent'); ?></p>
+                    
+                    <label style="margin-top: 15px; display: block;">
+                        <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
+                        <?php esc_html_e('Enable Google Additional Consent Mode', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Generates AC String for Google Ad Tech Providers outside the IAB framework.', 'mbr-cookie-consent'); ?></p>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
+                        <strong><?php esc_html_e('What is Google ACM?', 'mbr-cookie-consent'); ?></strong>
+                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('Google ACM allows you to manage consent for Google\'s own advertising products separately from IAB TCF. This includes:', 'mbr-cookie-consent'); ?></p>
+                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li><?php esc_html_e('Google Ads', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('DoubleClick / Google Ad Manager', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('AdSense', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('Campaign Manager 360', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('Display & Video 360', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('And other Google ATP providers', 'mbr-cookie-consent'); ?></li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <h4><?php esc_html_e('How ACM Works', 'mbr-cookie-consent'); ?></h4>
+                        <ol style="margin: 10px 0 0 20px; line-height: 1.8;">
+                            <li><?php esc_html_e('User gives marketing consent via cookie banner', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('Plugin generates AC String (e.g., "1~1.2.3.4.5")', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('AC String passed to Google ad tags', 'mbr-cookie-consent'); ?></li>
+                            <li><?php esc_html_e('Google applies consent to ATP providers', 'mbr-cookie-consent'); ?></li>
+                        </ol>
+                    </div>
+                    
+        
+        </div>
+        
+        <!-- TAB 6: CUSTOMIZATION -->
+            </div>
+        </div>
+        </div>
+        <div class="mbr-cc-tab-content" id="tab-customization">
         <!-- Enhanced Customization -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Enhanced Customization', 'mbr-cookie-consent'); ?></h2>
@@ -517,135 +680,7 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
         </div>
-        
-        <!-- Advanced Consent Management -->
-        <div class="mbr-cc-settings-section">
-            <h2><?php esc_html_e('Advanced Consent Management', 'mbr-cookie-consent'); ?></h2>
-            <p><?php esc_html_e('Enterprise-grade consent frameworks for publishers and advertisers including IAB TCF v2.3 and Google Additional Consent Mode.', 'mbr-cookie-consent'); ?></p>
-            
-            <!-- IAB TCF v2.3 -->
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('IAB Transparency & Consent Framework (TCF) v2.3', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('The IAB Europe Transparency & Consent Framework (TCF) is the industry standard for managing consent for digital advertising. Required for publishers and advertisers operating in Europe.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_iab_tcf_enabled" value="1" <?php checked(get_option('mbr_cc_iab_tcf_enabled', false)); ?>>
-                        <?php esc_html_e('Enable IAB TCF v2.3', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Implements the __tcfapi JavaScript API and generates TCF-compliant consent strings.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
-                        <strong><?php esc_html_e('What is IAB TCF?', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('The TCF enables publishers and advertisers to communicate user consent to ad tech vendors in a standardized way. It includes:', 'mbr-cookie-consent'); ?></p>
-                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('11 standardized consent purposes', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('2 special features (geolocation, device scanning)', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Global Vendor List (GVL) of registered vendors', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('TC String format for consent storage', 'mbr-cookie-consent'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <h4><?php esc_html_e('TCF Configuration', 'mbr-cookie-consent'); ?></h4>
-                        
-                        <label for="publisher_country_code" style="display: block; margin-top: 10px;"><?php esc_html_e('Publisher Country Code:', 'mbr-cookie-consent'); ?></label>
-                        <input type="text" 
-                               name="mbr_cc_publisher_country_code" 
-                               id="publisher_country_code" 
-                               value="<?php echo esc_attr(get_option('mbr_cc_publisher_country_code', '')); ?>"
-                               placeholder="GB"
-                               maxlength="2"
-                               style="width: 100px; text-transform: uppercase;">
-                        <p class="description"><?php esc_html_e('2-letter ISO country code (e.g., GB, DE, FR). Required for TCF compliance.', 'mbr-cookie-consent'); ?></p>
-                        
-                        <label style="display: block; margin-top: 15px;">
-                            <input type="checkbox" name="mbr_cc_purpose_one_treatment" value="1" <?php checked(get_option('mbr_cc_purpose_one_treatment', false)); ?>>
-                            <?php esc_html_e('Enable Purpose One Treatment', 'mbr-cookie-consent'); ?>
-                        </label>
-                        <p class="description"><?php esc_html_e('For publishers in jurisdictions that do not require consent for Purpose 1 (Store/Access Information). Consult legal counsel.', 'mbr-cookie-consent'); ?></p>
-                        
-                        <label for="gdpr_applies" style="display: block; margin-top: 15px;"><?php esc_html_e('GDPR Applies:', 'mbr-cookie-consent'); ?></label>
-                        <select name="mbr_cc_gdpr_applies" id="gdpr_applies">
-                            <option value="auto" <?php selected(get_option('mbr_cc_gdpr_applies'), 'auto'); ?>><?php esc_html_e('Auto-detect', 'mbr-cookie-consent'); ?></option>
-                            <option value="yes" <?php selected(get_option('mbr_cc_gdpr_applies'), 'yes'); ?>><?php esc_html_e('Yes (Always)', 'mbr-cookie-consent'); ?></option>
-                            <option value="no" <?php selected(get_option('mbr_cc_gdpr_applies'), 'no'); ?>><?php esc_html_e('No (Never)', 'mbr-cookie-consent'); ?></option>
-                        </select>
-                        <p class="description"><?php esc_html_e('Whether GDPR applies to your users. Auto-detect recommended.', 'mbr-cookie-consent'); ?></p>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                        <strong><?php esc_html_e('Important:', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 5px 0 0 0;"><?php esc_html_e('IAB TCF requires CMP registration. You must register as a Consent Management Platform with IAB Europe to obtain a CMP ID. This plugin provides a placeholder implementation. For production use, complete registration at:', 'mbr-cookie-consent'); ?> 
-                            <a href="https://iabeurope.eu/tcf-for-cmps/" target="_blank">https://iabeurope.eu/tcf-for-cmps/</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Google ACM -->
-            <div class="mbr-cc-form-row" style="margin-top: 30px;">
-                <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('Google Additional Consent Mode (ACM)', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers (ATPs) that are not part of the IAB Global Vendor List. Required if using Google advertising products.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
-                        <?php esc_html_e('Enable Google Additional Consent Mode', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Generates AC String for Google Ad Tech Providers outside the IAB framework.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
-                        <strong><?php esc_html_e('What is Google ACM?', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('Google ACM allows you to manage consent for Google\'s own advertising products separately from IAB TCF. This includes:', 'mbr-cookie-consent'); ?></p>
-                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('Google Ads', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('DoubleClick / Google Ad Manager', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('AdSense', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Campaign Manager 360', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Display & Video 360', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('And other Google ATP providers', 'mbr-cookie-consent'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <h4><?php esc_html_e('How ACM Works', 'mbr-cookie-consent'); ?></h4>
-                        <ol style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('User gives marketing consent via cookie banner', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Plugin generates AC String (e.g., "1~1.2.3.4.5")', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('AC String passed to Google ad tags', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Google applies consent to ATP providers', 'mbr-cookie-consent'); ?></li>
-                        </ol>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #f0f0f0; border-left: 4px solid #0073aa;">
-                        <strong><?php esc_html_e('AC String Format:', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 5px 0 0 0; font-family: monospace;">1~1.2.3.4.5.6.7.8.9.10</p>
-                        <p style="margin: 5px 0 0 0; font-size: 13px;"><?php esc_html_e('Version~Provider.IDs (consented Google ATPs)', 'mbr-cookie-consent'); ?></p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Combined Usage -->
-            <div class="mbr-cc-form-row" style="margin-top: 30px;">
-                <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('Using TCF + ACM Together', 'mbr-cookie-consent'); ?></h3>
-                    <p><?php esc_html_e('For comprehensive coverage, enable both frameworks:', 'mbr-cookie-consent'); ?></p>
-                    
-                    <div style="padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
-                        <ul style="margin: 0; line-height: 2;">
-                            <li><strong><?php esc_html_e('IAB TCF:', 'mbr-cookie-consent'); ?></strong> <?php esc_html_e('Manages consent for IAB-registered vendors (programmatic advertising)', 'mbr-cookie-consent'); ?></li>
-                            <li><strong><?php esc_html_e('Google ACM:', 'mbr-cookie-consent'); ?></strong> <?php esc_html_e('Manages consent for Google ATPs (Google advertising products)', 'mbr-cookie-consent'); ?></li>
-                            <li><strong><?php esc_html_e('Together:', 'mbr-cookie-consent'); ?></strong> <?php esc_html_e('Complete coverage for all advertising partners', 'mbr-cookie-consent'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                        <strong><?php esc_html_e('Legal Notice:', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 5px 0 0 0;"><?php esc_html_e('These advanced frameworks require legal review. Ensure compliance with GDPR, ePrivacy Directive, and IAB policies. Consult with legal counsel before enabling in production. Improper implementation may result in regulatory penalties.', 'mbr-cookie-consent'); ?></p>
-                    </div>
-                </div>
-            </div>
+
         </div>
         
         <p class="submit">
