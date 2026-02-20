@@ -85,7 +85,9 @@ From version 1.5.0 the plugin now offers multisite enterprise-level support.
 2. Upload to `/wp-content/plugins/mbr-cookie-consent/`
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Add the following line to wp-config.php
+   
    define('MBR_CC_FORCE_GEOLOCATION', true);
+   
 5. Go to **Cookie Consent > Dashboard** to configure
 
 ### From Little Web Shack
@@ -95,6 +97,7 @@ From version 1.5.0 the plugin now offers multisite enterprise-level support.
 3. Upload via WordPress admin or FTP
 4. Activate and configure
 5. Add the following line to wp-config.php
+   
    define('MBR_CC_FORCE_GEOLOCATION', true);
 
 ## Quick Start Guide
