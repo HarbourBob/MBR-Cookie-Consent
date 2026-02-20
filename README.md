@@ -367,7 +367,7 @@ The plugin uses output buffering to intercept and modify HTML before it reaches 
 ## Support
 
 For support, feature requests, or bug reports:
-- Email: [Your contact email]
+- Email: [rob@littlewebshack.com]
 - Website: [Little Web Shack](https://littlewebshack.com)
 - Documentation: See plugin admin pages
 
@@ -397,6 +397,13 @@ For support, feature requests, or bug reports:
 - A/B testing for banner variations
 
 ## Changelog
+
+### 1.6.1 - Minor Bug Fixing
+- **Minor bug fixing to Admin Interface
+
+### 1.6.0 - Geolocation
+- **Geolocation Feature
+- **Redesigned Admin Interface for better UX
 
 ### 1.5.1 - Minor Bug Fixing
 - **Minor bug fixing to the Consent Log
