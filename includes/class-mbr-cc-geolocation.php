@@ -55,16 +55,21 @@ class MBR_CC_Geolocation {
      * Constructor
      */
     private function __construct() {
-        // Hook to detect location early
-        add_action('init', array($this, 'detect_location'));
+        // Don't detect in constructor - wait for get_region() to be called
+        // This ensures fresh detection per request, not cached in singleton
     }
     
     /**
      * Detect user's location
      */
     public function detect_location() {
-        // Check if geolocation is enabled
-        if (!get_option('mbr_cc_geolocation_enabled', false)) {
+        // Check if geolocation is enabled (constant or option)
+        $geo_enabled = defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION;
+        if (!$geo_enabled) {
+            $geo_enabled = get_option('mbr_cc_geolocation_enabled', false);
+        }
+        
+        if (!$geo_enabled) {
             $this->region = 'default';
             return;
         }
@@ -72,6 +77,7 @@ class MBR_CC_Geolocation {
         // Check cache first
         $cached = $this->get_cached_location();
         if ($cached) {
+            $ip = $this->get_user_ip();
             $this->country_code = $cached['country'];
             $this->region = $cached['region'];
             return;
@@ -124,6 +130,7 @@ class MBR_CC_Geolocation {
      * Detect country from IP address
      */
     private function detect_country_from_ip($ip) {
+        
         // Allow manual override for testing
         if (defined('MBR_CC_TEST_COUNTRY')) {
             return MBR_CC_TEST_COUNTRY;
@@ -157,9 +164,11 @@ class MBR_CC_Geolocation {
                 $country = $this->detect_via_ipapi($ip);
         }
         
+        
         // Fallback to default if detection fails
         if (!$country) {
-            $country = $this->get_default_country();
+            $default = $this->get_default_country();
+            $country = $default;
         }
         
         return strtoupper($country);
@@ -296,9 +305,8 @@ class MBR_CC_Geolocation {
      * Get detected region
      */
     public function get_region() {
-        if ($this->region === null) {
-            $this->detect_location();
-        }
+        // Always detect fresh for each request (don't trust cached object property)
+        $this->detect_location();
         return $this->region;
     }
     

@@ -48,7 +48,15 @@ class MBR_CC_Region_Config {
      * Apply region-specific configuration
      */
     public function apply_region_config($config) {
-        if (!get_option('mbr_cc_geolocation_enabled', false)) {
+        
+        // Check constant first, then database option
+        $geo_enabled = defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION;
+        
+        if (!$geo_enabled) {
+            $geo_enabled = get_option('mbr_cc_geolocation_enabled', false);
+        }
+        
+        if (!$geo_enabled) {
             return $config;
         }
         
@@ -60,6 +68,7 @@ class MBR_CC_Region_Config {
             $region_config = $this->$method();
             $config = array_merge($config, $region_config);
         }
+        
         
         return $config;
     }
@@ -112,8 +121,8 @@ class MBR_CC_Region_Config {
             'enable_ccpa' => true,
             'ccpa_link_text' => get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information'),
             
-            // Reject button optional
-            'show_reject_button' => get_option('mbr_cc_ccpa_show_reject', true),
+            // Reject button not typically needed for CCPA (they use "Do Not Sell" instead)
+            'show_reject_button' => false,
             
             // CCPA-specific text
             'banner_heading' => get_option('mbr_cc_geolocation_ccpa_heading', 'Your Privacy Rights'),

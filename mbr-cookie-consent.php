@@ -162,6 +162,10 @@ class MBR_Cookie_Consent {
         // Initialize Google ACM.
         MBR_CC_Google_ACM::get_instance();
         
+        // Initialize geolocation and regional config (must run before banner).
+        MBR_CC_Geolocation::get_instance();
+        MBR_CC_Region_Config::get_instance();
+        
         // Initialize banner display.
         MBR_CC_Banner::get_instance();
         

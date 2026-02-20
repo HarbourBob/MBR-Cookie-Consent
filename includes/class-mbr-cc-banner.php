@@ -150,10 +150,21 @@ class MBR_CC_Banner {
         $customize_text = $i18n::get_translated_string('customize_button',
             get_option('mbr_cc_customize_button_text', 'Customize'));
         
-        $show_reject = get_option('mbr_cc_show_reject_button', true);
-        $show_customize = get_option('mbr_cc_show_customize_button', true);
+        // Get base configuration from options
+        $base_config = array(
+            'show_reject_button' => get_option('mbr_cc_show_reject_button', true),
+            'show_customize_button' => get_option('mbr_cc_show_customize_button', true),
+            'enable_ccpa' => get_option('mbr_cc_enable_ccpa', false),
+        );
         
-        $enable_ccpa = get_option('mbr_cc_enable_ccpa', false);
+        // Apply geolocation-based regional overrides
+        $config = apply_filters('mbr_cc_banner_config', $base_config);
+        
+        // Use filtered values
+        $show_reject = $config['show_reject_button'];
+        $show_customize = $config['show_customize_button'];
+        $enable_ccpa = $config['enable_ccpa'];
+        
         $ccpa_text = $i18n::get_translated_string('ccpa_link',
             get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information'));
         
