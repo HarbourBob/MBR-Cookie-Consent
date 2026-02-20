@@ -35,7 +35,7 @@ if (!defined('ABSPATH')) {
         </button>
         <button type="button" class="mbr-cc-tab-button" data-tab="i18n">
             <span class="dashicons dashicons-translation"></span>
-            <?php esc_html_e('i18n & Accessibility', 'mbr-cookie-consent'); ?>
+            <?php esc_html_e('Int\'l & Accessibility', 'mbr-cookie-consent'); ?>
         </button>
         <button type="button" class="mbr-cc-tab-button" data-tab="advanced-consent">
             <span class="dashicons dashicons-shield"></span>
@@ -53,28 +53,44 @@ if (!defined('ABSPATH')) {
         <div class="mbr-cc-tab-content active" id="tab-banner">
         <!-- Banner Appearance -->
         <div class="mbr-cc-settings-section">
-            <h2><?php esc_html_e('Banner Appearance', 'mbr-cookie-consent'); ?></h2>
+            <h2><?php esc_html_e('Banner Layout', 'mbr-cookie-consent'); ?></h2>
+            <p class="description"><?php esc_html_e('Choose how your cookie banner appears to visitors', 'mbr-cookie-consent'); ?></p>
             
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label for="banner_position"><?php esc_html_e('Banner Position', 'mbr-cookie-consent'); ?></label>
-                    <select name="mbr_cc_banner_position" id="banner_position">
-                        <option value="bottom" <?php selected(get_option('mbr_cc_banner_position'), 'bottom'); ?>><?php esc_html_e('Bottom', 'mbr-cookie-consent'); ?></option>
-                        <option value="top" <?php selected(get_option('mbr_cc_banner_position'), 'top'); ?>><?php esc_html_e('Top', 'mbr-cookie-consent'); ?></option>
-                    </select>
-                </div>
+            <div class="mbr-cc-layout-grid">
+                <?php
+                $current_layout = get_option('mbr_cc_banner_layout', 'bar');
+                $current_position = get_option('mbr_cc_banner_position', 'bottom');
+                $layouts = array(
+                    'bar-bottom' => array('label' => 'Bottom Bar', 'position' => 'bottom', 'layout' => 'bar'),
+                    'bar-top' => array('label' => 'Top Bar', 'position' => 'top', 'layout' => 'bar'),
+                    'box-left' => array('label' => 'Bottom Left', 'position' => 'bottom', 'layout' => 'box-left'),
+                    'box-right' => array('label' => 'Bottom Right', 'position' => 'bottom', 'layout' => 'box-right'),
+                    'popup' => array('label' => 'Center Popup', 'position' => 'bottom', 'layout' => 'popup'),
+                );
                 
-                <div class="mbr-cc-form-field">
-                    <label for="banner_layout"><?php esc_html_e('Banner Layout', 'mbr-cookie-consent'); ?></label>
-                    <select name="mbr_cc_banner_layout" id="banner_layout">
-                        <option value="bar" <?php selected(get_option('mbr_cc_banner_layout'), 'bar'); ?>><?php esc_html_e('Bar (Full Width)', 'mbr-cookie-consent'); ?></option>
-                        <option value="box-left" <?php selected(get_option('mbr_cc_banner_layout'), 'box-left'); ?>><?php esc_html_e('Box (Bottom Left)', 'mbr-cookie-consent'); ?></option>
-                        <option value="box-right" <?php selected(get_option('mbr_cc_banner_layout'), 'box-right'); ?>><?php esc_html_e('Box (Bottom Right)', 'mbr-cookie-consent'); ?></option>
-                        <option value="popup" <?php selected(get_option('mbr_cc_banner_layout'), 'popup'); ?>><?php esc_html_e('Popup (Center)', 'mbr-cookie-consent'); ?></option>
-                    </select>
-                    <p class="description"><?php esc_html_e('Choose how the cookie consent banner appears on your site.', 'mbr-cookie-consent'); ?></p>
-                </div>
+                foreach ($layouts as $key => $layout) :
+                    $is_selected = ($current_layout === $layout['layout'] && $current_position === $layout['position']);
+                ?>
+                    <label class="mbr-cc-layout-card <?php echo $is_selected ? 'selected' : ''; ?>">
+                        <input type="radio" name="mbr_cc_layout_option" value="<?php echo esc_attr($key); ?>" <?php checked($is_selected); ?>>
+                        <div class="layout-preview layout-preview-<?php echo esc_attr($key); ?>">
+                            <div class="preview-browser">
+                                <div class="preview-banner"></div>
+                            </div>
+                        </div>
+                        <span class="layout-label"><?php echo esc_html($layout['label']); ?></span>
+                    </label>
+                <?php endforeach; ?>
             </div>
+            
+            <!-- Hidden fields for actual values -->
+            <input type="hidden" name="mbr_cc_banner_position" id="banner_position" value="<?php echo esc_attr($current_position); ?>">
+            <input type="hidden" name="mbr_cc_banner_layout" id="banner_layout" value="<?php echo esc_attr($current_layout); ?>">
+        </div>
+        
+        <!-- Colors -->
+        <div class="mbr-cc-settings-section">
+            <h2><?php esc_html_e('Colors', 'mbr-cookie-consent'); ?></h2>
             
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field">
@@ -145,12 +161,15 @@ if (!defined('ABSPATH')) {
             <h2><?php esc_html_e('Revisit Consent Button', 'mbr-cookie-consent'); ?></h2>
             
             <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_revisit_consent_enabled" value="1" <?php checked(get_option('mbr_cc_revisit_consent_enabled', true)); ?>>
-                        <?php esc_html_e('Show Revisit Consent Button', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
-                    <p class="description"><?php esc_html_e('Display a floating button allowing users to change their cookie preferences.', 'mbr-cookie-consent'); ?></p>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Show Revisit Consent Button', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Display a floating button allowing users to change their cookie preferences.', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
             </div>
             
@@ -169,11 +188,16 @@ if (!defined('ABSPATH')) {
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field" style="width: 100%;">
                     <h4><?php esc_html_e('Privacy Policy', 'mbr-cookie-consent'); ?></h4>
-                    <label>
-                        <input type="checkbox" name="mbr_cc_show_privacy_policy_link" value="1" <?php checked(get_option('mbr_cc_show_privacy_policy_link', false)); ?>>
-                        <?php esc_html_e('Show Privacy Policy link in banner', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <br><br>
+                    <div class="mbr-cc-toggle-wrapper">
+                        <label class="mbr-cc-toggle-switch">
+                            <input type="checkbox" name="mbr_cc_show_privacy_policy_link" value="1" <?php checked(get_option('mbr_cc_show_privacy_policy_link', false)); ?>>
+                            <span class="mbr-cc-toggle-slider"></span>
+                        </label>
+                        <div class="mbr-cc-toggle-label">
+                            <strong><?php esc_html_e('Show Privacy Policy link in banner', 'mbr-cookie-consent'); ?></strong>
+                        </div>
+                    </div>
+                    <br>
                     <label for="privacy_policy_text"><?php esc_html_e('Link Text', 'mbr-cookie-consent'); ?></label>
                     <input type="text" name="mbr_cc_privacy_policy_text" id="privacy_policy_text" value="<?php echo esc_attr(get_option('mbr_cc_privacy_policy_text', 'Privacy Policy')); ?>">
                     <br><br>
@@ -185,11 +209,16 @@ if (!defined('ABSPATH')) {
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field" style="width: 100%;">
                     <h4><?php esc_html_e('Cookie Policy', 'mbr-cookie-consent'); ?></h4>
-                    <label>
-                        <input type="checkbox" name="mbr_cc_show_cookie_policy_link" value="1" <?php checked(get_option('mbr_cc_show_cookie_policy_link', false)); ?>>
-                        <?php esc_html_e('Show Cookie Policy link in banner', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <br><br>
+                    <div class="mbr-cc-toggle-wrapper">
+                        <label class="mbr-cc-toggle-switch">
+                            <input type="checkbox" name="mbr_cc_show_cookie_policy_link" value="1" <?php checked(get_option('mbr_cc_show_cookie_policy_link', false)); ?>>
+                            <span class="mbr-cc-toggle-slider"></span>
+                        </label>
+                        <div class="mbr-cc-toggle-label">
+                            <strong><?php esc_html_e('Show Cookie Policy link in banner', 'mbr-cookie-consent'); ?></strong>
+                        </div>
+                    </div>
+                    <br>
                     <label for="cookie_policy_text"><?php esc_html_e('Link Text', 'mbr-cookie-consent'); ?></label>
                     <input type="text" name="mbr_cc_cookie_policy_text" id="cookie_policy_text" value="<?php echo esc_attr(get_option('mbr_cc_cookie_policy_text', 'Cookie Policy')); ?>">
                     <br><br>
@@ -229,34 +258,48 @@ if (!defined('ABSPATH')) {
             <h2><?php esc_html_e('Banner Options', 'mbr-cookie-consent'); ?></h2>
             
             <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_show_reject_button" value="1" <?php checked(get_option('mbr_cc_show_reject_button', true)); ?>>
-                        <?php esc_html_e('Show Reject All Button', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Show Reject All Button', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Recommended for GDPR compliance', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
                 
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_show_customize_button" value="1" <?php checked(get_option('mbr_cc_show_customize_button', true)); ?>>
-                        <?php esc_html_e('Show Customize Button', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Show Customize Button', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Lets users choose which cookie categories to accept', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
                 
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_show_close_button" value="1" <?php checked(get_option('mbr_cc_show_close_button', false)); ?>>
-                        <?php esc_html_e('Show X (Close) Button', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
-                    <p class="description"><?php esc_html_e('Required by Italian law. Closes banner without saving consent.', 'mbr-cookie-consent'); ?></p>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Show X (Close) Button', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Required by Italian law. Closes banner without saving consent.', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
                 
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_reload_on_consent" value="1" <?php checked(get_option('mbr_cc_reload_on_consent', false)); ?>>
-                        <?php esc_html_e('Reload Page on Consent', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
-                    <p class="description"><?php esc_html_e('Automatically reload the page when users accept or reject cookies.', 'mbr-cookie-consent'); ?></p>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Reload Page on Consent', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Automatically reload the page when users accept or reject cookies.', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
             </div>
             
@@ -273,12 +316,15 @@ if (!defined('ABSPATH')) {
             <h2><?php esc_html_e('CCPA / California Privacy', 'mbr-cookie-consent'); ?></h2>
             
             <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field">
-                    <label>
+                <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
                         <input type="checkbox" name="mbr_cc_enable_ccpa" value="1" <?php checked(get_option('mbr_cc_enable_ccpa', false)); ?>>
-                        <?php esc_html_e('Enable CCPA "Do Not Sell" Link', 'mbr-cookie-consent'); ?>
+                        <span class="mbr-cc-toggle-slider"></span>
                     </label>
-                    <p class="description"><?php esc_html_e('Shows a clickable link in the banner that allows users to opt out of data selling/sharing. When clicked, it rejects all Marketing and Analytics cookies (CCPA compliance for California users).', 'mbr-cookie-consent'); ?></p>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Enable CCPA "Do Not Sell" Link', 'mbr-cookie-consent'); ?></strong>
+                        <p class="description"><?php esc_html_e('Shows a clickable link in the banner that allows users to opt out of data selling/sharing. When clicked, it rejects all Marketing and Analytics cookies (CCPA compliance for California users).', 'mbr-cookie-consent'); ?></p>
+                    </div>
                 </div>
             </div>
             
@@ -305,29 +351,53 @@ if (!defined('ABSPATH')) {
                     <h3><?php esc_html_e('Google Consent Mode v2', 'mbr-cookie-consent'); ?></h3>
                     <p class="description"><?php esc_html_e('Google Consent Mode allows Google tags (Analytics, Ads) to adjust their behavior based on user consent choices. This ensures compliance while maintaining conversion measurement capabilities.', 'mbr-cookie-consent'); ?></p>
                     
-                    <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_google_consent_mode" value="1" <?php checked(get_option('mbr_cc_google_consent_mode', false)); ?>>
-                        <?php esc_html_e('Enable Google Consent Mode v2', 'mbr-cookie-consent'); ?>
-                    </label>
+                    <div class="mbr-cc-toggle-wrapper" style="margin-top: 15px;">
+                        <label class="mbr-cc-toggle-switch">
+                            <input type="checkbox" name="mbr_cc_google_consent_mode" value="1" <?php checked(get_option('mbr_cc_google_consent_mode', false)); ?>>
+                            <span class="mbr-cc-toggle-slider"></span>
+                        </label>
+                        <div class="mbr-cc-toggle-label">
+                            <strong><?php esc_html_e('Enable Google Consent Mode v2', 'mbr-cookie-consent'); ?></strong>
+                            <p class="description"><?php esc_html_e('Automatically updates Google services consent status', 'mbr-cookie-consent'); ?></p>
+                        </div>
+                    </div>
                     <p class="description"><?php esc_html_e('Activates consent mode signals for Google Analytics, Google Ads, and other Google services.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 15px; padding-left: 25px;">
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_google_default_deny" value="1" <?php checked(get_option('mbr_cc_google_default_deny', true)); ?>>
-                            <?php esc_html_e('Default to "Denied" (Recommended for EU/EEA)', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_google_default_deny" value="1" <?php checked(get_option('mbr_cc_google_default_deny', true)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Default to "Denied" (Recommended for EU/EEA)', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description"><?php esc_html_e('Sets default consent state to denied before user interaction. Recommended for GDPR compliance.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-top: 15px; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_google_ads_redaction" value="1" <?php checked(get_option('mbr_cc_google_ads_redaction', true)); ?>>
-                            <?php esc_html_e('Enable Ads Data Redaction', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_google_ads_redaction" value="1" <?php checked(get_option('mbr_cc_google_ads_redaction', true)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Ads Data Redaction', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description"><?php esc_html_e('Redacts ads-related data when marketing consent is not given. Recommended for privacy compliance.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-top: 15px; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_google_url_passthrough" value="1" <?php checked(get_option('mbr_cc_google_url_passthrough', false)); ?>>
-                            <?php esc_html_e('Enable URL Passthrough', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_google_url_passthrough" value="1" <?php checked(get_option('mbr_cc_google_url_passthrough', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable URL Passthrough', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description"><?php esc_html_e('Passes ad click information through URLs for conversion tracking without cookies. Use with caution as it may affect privacy.', 'mbr-cookie-consent'); ?></p>
                     </div>
                 </div>
@@ -339,16 +409,28 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('Microsoft UET (Universal Event Tracking) Consent Mode ensures Microsoft Advertising tags comply with EU data protection requirements by adjusting tag behavior based on consent.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_microsoft_consent_mode" value="1" <?php checked(get_option('mbr_cc_microsoft_consent_mode', false)); ?>>
-                        <?php esc_html_e('Enable Microsoft UET Consent Mode', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_microsoft_consent_mode" value="1" <?php checked(get_option('mbr_cc_microsoft_consent_mode', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Microsoft UET Consent Mode', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Activates consent mode signals for Microsoft Advertising (Bing Ads) UET tags.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 15px; padding-left: 25px;">
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_microsoft_default_deny" value="1" <?php checked(get_option('mbr_cc_microsoft_default_deny', true)); ?>>
-                            <?php esc_html_e('Default to "Denied" (Recommended for EU)', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_microsoft_default_deny" value="1" <?php checked(get_option('mbr_cc_microsoft_default_deny', true)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Default to "Denied" (Recommended for EU)', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description"><?php esc_html_e('Sets default consent state to denied before user interaction. Recommended for GDPR compliance.', 'mbr-cookie-consent'); ?></p>
                     </div>
                 </div>
@@ -380,9 +462,15 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('Automatically translate banner text based on visitor browser language. Supports 40+ languages including English, Spanish, French, German, Japanese, Chinese, and many more.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_auto_translate" value="1" <?php checked(get_option('mbr_cc_auto_translate', true)); ?>>
-                        <?php esc_html_e('Enable Auto-Translation', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_auto_translate" value="1" <?php checked(get_option('mbr_cc_auto_translate', true)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Auto-Translation', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Automatically detects visitor language from browser settings and displays the banner in their native language.', 'mbr-cookie-consent'); ?></p>
                     
                     <?php 
@@ -418,9 +506,15 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('Accessibility features ensure your cookie banner is usable by everyone, including people using screen readers and keyboard navigation.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_wcag_compliance" value="1" <?php checked(get_option('mbr_cc_wcag_compliance', true)); ?>>
-                        <?php esc_html_e('Enable WCAG/ADA Compliance Features', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_wcag_compliance" value="1" <?php checked(get_option('mbr_cc_wcag_compliance', true)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable WCAG/ADA Compliance Features', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Enables accessibility enhancements including screen reader announcements, keyboard navigation, focus management, and proper ARIA attributes.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 15px; padding: 15px; background: #f0f0f0; border-left: 4px solid #0073aa;">
@@ -460,9 +554,15 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('The IAB Europe Transparency & Consent Framework (TCF) is the industry standard for managing consent for digital advertising. Required for publishers and advertisers operating in Europe.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_iab_tcf_enabled" value="1" <?php checked(get_option('mbr_cc_iab_tcf_enabled', false)); ?>>
-                        <?php esc_html_e('Enable IAB TCF v2.3', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_iab_tcf_enabled" value="1" <?php checked(get_option('mbr_cc_iab_tcf_enabled', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable IAB TCF v2.3', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Implements the __tcfapi JavaScript API and generates TCF-compliant consent strings.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
@@ -490,9 +590,15 @@ if (!defined('ABSPATH')) {
                         <p class="description"><?php esc_html_e('2-letter ISO country code (e.g., GB, DE, FR). Required for TCF compliance.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-top: 15px;">
-                            <input type="checkbox" name="mbr_cc_purpose_one_treatment" value="1" <?php checked(get_option('mbr_cc_purpose_one_treatment', false)); ?>>
-                            <?php esc_html_e('Enable Purpose One Treatment', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_purpose_one_treatment" value="1" <?php checked(get_option('mbr_cc_purpose_one_treatment', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Purpose One Treatment', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description"><?php esc_html_e('For publishers in jurisdictions that do not require consent for Purpose 1 (Store/Access Information). Consult legal counsel.', 'mbr-cookie-consent'); ?></p>
                         
                         <label for="gdpr_applies" style="display: block; margin-top: 15px;"><?php esc_html_e('GDPR Applies:', 'mbr-cookie-consent'); ?></label>
@@ -520,9 +626,15 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers (ATPs) that are not part of the IAB Global Vendor List. Required if using Google advertising products.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
-                        <?php esc_html_e('Enable Google Additional Consent Mode', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Google Additional Consent Mode', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Generates AC String for Google Ad Tech Providers outside the IAB framework.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
@@ -571,27 +683,51 @@ if (!defined('ABSPATH')) {
                         <h4><?php esc_html_e('Quick Exclusions', 'mbr-cookie-consent'); ?></h4>
                         
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_exclude_login" value="1" <?php checked(get_option('mbr_cc_exclude_login', false)); ?>>
-                            <?php esc_html_e('Hide on Login Pages', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_exclude_login" value="1" <?php checked(get_option('mbr_cc_exclude_login', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Hide on Login Pages', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description" style="margin-left: 25px; margin-bottom: 15px;"><?php esc_html_e('Excludes WordPress login, WooCommerce login, and other login pages.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_exclude_checkout" value="1" <?php checked(get_option('mbr_cc_exclude_checkout', false)); ?>>
-                            <?php esc_html_e('Hide on Checkout Pages', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_exclude_checkout" value="1" <?php checked(get_option('mbr_cc_exclude_checkout', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Hide on Checkout Pages', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description" style="margin-left: 25px; margin-bottom: 15px;"><?php esc_html_e('Excludes WooCommerce and Easy Digital Downloads checkout pages.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_exclude_cart" value="1" <?php checked(get_option('mbr_cc_exclude_cart', false)); ?>>
-                            <?php esc_html_e('Hide on Cart Pages', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_exclude_cart" value="1" <?php checked(get_option('mbr_cc_exclude_cart', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Hide on Cart Pages', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description" style="margin-left: 25px; margin-bottom: 15px;"><?php esc_html_e('Excludes WooCommerce cart page.', 'mbr-cookie-consent'); ?></p>
                         
                         <label style="display: block; margin-bottom: 10px;">
-                            <input type="checkbox" name="mbr_cc_exclude_account" value="1" <?php checked(get_option('mbr_cc_exclude_account', false)); ?>>
-                            <?php esc_html_e('Hide on Account Pages', 'mbr-cookie-consent'); ?>
-                        </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_exclude_account" value="1" <?php checked(get_option('mbr_cc_exclude_account', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Hide on Account Pages', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                         <p class="description" style="margin-left: 25px;"><?php esc_html_e('Excludes WooCommerce and EDD account/dashboard pages.', 'mbr-cookie-consent'); ?></p>
                     </div>
                     
@@ -641,9 +777,15 @@ if (!defined('ABSPATH')) {
                     <p class="description"><?php esc_html_e('Share consent preferences across all subdomains. Useful for sites with multiple subdomains (shop.example.com, blog.example.com, etc.).', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_subdomain_sharing" value="1" <?php checked(get_option('mbr_cc_subdomain_sharing', false)); ?>>
-                        <?php esc_html_e('Enable Subdomain Consent Sharing', 'mbr-cookie-consent'); ?>
-                    </label>
+                        <div class="mbr-cc-toggle-wrapper">
+                            <label class="mbr-cc-toggle-switch">
+                                <input type="checkbox" name="mbr_cc_subdomain_sharing" value="1" <?php checked(get_option('mbr_cc_subdomain_sharing', false)); ?>>
+                                <span class="mbr-cc-toggle-slider"></span>
+                            </label>
+                            <div class="mbr-cc-toggle-label">
+                                <strong><?php esc_html_e('Enable Subdomain Consent Sharing', 'mbr-cookie-consent'); ?></strong>
+                            </div>
+                        </div>
                     <p class="description"><?php esc_html_e('Cookie consent will be shared across all subdomains of your root domain.', 'mbr-cookie-consent'); ?></p>
                     
                     <div style="margin-top: 15px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
@@ -690,3 +832,28 @@ if (!defined('ABSPATH')) {
         </p>
     </form>
 </div>
+
+<script>
+jQuery(document).ready(function($) {
+    // Layout selection
+    $('input[name="mbr_cc_layout_option"]').on('change', function() {
+        var value = $(this).val();
+        var parts = value.split('-');
+        
+        if (value === 'popup') {
+            $('#banner_layout').val('popup');
+            $('#banner_position').val('bottom');
+        } else if (value.startsWith('bar-')) {
+            $('#banner_layout').val('bar');
+            $('#banner_position').val(parts[1]);
+        } else {
+            $('#banner_layout').val(value);
+            $('#banner_position').val('bottom');
+        }
+        
+        // Update visual selection
+        $('.mbr-cc-layout-card').removeClass('selected');
+        $(this).closest('.mbr-cc-layout-card').addClass('selected');
+    });
+});
+</script>

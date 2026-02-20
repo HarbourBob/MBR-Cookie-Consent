@@ -43,10 +43,15 @@ $region_name = $geo->get_region_name();
     <!-- Enable Geolocation -->
     <div class="mbr-cc-form-row" style="margin-top: 25px;">
         <div class="mbr-cc-form-field">
-            <label>
-                <input type="checkbox" name="mbr_cc_geolocation_enabled" value="1" <?php checked(get_option('mbr_cc_geolocation_enabled', false)); ?>>
-                <?php esc_html_e('Enable Automatic Geolocation', 'mbr-cookie-consent'); ?>
-            </label>
+            <div class="mbr-cc-toggle-wrapper">
+                    <label class="mbr-cc-toggle-switch">
+                        <input type="checkbox" name="mbr_cc_geolocation_enabled" value="1" <?php checked(get_option('mbr_cc_geolocation_enabled', false)); ?>>
+                        <span class="mbr-cc-toggle-slider"></span>
+                    </label>
+                    <div class="mbr-cc-toggle-label">
+                        <strong><?php esc_html_e('Enable Automatic Geolocation', 'mbr-cookie-consent'); ?></strong>
+                    </div>
+                </div>
             <p class="description"><?php esc_html_e('Automatically detect user location and apply region-specific privacy requirements.', 'mbr-cookie-consent'); ?></p>
         </div>
     </div>
