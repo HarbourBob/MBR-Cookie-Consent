@@ -3,9 +3,9 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com
  * Description: GDPR, CCPA, and global privacy law compliant cookie consent management with automatic script blocking and consent logging.
- * Version: 1.5.1
+ * Version: 1.6.0
  * Author: Made by Robert
- * Author URI: https://madeberobert.com
+ * Author URI: https://madebyrobert.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: mbr-cookie-consent
@@ -47,7 +47,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '1.5.1');
+define('MBR_CC_VERSION', '1.6.0');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -89,6 +89,8 @@ class MBR_Cookie_Consent {
      */
     private function load_dependencies() {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-database.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-geolocation.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-region-config.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-script-blocker.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-banner.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-consent-manager.php';
@@ -103,6 +105,7 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-privacy-policy-generator.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-admin.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-settings.php';
+        require_once MBR_CC_PLUGIN_DIR . 'admin/geolocation-ajax.php';
         
         // Load network admin for multisite
         if (is_multisite()) {
