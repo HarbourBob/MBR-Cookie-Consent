@@ -246,11 +246,13 @@ Other plugins charge for these. We don't:
 2. Go to Plugins > Add New
 3. Search "MBR Cookie Consent"
 4. Click Install Now > Activate
-5. Visit Cookie Consent > Dashboard
-6. Click "Generate Cookie Policy Page"
-7. Click "Generate Privacy Policy Page"
-8. Go to Settings to customize colors/text
-9. Test in incognito window
+5. Add the following line to wp-config.php
+   define('MBR_CC_FORCE_GEOLOCATION', true);
+6. Visit Cookie Consent > Dashboard
+7. Click "Generate Cookie Policy Page"
+8. Click "Generate Privacy Policy Page"
+9. Go to Settings to customize colors/text
+10. Test in incognito window
 
 Done! Your site is now compliant.
 
@@ -814,5 +816,6 @@ This plugin provides technical tools to help implement cookie consent mechanisms
 - Data protection requirements
 
 The plugin developer is not liable for regulatory penalties, legal issues, or misuse of the plugin.
+
 
 Generated privacy and cookie policies are templates requiring professional legal review before publication.
