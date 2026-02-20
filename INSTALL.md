@@ -5,7 +5,9 @@
 1. Download mbr-cookie-consent.zip
 2. Upload via WordPress admin (Plugins > Add New > Upload)
 3. Activate the plugin
-4. Go to Cookie Consent > Dashboard
+4. Add the following line to wp-config.php
+   define('MBR_CC_FORCE_GEOLOCATION', true);
+5. Go to Cookie Consent > Dashboard
 
 ## 5-Minute Setup
 
