@@ -27,7 +27,7 @@ From version 1.5.0 the plugin now offers multi-site enterprise-level support.
 - **Consent Logging**: Records and exports user consent in CSV format
 - **GDPR-Compliant Storage**: IP anonymization and proper data handling
 - **Multisite support**: Automatically detects networks andadjusts settings accordingly
-- **Geolocation** Automatically detects the visitor's country of location and displays an appropriate banner
+- **Geolocation**: Automatically detects the visitor's country of location and displays an appropriate banner
 
 #### Consent Mode Integration (Phase 2)
 - **Google Consent Mode v2**: Full integration with Google's consent framework
