@@ -398,6 +398,17 @@ For support, feature requests, or bug reports:
 
 ## Changelog
 
+### 1.8.0
+- **New: Elementor video widget blocking — YouTube and other embeds placed via Elementor's Video widget and the newer e-youtube-base component are now correctly blocked pending consent. Previously only standard HTML iframes were intercepted; Elementor renders videos entirely via JavaScript making PHP-level blocking ineffective.
+- **New: Automatic built-in service library — common third-party services (YouTube, Vimeo, Google Maps, Google Analytics, Facebook Pixel, and more) are now blocked automatically by consent category with no manual configuration required.
+- **New: After accepting cookies on a page with blocked Elementor videos, the page automatically reloads so videos initialise cleanly.
+- **New: Blocked video placeholder shown in place of Elementor video widgets, matching the existing blocked content overlay style, with an "Accept cookies & play video" button.
+- **Fix: Script blocker now matches iframes using data-lazy-src and data-src attributes in addition to src, ensuring compatibility with WP Rocket and other lazy-load plugins.
+- **Fix: Per-category unblocking — accepting one cookie category (e.g. Analytics) no longer incorrectly unblocks services from a different category (e.g. Marketing/YouTube).
+- **Fix: WP Rocket exclusion filters added so lazy-load transformation of blocked iframes is suppressed.
+- **Improvement: Blocked elements now carry a data-mbr-cc-category attribute enabling precise per-category restore logic on consent.
+
+
 ### 1.6.1 - Minor Bug Fixing
 - **Minor bug fixing to Admin Interface
 
