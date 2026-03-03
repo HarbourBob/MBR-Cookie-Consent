@@ -257,26 +257,30 @@
         unblockScripts: function(consent) {
             var self = this;
             
-            // Find all blocked scripts
+            // Find all blocked scripts and unblock per-category.
             $('script[data-mbr-cc-blocked="true"]').each(function() {
                 var $script = $(this);
-                var src = $script.data('mbr-cc-src');
+                var src      = $script.data('mbr-cc-src');
+                var category = $script.data('mbr-cc-category') || 'marketing';
                 
-                // Check if we should unblock this script
-                // For now, just check if consent was given
-                if (consent.all || self.hasConsent(consent)) {
+                if (consent.all || consent[category] === true) {
                     self.unblockScript($script, src);
                 }
             });
             
-            // Unblock iframes
+            // Unblock iframes per-category.
             $('iframe[data-mbr-cc-blocked="true"]').each(function() {
-                var $iframe = $(this);
-                var src = $iframe.data('mbr-cc-src');
+                var $iframe  = $(this);
+                var src      = $iframe.data('mbr-cc-src');
+                var category = $iframe.data('mbr-cc-category') || 'marketing';
                 
-                if (consent.all || self.hasConsent(consent)) {
-                    $iframe.attr('src', src);
-                    $iframe.removeAttr('data-mbr-cc-blocked');
+                if (consent.all || consent[category] === true) {
+                    $iframe.attr('src', src)
+                           .removeAttr('style')
+                           .removeAttr('aria-hidden')
+                           .removeAttr('data-mbr-cc-blocked');
+                    // Hide the placeholder overlay that sits before this iframe.
+                    $iframe.prev('.mbr-cc-blocked-wrapper').remove();
                 }
             });
         },
@@ -352,6 +356,10 @@
             return null;
         }
     };
+    
+    // Expose on window so other scripts (e.g. blocked-content.js) can call
+    // showPreferences() without needing to be inside this closure.
+    window.MbrCookieBanner = MbrCookieBanner;
     
     // Initialize on document ready
     $(document).ready(function() {

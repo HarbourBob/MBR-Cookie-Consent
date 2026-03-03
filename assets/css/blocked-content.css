@@ -1,0 +1,178 @@
+/**
+ * MBR Cookie Consent — Blocked Content Overlay
+ *
+ * Styles the branded placeholder shown in place of blocked iframes / embeds.
+ * The accent colour is injected as CSS custom properties inline by PHP,
+ * falling back to the default WordPress admin blue when not set.
+ *
+ * @package MBR_Cookie_Consent
+ * @since   1.7.0
+ */
+
+/* ── Outer wrapper (replaces the blocked element in the DOM) ────────── */
+.mbr-cc-blocked-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 200px;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 Helvetica, Arial, sans-serif;
+}
+
+/* Subtle diagonal-stripe background so it reads as "inactive" */
+.mbr-cc-blocked-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 0, 0, 0.018) 10px,
+        rgba(0, 0, 0, 0.018) 20px
+    );
+    pointer-events: none;
+}
+
+/* ── Modal card ─────────────────────────────────────────────────────── */
+.mbr-cc-blocked-modal {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 32px;
+    max-width: 460px;
+    width: 90%;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+    text-align: center;
+    margin: 16px auto;
+}
+
+/* ── Logo — image variant ───────────────────────────────────────────── */
+.mbr-cc-blocked-logo {
+    display: block;
+    max-height: 48px;
+    max-width: 180px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Site icon variant gets rounded corners */
+.mbr-cc-blocked-logo--icon {
+    max-height: 40px;
+    max-width: 40px;
+    border-radius: 6px;
+}
+
+/* ── Logo — text fallback ───────────────────────────────────────────── */
+.mbr-cc-blocked-logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+}
+
+/* ── Lock icon circle ───────────────────────────────────────────────── */
+.mbr-cc-blocked-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    background: #fef3c7;
+    border-radius: 50%;
+    flex-shrink: 0;
+    color: #d97706;
+}
+
+.mbr-cc-blocked-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* ── Heading ────────────────────────────────────────────────────────── */
+.mbr-cc-blocked-heading {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ── Message ────────────────────────────────────────────────────────── */
+.mbr-cc-blocked-message {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.65;
+    max-width: 360px;
+}
+
+/* ── CTA button ─────────────────────────────────────────────────────── */
+.mbr-cc-blocked-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 20px;
+    /* PHP injects --mbr-cc-accent from the site's primary_color setting */
+    background: var(--mbr-cc-accent, #0073aa);
+    color: #ffffff !important;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none !important;
+    line-height: 1;
+    transition: background 0.15s ease, transform 0.1s ease;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.mbr-cc-blocked-btn:hover,
+.mbr-cc-blocked-btn:focus-visible {
+    background: var(--mbr-cc-accent-dark, #005a87);
+    color: #ffffff !important;
+    outline: 2px solid var(--mbr-cc-accent, #0073aa);
+    outline-offset: 2px;
+    transform: translateY(-1px);
+}
+
+.mbr-cc-blocked-btn:active {
+    transform: translateY(0);
+}
+
+.mbr-cc-blocked-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .mbr-cc-blocked-modal {
+        padding: 22px 18px;
+        gap: 12px;
+    }
+
+    .mbr-cc-blocked-heading {
+        font-size: 14px;
+    }
+
+    .mbr-cc-blocked-message {
+        font-size: 12px;
+    }
+}

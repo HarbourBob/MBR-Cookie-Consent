@@ -540,9 +540,9 @@ WHERE blog_id IS NULL;
 
 ## Support
 
-- 📖 [GitHub Wiki](https://github.com/harbourbob/mbr-cookie-consent/wiki)
-- 🐛 [Report Issues](https://github.com/harbourbob/mbr-cookie-consent/issues)
-- 💬 [Discussions](https://github.com/harbourbob/mbr-cookie-consent/discussions)
+- 📖 [GitHub Wiki](https://github.com/yourusername/mbr-cookie-consent/wiki)
+- 🐛 [Report Issues](https://github.com/yourusername/mbr-cookie-consent/issues)
+- 💬 [Discussions](https://github.com/yourusername/mbr-cookie-consent/discussions)
 
 ---
 

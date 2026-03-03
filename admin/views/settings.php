@@ -45,6 +45,10 @@ if (!defined('ABSPATH')) {
             <span class="dashicons dashicons-admin-tools"></span>
             <?php esc_html_e('Customization', 'mbr-cookie-consent'); ?>
         </button>
+        <button type="button" class="mbr-cc-tab-button" data-tab="content-blocking">
+            <span class="dashicons dashicons-hidden"></span>
+            <?php esc_html_e('Content Blocking', 'mbr-cookie-consent'); ?>
+        </button>
     </nav>
     
     <form method="post" id="mbr-cc-settings-form">
@@ -730,6 +734,113 @@ if (!defined('ABSPATH')) {
                 <?php esc_html_e('Save Settings', 'mbr-cookie-consent'); ?>
             </button>
         </p>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             TAB: CONTENT BLOCKING
+             New in v1.7.0 — blocked content overlay settings
+        ═══════════════════════════════════════════════════════════════ -->
+        <div class="mbr-cc-tab-content" id="tab-content-blocking">
+        <div class="mbr-cc-settings-section">
+            <h2><?php esc_html_e( 'Blocked Content Overlay', 'mbr-cookie-consent' ); ?></h2>
+            <p><?php esc_html_e( 'When content (such as an embedded map or video) is blocked because the visitor has not granted cookie consent, you can display a branded placeholder modal instead of a blank space. The modal explains why the content is hidden and provides a direct link to your cookie settings.', 'mbr-cookie-consent' ); ?></p>
+
+            <div style="margin-bottom: 20px; padding: 14px 16px; background: #e7f3e7; border-left: 4px solid #46b450;">
+                <strong><?php esc_html_e( 'Legal note:', 'mbr-cookie-consent' ); ?></strong>
+                <?php esc_html_e( 'Displaying this overlay is considered best practice under GDPR, UK GDPR, and similar regulations. It satisfies the transparency requirement by clearly informing visitors why content is unavailable, and fulfils the requirement that consent must be as easy to withdraw or amend as it was to give.', 'mbr-cookie-consent' ); ?>
+            </div>
+
+            <!-- Enable toggle -->
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e( 'Enable Overlay', 'mbr-cookie-consent' ); ?></h3>
+                    <label>
+                        <input type="checkbox"
+                               name="mbr_cc_blocked_overlay_enabled"
+                               id="mbr_cc_blocked_overlay_enabled"
+                               value="1"
+                               <?php checked( get_option( 'mbr_cc_blocked_overlay_enabled', false ) ); ?>>
+                        <?php esc_html_e( 'Show a branded placeholder where content is blocked pending cookie consent', 'mbr-cookie-consent' ); ?>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e( 'When enabled, blocked iframes and embeds display a styled modal card with your site logo, an explanatory message, and a button to open cookie settings. When disabled, blocked content is simply invisible.', 'mbr-cookie-consent' ); ?>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Text customisation -->
+            <div class="mbr-cc-form-row" style="margin-top: 24px;">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e( 'Overlay Text', 'mbr-cookie-consent' ); ?></h3>
+                    <p class="description"><?php esc_html_e( 'Leave any field blank to use the default text shown in the placeholder.', 'mbr-cookie-consent' ); ?></p>
+
+                    <div style="margin-top: 16px;">
+                        <label for="mbr_cc_blocked_overlay_heading" style="display:block; font-weight:600; margin-bottom:4px;">
+                            <?php esc_html_e( 'Heading', 'mbr-cookie-consent' ); ?>
+                        </label>
+                        <input type="text"
+                               name="mbr_cc_blocked_overlay_heading"
+                               id="mbr_cc_blocked_overlay_heading"
+                               value="<?php echo esc_attr( get_option( 'mbr_cc_blocked_overlay_heading', '' ) ); ?>"
+                               class="regular-text"
+                               placeholder="<?php esc_attr_e( 'Content blocked', 'mbr-cookie-consent' ); ?>">
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <label for="mbr_cc_blocked_overlay_message" style="display:block; font-weight:600; margin-bottom:4px;">
+                            <?php esc_html_e( 'Message', 'mbr-cookie-consent' ); ?>
+                        </label>
+                        <textarea name="mbr_cc_blocked_overlay_message"
+                                  id="mbr_cc_blocked_overlay_message"
+                                  class="large-text"
+                                  rows="3"
+                                  placeholder="<?php esc_attr_e( "Some content on this page requires cookie consent that hasn't been granted yet. Update your preferences below to view it.", 'mbr-cookie-consent' ); ?>"><?php echo esc_textarea( get_option( 'mbr_cc_blocked_overlay_message', '' ) ); ?></textarea>
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <label for="mbr_cc_blocked_overlay_btn_text" style="display:block; font-weight:600; margin-bottom:4px;">
+                            <?php esc_html_e( 'Button Label', 'mbr-cookie-consent' ); ?>
+                        </label>
+                        <input type="text"
+                               name="mbr_cc_blocked_overlay_btn_text"
+                               id="mbr_cc_blocked_overlay_btn_text"
+                               value="<?php echo esc_attr( get_option( 'mbr_cc_blocked_overlay_btn_text', '' ) ); ?>"
+                               class="regular-text"
+                               placeholder="<?php esc_attr_e( 'Cookie Settings', 'mbr-cookie-consent' ); ?>">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branding -->
+            <div class="mbr-cc-form-row" style="margin-top: 24px;">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e( 'Branding', 'mbr-cookie-consent' ); ?></h3>
+                    <p class="description">
+                        <?php esc_html_e( 'The overlay automatically uses your WordPress site logo (set in Appearance > Customise), falling back to your site icon, then your site name as text. Use the field below only if you want to override this with a specific image.', 'mbr-cookie-consent' ); ?>
+                    </p>
+
+                    <div style="margin-top: 16px;">
+                        <label for="mbr_cc_blocked_overlay_logo_url" style="display:block; font-weight:600; margin-bottom:4px;">
+                            <?php esc_html_e( 'Custom Logo URL (optional override)', 'mbr-cookie-consent' ); ?>
+                        </label>
+                        <input type="url"
+                               name="mbr_cc_blocked_overlay_logo_url"
+                               id="mbr_cc_blocked_overlay_logo_url"
+                               value="<?php echo esc_attr( get_option( 'mbr_cc_blocked_overlay_logo_url', '' ) ); ?>"
+                               class="large-text"
+                               placeholder="https://example.com/logo.png">
+                        <p class="description"><?php esc_html_e( 'Recommended size: up to 360&thinsp;&times;&thinsp;96 px. Leave blank to use the automatic logo cascade described above.', 'mbr-cookie-consent' ); ?></p>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 12px 16px; background: #f0f6fc; border-left: 4px solid #0073aa;">
+                        <strong><?php esc_html_e( 'Accent colour:', 'mbr-cookie-consent' ); ?></strong>
+                        <?php esc_html_e( 'The overlay button automatically inherits the Primary Colour set on the Banner Settings tab — no separate colour picker needed.', 'mbr-cookie-consent' ); ?>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- .mbr-cc-settings-section -->
+        </div><!-- #tab-content-blocking -->
+
     </form>
 </div>
 

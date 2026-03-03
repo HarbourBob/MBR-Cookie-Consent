@@ -72,6 +72,36 @@ class MBR_CC_Banner {
             'revisitText' => get_option('mbr_cc_revisit_consent_text', 'Cookie Settings'),
         ));
         
+        // Blocked content overlay assets (only when feature is enabled).
+        if ( class_exists( 'MBR_CC_Blocked_Placeholder' ) && MBR_CC_Blocked_Placeholder::is_enabled() ) {
+            wp_enqueue_style(
+                'mbr-cc-blocked-content',
+                MBR_CC_PLUGIN_URL . 'assets/css/blocked-content.css',
+                array( 'mbr-cc-banner' ),
+                MBR_CC_VERSION
+            );
+            wp_enqueue_script(
+                'mbr-cc-blocked-content',
+                MBR_CC_PLUGIN_URL . 'assets/js/blocked-content.js',
+                array( 'jquery', 'mbr-cc-banner' ),
+                MBR_CC_VERSION,
+                true
+            );
+        }
+        
+        // Elementor video blocker — runs when Elementor is active on the page.
+        // Enqueued in the <head> (in_footer=false) with high priority so it
+        // executes BEFORE Elementor's own frontend script initialises widgets.
+        if ( defined( 'ELEMENTOR_VERSION' ) || class_exists( '\Elementor\Plugin' ) ) {
+            wp_enqueue_script(
+                'mbr-cc-elementor-video-blocker',
+                MBR_CC_PLUGIN_URL . 'assets/js/elementor-video-blocker.js',
+                array(), // No jQuery dependency — pure JS runs earlier.
+                MBR_CC_VERSION,
+                false    // Load in <head> so it runs before Elementor's DOMContentLoaded.
+            );
+        }
+
         // Add inline CSS for customization.
         $this->add_inline_styles();
     }

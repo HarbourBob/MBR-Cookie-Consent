@@ -128,6 +128,13 @@ class MBR_CC_Settings {
         
         // Google ACM.
         register_setting('mbr_cc_settings', 'mbr_cc_google_acm_enabled');
+        
+        // Blocked Content Overlay (v1.7.0).
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_enabled');
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_heading');
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_message');
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_btn_text');
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_logo_url');
     }
     
     /**

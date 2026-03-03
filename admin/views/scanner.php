@@ -17,6 +17,45 @@ $blocked_scripts = $blocker->get_blocked_scripts();
 <div class="wrap mbr-cc-admin-wrap">
     <h1><?php esc_html_e('Cookie Scanner', 'mbr-cookie-consent'); ?></h1>
     
+    <!-- Built-in Services Notice -->
+    <div class="mbr-cc-settings-section" style="border-left: 4px solid #46b450; background: #f0faf0;">
+        <h2><?php esc_html_e( 'Automatic Blocking — Built-in Services', 'mbr-cookie-consent' ); ?></h2>
+        <p><?php esc_html_e( 'The following third-party services are blocked automatically by category — no manual configuration needed. They are active as soon as a visitor has not granted consent for that category.', 'mbr-cookie-consent' ); ?></p>
+
+        <?php
+        $builtin = MBR_CC_Script_Blocker::get_builtin_services();
+        $category_labels = array(
+            'marketing'   => __( 'Marketing', 'mbr-cookie-consent' ),
+            'analytics'   => __( 'Analytics', 'mbr-cookie-consent' ),
+            'preferences' => __( 'Preferences / Functional', 'mbr-cookie-consent' ),
+        );
+        foreach ( $builtin as $cat => $services ) :
+            $label = isset( $category_labels[ $cat ] ) ? $category_labels[ $cat ] : ucfirst( $cat );
+        ?>
+        <div style="margin-bottom: 16px;">
+            <h3 style="margin-bottom: 6px;"><?php echo esc_html( $label ); ?></h3>
+            <table class="widefat striped" style="max-width: 700px;">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e( 'Service', 'mbr-cookie-consent' ); ?></th>
+                        <th><?php esc_html_e( 'Blocks', 'mbr-cookie-consent' ); ?></th>
+                        <th><?php esc_html_e( 'Matched domains / patterns', 'mbr-cookie-consent' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $services as $svc ) : ?>
+                    <tr>
+                        <td><strong><?php echo esc_html( $svc['name'] ); ?></strong></td>
+                        <td><?php echo esc_html( ucfirst( $svc['type'] ) ); ?></td>
+                        <td><code><?php echo esc_html( implode( ', ', $svc['domains'] ) ); ?></code></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endforeach; ?>
+    </div>
+
     <!-- Scanner -->
     <div class="mbr-cc-settings-section">
         <h2><?php esc_html_e('Scan Your Website', 'mbr-cookie-consent'); ?></h2>

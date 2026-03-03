@@ -5,7 +5,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, goog
 Requires at least: 5.8
 Tested up to: 6.9.1
 Requires PHP: 7.4
-Stable tag: 1.6.1
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -465,6 +465,25 @@ No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
 
+= 1.8.0 =
+* New: Elementor video widget blocking — YouTube and other embeds placed via Elementor's Video widget and the newer e-youtube-base component are now correctly blocked pending consent. Previously only standard HTML iframes were intercepted; Elementor renders videos entirely via JavaScript making PHP-level blocking ineffective.
+* New: Automatic built-in service library — common third-party services (YouTube, Vimeo, Google Maps, Google Analytics, Facebook Pixel, and more) are now blocked automatically by consent category with no manual configuration required.
+* New: After accepting cookies on a page with blocked Elementor videos, the page automatically reloads so videos initialise cleanly.
+* New: Blocked video placeholder shown in place of Elementor video widgets, matching the existing blocked content overlay style, with an "Accept cookies & play video" button.
+* Fix: Script blocker now matches iframes using data-lazy-src and data-src attributes in addition to src, ensuring compatibility with WP Rocket and other lazy-load plugins.
+* Fix: Per-category unblocking — accepting one cookie category (e.g. Analytics) no longer incorrectly unblocks services from a different category (e.g. Marketing/YouTube).
+* Fix: WP Rocket exclusion filters added so lazy-load transformation of blocked iframes is suppressed.
+* Improvement: Blocked elements now carry a data-mbr-cc-category attribute enabling precise per-category restore logic on consent.
+
+= 1.7.0 =
+* New: Blocked Content Overlay — when an iframe or embed is blocked pending consent, a branded modal placeholder is now displayed instead of invisible blank space.
+* New: Overlay shows site logo (auto-detected from WordPress theme, site icon, or site name), an explanatory message, and a "Cookie Settings" button.
+* New: Full admin control under Settings → Content Blocking: enable/disable toggle, customisable heading, message, button label, and optional custom logo URL.
+* New: Overlay accent colour automatically inherits the banner Primary Colour setting.
+* Compliance: Feature satisfies GDPR/UK GDPR transparency and ease-of-withdrawal requirements.
+
+= 1.6.1 =
+
 = 1.4.1 - February 6, 2026 =
 * **New:** Intelligent Privacy Policy Generator
 * Feature: Automatic site analysis (e-commerce, analytics, advertising)
@@ -819,4 +838,3 @@ The plugin developer is not liable for regulatory penalties, legal issues, or mi
 
 
 Generated privacy and cookie policies are templates requiring professional legal review before publication.
-
