@@ -28,7 +28,7 @@ MBR Cookie Consent is the most comprehensive, enterprise-grade cookie consent ma
 = 🎯 Core Features =
 
 **Consent Management**
-✓ Customizable cookie banner (4 layouts)
+✓ Customizable cookie banner (5 layouts)
 ✓ Automatic script blocking until consent
 ✓ Granular category-level control
 ✓ Preference center for users
