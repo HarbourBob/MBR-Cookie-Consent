@@ -84,7 +84,16 @@ class MBR_CC_Consent_Manager {
      * AJAX: Save user consent.
      */
     public function ajax_save_consent() {
-        check_ajax_referer('mbr_cc_consent_nonce', 'nonce');
+        // Use a soft nonce check rather than check_ajax_referer() which dies on
+        // failure. On cached sites the nonce baked into the page HTML can be
+        // stale (caches persist beyond the 12-hour nonce lifetime). A failed
+        // nonce must not block the consent log — the cookie is already set in JS
+        // regardless of whether this AJAX call succeeds.
+        $nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'], 'mbr_cc_consent_nonce' );
+        if ( ! $nonce_valid ) {
+            // Log the issue but continue — do not bail out.
+            error_log( 'MBR Cookie Consent: stale or missing nonce on consent save. Consent cookie already set client-side.' );
+        }
         
         $consent_data = isset($_POST['consent']) ? json_decode(stripslashes($_POST['consent']), true) : array();
         $consent_method = isset($_POST['method']) ? sanitize_text_field($_POST['method']) : 'banner';

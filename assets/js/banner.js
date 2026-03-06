@@ -2,6 +2,12 @@
     'use strict';
     
     var MbrCookieBanner = {
+
+        // Set to true as soon as the user acts on the banner in this page session.
+        // Prevents checkConsent() from re-showing the banner if the cookie read-back
+        // fails immediately after writing (can happen with explicit domain scoping,
+        // e.g. .example.com vs www.example.com, before the browser propagates it).
+        _consentSaved: false,
         
         init: function() {
             this.checkConsent();
@@ -135,6 +141,11 @@
         },
         
         showBanner: function() {
+            // Don't re-show if the user has already interacted with the banner
+            // during this page session.
+            if (this._consentSaved) {
+                return;
+            }
             $('#mbr-cc-banner').fadeIn(300);
             // Show popup overlay if using popup layout
             if ($('#mbr-cc-popup-overlay').length) {
@@ -217,19 +228,58 @@
         
         saveConsent: function(consent, method) {
             var self = this;
-            
-            // Set cookie
-            this.setCookie('mbr_cc_consent', JSON.stringify(consent), mbrCcConsent.cookieExpiry);
-            
-            // Update consent modes (Google Consent Mode v2 & Microsoft UET)
+
+            // Mark consent as saved immediately. This prevents showBanner() from
+            // firing again if anything re-triggers checkConsent() before the cookie
+            // is fully readable — which can happen with explicit domain scoping.
+            this._consentSaved = true;
+
+            // Set cookie immediately — this is the source of truth for consent.
+            // Everything below (UI changes, script unblocking, AJAX logging) must
+            // not be gated on the AJAX call succeeding. On cached sites the nonce
+            // baked into the page may be stale, causing the AJAX to fail silently
+            // while the cookie is already correctly set. If we waited for AJAX
+            // success to hide the banner it would reappear every time that happened.
+            var consentJson = JSON.stringify(consent);
+            this.setCookie('mbr_cc_consent', consentJson, mbrCcConsent.cookieExpiry);
+
+            // Verify the cookie was actually written correctly. If an explicit
+            // domain scope (e.g. .example.com) causes the read-back to fail,
+            // fall back to writing without a domain so the browser uses its default.
+            if (!this.getCookie('mbr_cc_consent')) {
+                // Write without domain — browser will scope to current host.
+                var expDate = new Date();
+                expDate.setTime(expDate.getTime() + (mbrCcConsent.cookieExpiry * 24 * 60 * 60 * 1000));
+                document.cookie = 'mbr_cc_consent=' + consentJson +
+                    '; expires=' + expDate.toUTCString() +
+                    '; path=/; SameSite=Lax';
+            }
+
+            // Update consent modes (Google Consent Mode v2 & Microsoft UET).
             if (typeof window.MbrCcConsentModes !== 'undefined') {
                 window.MbrCcConsentModes.updateAllConsent(consent);
             }
-            
-            // Trigger consent saved event for TCF and ACM
+
+            // Hide banner and modal immediately — do not wait for AJAX.
+            this.hideBanner();
+            this.hidePreferences();
+
+            // Trigger consent saved event for TCF, ACM, and our Elementor blocker.
             $(document).trigger('mbr_cc_consent_saved', [consent]);
-            
-            // Log to database
+
+            // Unblock scripts immediately.
+            this.unblockScripts(consent);
+
+            // Reload page if enabled (e.g. to restore Elementor videos).
+            if (mbrCcConsent.reloadOnConsent) {
+                location.reload();
+                return; // No point doing anything else if we're reloading.
+            }
+
+            // Fire-and-forget AJAX to log consent to the database.
+            // The outcome does NOT affect the UI — if this fails (stale nonce,
+            // security plugin blocking admin-ajax.php, slow server) the user
+            // still has their consent cookie and the banner stays hidden.
             $.ajax({
                 url: mbrCcConsent.ajaxUrl,
                 type: 'POST',
@@ -238,19 +288,9 @@
                     nonce: mbrCcConsent.nonce,
                     consent: JSON.stringify(consent),
                     method: method
-                },
-                success: function(response) {
-                    self.hideBanner();
-                    self.hidePreferences();
-                    
-                    // Unblock scripts
-                    self.unblockScripts(consent);
-                    
-                    // Reload page if enabled
-                    if (mbrCcConsent.reloadOnConsent) {
-                        location.reload();
-                    }
                 }
+                // No success or error handlers — fire and forget.
+                // Consent is already saved in the cookie regardless of outcome.
             });
         },
         
