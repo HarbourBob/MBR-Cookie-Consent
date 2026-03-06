@@ -1,574 +1,380 @@
-# MBR Cookie Consent - v1.9.1
+# MBR Cookie Consent
 
-A comprehensive WordPress cookie consent plugin supporting GDPR, CCPA, and global privacy compliance.
+[![Version](https://img.shields.io/badge/version-1.9.1-blue?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
+[![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
+[![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
+[![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![Downloads](https://img.shields.io/badge/downloads-free%20%26%20open%20source-brightgreen?style=flat-square)](https://littlewebshack.com)
+[![GDPR](https://img.shields.io/badge/GDPR-compliant-success?style=flat-square)](https://littlewebshack.com)
+[![IAB TCF](https://img.shields.io/badge/IAB%20TCF-v2.3-orange?style=flat-square)](https://iabeurope.eu)
 
-## Description
+![MBR Cookie Consent](head.webp)
 
-MBR Cookie Consent provides a complete solution for managing cookie consent on your WordPress website. The plugin automatically blocks non-essential scripts until user consent is given and maintains detailed consent logs for compliance auditing.
+> **Enterprise-grade GDPR, CCPA & global privacy compliance for WordPress — completely free, forever. No upsells. No vendor lock-in.**
 
-From version 1.6.0 the plugin provides full, automatic geolocation support.
+---
 
-From version 1.5.0 the plugin now offers multisite enterprise-level support.
+## 🌟 Why MBR Cookie Consent?
 
-**Legal Disclaimer:** This plugin provides technical tools to help implement cookie consent mechanisms. It does not constitute legal advice. You are responsible for ensuring your use of this plugin complies with applicable laws and should consult with legal counsel regarding your specific compliance requirements.
+| | MBR Cookie Consent | Typical Premium Plugins |
+|---|---|---|
+| **Price** | ✅ Free forever | ❌ £99–£299/year |
+| **IAB TCF v2.3** | ✅ Included | ❌ Premium only |
+| **Google Consent Mode v2** | ✅ Included | ❌ Premium only |
+| **40+ Language Auto-Translation** | ✅ Included | ❌ Premium only |
+| **Form Builder Integration** | ✅ Included | ❌ Premium only |
+| **A/B Testing** | ✅ Included | ❌ Premium only |
+| **Geolocation Detection** | ✅ Included | ❌ Premium only |
+| **Multisite Support** | ✅ Included | ❌ Premium only |
+| **Vendor lock-in** | ✅ None | ❌ Proprietary |
 
-## Features
+---
 
-#### Consent Management
-- **Cookie Consent Banner**: Customizable banner with Accept/Reject/Customize options
-- **Automatic Script Blocking**: Blocks non-essential cookies until explicit consent
-- **Preference Center**: Allows users to manage cookie preferences by category
-- **Revisit Consent Button**: Floating button for updating consent choices
-- **CCPA "Do Not Sell"**: Optional link for California residents
-- **Consent Logging**: Records and exports user consent in CSV format
-- **GDPR-Compliant Storage**: IP anonymization and proper data handling
-- **Multisite support**: Automatically detects networks andadjusts settings accordingly
-- **Geolocation**: Automatically detects the visitor's country of location and displays an appropriate banner
+## ✨ Features
 
-#### Consent Mode Integration (Phase 2)
-- **Google Consent Mode v2**: Full integration with Google's consent framework
-  - Supports ad_storage, ad_user_data, ad_personalization, analytics_storage
-  - Functionality and personalization storage controls
-  - Configurable default consent states (granted/denied)
-  - Ads data redaction for privacy compliance
-  - Optional URL passthrough for cookieless conversion tracking
-- **Microsoft UET Consent Mode**: Microsoft Advertising compliance
-  - EU consent requirements support
-  - Automatic tag behavior adjustment based on consent
-  - Configurable default states for GDPR compliance
+### 🛡️ Consent Management
+- **Customisable Banner** — Accept All, Reject All, and Customise options
+- **Automatic Script Blocking** — blocks non-essential scripts until explicit consent is given
+- **Preference Centre** — granular category-by-category control for visitors
+- **Revisit Consent Button** — floating button so visitors can update preferences any time
+- **CCPA "Do Not Sell"** — optional link for California residents
+- **Consent Logging** — every interaction recorded, exportable to CSV
+- **GDPR-Compliant Storage** — IP anonymisation and proper data handling
+- **Geolocation Detection** — auto-detects visitor country and displays the appropriate banner *(v1.6.0)*
+- **Multisite Support** — network-aware, adjusts settings across sites automatically *(v1.5.0)*
 
-#### Internationalization & Accessibility (Phase 3)
-- **Auto-Translation (40+ Languages)**: Automatically translates banner based on browser language
-  - Supports 40+ languages including all major European, Asian, and global languages
-  - Automatic browser language detection
-  - WPML and Polylang integration for advanced multilingual sites
-  - No configuration needed - works out of the box
-- **Multilingual Plugin Compatibility**:
-  - WPML: Full string registration and translation support
-  - Polylang: Complete integration with string translation
-  - Automatic detection and seamless integration
-- **WCAG/ADA Compliance**:
-  - Screen reader announcements for all interactions
-  - Full keyboard navigation support (Tab, Shift+Tab, Escape, Enter)
-  - Focus trap in modal dialogs
-  - WCAG 2.1 AA compliant focus indicators
-  - Proper ARIA labels, roles, and attributes
-  - High contrast mode support
-  - Reduced motion support for users with vestibular disorders
-  - Semantic HTML structure
+---
 
-#### Banner Customization
-- **Layout Options**: Bar (full width), Box (bottom left/right), Popup (center)
-- **Position Options**: Top/bottom (for bar layout)
-- **Color Customization**: Primary, accept, reject, and text colors
-- **Custom Text**: Fully customizable heading, description, and button text
-- **Reload on Consent**: Optional page reload after consent action
+### 📊 Consent Mode Integration
+- **Google Consent Mode v2** — full integration with `ad_storage`, `ad_user_data`, `ad_personalization`, `analytics_storage`, `functionality_storage`, `personalization_storage`
+- **Microsoft UET Consent Mode** — EU consent requirements for Microsoft Advertising
+- Configurable default states (recommended: denied for EU/EEA)
+- Ads data redaction and optional URL passthrough
 
-#### Cookie Scanner & Management
-- **Automatic Scanning**: One-click scan to detect scripts on your site
-- **Manual Management**: Add, edit, or delete cookies and scripts
-- **Category Management**: Organize scripts by Necessary, Analytics, Marketing, Preferences
+---
 
-#### Form Builder Integration *(v1.9.0)*
-- **Block on No Consent**: Form submissions are rejected server-side until cookie consent is granted — cannot be bypassed by disabling JavaScript
-- **Supported Builders**: Contact Form 7, WPForms, Gravity Forms, Elementor Forms
-- **Elementor Modal**: Clean dark overlay modal replaces inline error messages in Elementor, with Accept Cookies and Not Now buttons
-- **Auto Re-submit**: After accepting cookies from the form modal, the pending form re-submits automatically — no page reload, no re-typing
-- **Configurable**: Choose required consent category and customise the blocked message
+### 🌍 Internationalisation & Accessibility
+- **40+ Language Auto-Translation** — detects browser language, no configuration needed
+- **WPML & Polylang** compatible — full string registration and translation support
+- **WCAG 2.1 AA** compliant — full keyboard navigation, screen reader support, focus traps, ARIA labels, high contrast and reduced motion support
 
-#### A/B Testing *(v1.9.0)*
-- **Three Variants**: Bottom bar (A), Popup (B), Box-left (C) — visitors randomly assigned on first visit
-- **Session Persistence**: Same visitor always sees the same variant via session cookie
-- **Conversion Tracking**: Impressions and accept-all conversions tracked per variant
-- **Results Dashboard**: Live table with accept rates, mini bar charts, and winner indicator
-- **Promote Winner**: One-click promotes the winning variant to the live banner position and disables the test
+---
 
-#### Legal Policy Tools
-- **Policy Generator**: Creates WordPress Cookie Policy page template
-- **Legal Disclaimers**: Built-in disclaimers throughout admin interface
+### 🎨 Banner Customisation
+- **Layout Options** — Bar (full width), Box (bottom left/right), Popup (centre)
+- **Colour Customisation** — primary, accept, reject, and text colours
+- **Custom Text** — fully customisable heading, description, and all button labels
+- **Reload on Consent** — optional page reload after consent action
 
-## Installation
+---
+
+### 🔍 Cookie Scanner & Management
+- **One-Click Scanner** — detects scripts and iframes across your site automatically
+- **Manual Management** — add, edit, or remove blocked scripts at any time
+- **Category Management** — organise by Necessary, Analytics, Marketing, Preferences
+
+---
+
+### 📝 Form Builder Integration *(v1.9.0)*
+
+Blocks form submissions **server-side** until consent is granted — cannot be bypassed by disabling JavaScript.
+
+![Blocked content placeholder](block.png)
+
+- **Supported builders** — Contact Form 7, WPForms, Gravity Forms, Elementor Forms
+- **Elementor modal** — clean dark overlay modal replaces inline errors, with Accept Cookies and Not Now buttons
+- **Auto re-submit** — after accepting cookies the pending form re-submits automatically with all data intact
+- **Configurable** — choose required consent category and customise the blocked message
+
+---
+
+### 🧪 A/B Testing *(v1.9.0)*
+
+Optimise your consent rate by testing banner position variants against real visitor data.
+
+- **Three variants** — Bottom bar (A), Popup (B), Box-left (C)
+- **Session persistence** — same visitor always sees the same variant
+- **Conversion tracking** — impressions and accept-all rate tracked per variant
+- **Results dashboard** — live table with accept rates, bar charts, and winner indicator
+- **Promote winner** — one click sets the winning variant as your live position
+
+---
+
+### ⚖️ Legal Policy Tools
+- **Privacy Policy Generator** — creates a comprehensive WordPress privacy policy page
+- **Cookie Policy Generator** — creates a WordPress cookie policy page template
+- **Legal Disclaimers** — built-in throughout the admin interface
+
+---
+
+## 🚀 Installation
+
+### From Little Web Shack *(recommended)*
+
+1. Visit [littlewebshack.com](https://littlewebshack.com) and download MBR Cookie Consent
+2. Upload via **Plugins > Add New > Upload Plugin** in WordPress admin
+3. Activate the plugin
+4. Add to `wp-config.php` to enable geolocation:
+   ```php
+   define('MBR_CC_FORCE_GEOLOCATION', true);
+   ```
+5. Go to **Cookie Consent > Dashboard** to configure
 
 ### Manual Installation
 
-1. Download the plugin ZIP file
+1. Download the plugin ZIP from [GitHub Releases](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 2. Upload to `/wp-content/plugins/mbr-cookie-consent/`
-3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Add the following line to wp-config.php
-   
-   define('MBR_CC_FORCE_GEOLOCATION', true);
-   
-5. Go to **Cookie Consent > Dashboard** to configure
+3. Activate through the **Plugins** menu
+4. Add the geolocation constant to `wp-config.php` (see above)
 
-### From Little Web Shack
+---
 
-1. Visit [Little Web Shack](https://littlewebshack.com)
-2. Download MBR Cookie Consent
-3. Upload via WordPress admin or FTP
-4. Activate and configure
-5. Add the following line to wp-config.php
-   
-   define('MBR_CC_FORCE_GEOLOCATION', true);
+## ⚡ Quick Start
 
-## Quick Start Guide
+### 1️⃣ Scan your site
+Go to **Cookie Consent > Cookie Scanner**, click **Start Scan**, review detected scripts, and add anything non-essential to the blocked list.
 
-### 1. Scan Your Website
+### 2️⃣ Configure categories
+Go to **Cookie Consent > Categories** and customise category names and descriptions to match your privacy policy.
 
-1. Go to **Cookie Consent > Cookie Scanner**
-2. Click "Start Scan" to detect scripts
-3. Review detected scripts and add to blocked list
+### 3️⃣ Customise your banner
+Go to **Cookie Consent > Settings** — set position, colours, text, and enable any optional features (Reject button, CCPA link, etc.).
 
-### 2. Configure Categories
+### 4️⃣ Generate your Cookie Policy
+Go to **Cookie Consent > Dashboard**, click **Generate Cookie Policy Page**, review the draft, and publish.
 
-1. Go to **Cookie Consent > Categories**
-2. Customize category names and descriptions
-3. Save changes
+### 5️⃣ Test
+Open an incognito window, visit your site, and verify Accept All / Reject All / Customise all behave correctly and scripts are blocked or unblocked as expected.
 
-### 3. Customize Banner
+---
 
-1. Go to **Cookie Consent > Settings**
-2. Set banner position (top/bottom)
-3. Customize colors and text
-4. Enable/disable features (reject button, CCPA link, etc.)
-5. Save settings
+## 🔧 Google & Microsoft Consent Mode Setup
 
-### 4. Generate Cookie Policy
+### Google Consent Mode v2
 
-1. Go to **Cookie Consent > Dashboard**
-2. Click "Generate Cookie Policy Page"
-3. Review and publish the page
-4. Link to it from your privacy page
+1. Go to **Cookie Consent > Settings > Consent Mode Integration**
+2. Enable **Google Consent Mode v2**
+3. Set defaults — **Denied** is recommended for EU/EEA compliance
+4. Enable **Ads Data Redaction** for additional privacy protection
+5. Your existing GA4/Google Ads tags will automatically receive consent signals — no changes needed
 
-### 5. Test the Banner
+**Consent types controlled:** `ad_storage` · `ad_user_data` · `ad_personalization` · `analytics_storage` · `functionality_storage` · `personalization_storage`
 
-1. Visit your website in an incognito/private window
-2. You should see the cookie banner
-3. Test Accept All, Reject All, and Customize options
-4. Verify scripts are blocked/unblocked correctly
+### Microsoft UET Consent Mode
 
-## Setting Up Consent Mode (Google & Microsoft)
+1. Go to **Cookie Consent > Settings > Consent Mode Integration**
+2. Enable **Microsoft UET Consent Mode**
+3. Set default to **Denied** for GDPR compliance
+4. Your existing UET tags will automatically receive consent signals
 
-### Google Consent Mode v2 Setup
+> 💡 Consent mode works **alongside** script blocking, not instead of it. Tags still load but behave differently based on consent signals.
 
-**Prerequisites:**
-- Google Analytics 4 (GA4) or Google Ads tags already installed on your site
-- Tags must load AFTER the consent mode initialization
+---
 
-**Setup Steps:**
+## 📦 Managing Blocked Scripts
 
-1. **Enable Google Consent Mode**
-   - Go to **Cookie Consent > Settings**
-   - Scroll to "Consent Mode Integration"
-   - Check "Enable Google Consent Mode v2"
+### Via the Scanner *(easiest)*
+**Cookie Consent > Cookie Scanner** → **Start Scan** → **Add to Blocked List**
 
-2. **Configure Default Behavior**
-   - ✅ **Default to "Denied"** - Recommended for EU/EEA compliance (GDPR)
-   - ✅ **Enable Ads Data Redaction** - Recommended for privacy (redacts ad data when consent not given)
-   - ⚠️ **Enable URL Passthrough** - Optional, use with caution (passes ad click info in URLs)
+### Manually
+**Cookie Consent > Cookie Scanner** → scroll to **Add Custom Script** and fill in:
 
-3. **Verify Tag Installation Order**
-   - Consent mode script loads automatically in `<head>` BEFORE other tags
-   - Your GA4/Google Ads tags should load normally (they'll receive consent signals)
-   - No changes needed to existing Google tags
+| Field | Description | Example |
+|---|---|---|
+| **Name** | Display name | `Google Analytics` |
+| **Identifier** | URL or content pattern | `google-analytics.com/analytics.js` |
+| **Type** | `src`, `inline`, or `iframe` | `src` |
+| **Category** | `necessary`, `analytics`, `marketing`, `preferences` | `analytics` |
 
-4. **Test Consent Mode**
-   - Open browser DevTools > Console
-   - Look for `dataLayer` commands showing consent state
-   - Accept cookies and verify consent updates to "granted"
-   - Check Google Tag Assistant for proper consent signals
+---
 
-**What It Does:**
-- Sets initial consent state (default: denied for privacy)
-- Signals to Google tags which categories are allowed
-- Adjusts tag behavior based on consent (e.g., no cookies if denied)
-- Enables conversion modeling when full consent not given
-- Maintains measurement capabilities while respecting user choices
+## 🗂️ Cookie Categories
 
-**Consent Types Controlled:**
-- `ad_storage` - Advertising cookies (Google Ads)
-- `ad_user_data` - User data for ads
-- `ad_personalization` - Personalized advertising
-- `analytics_storage` - Analytics cookies (GA4)
-- `functionality_storage` - Functional cookies
-- `personalization_storage` - Personalization cookies
+| Category | Description | Always Active |
+|---|---|---|
+| 🔒 **Necessary** | Essential for site functionality — session, security | ✅ Yes |
+| 📈 **Analytics** | Usage tracking — Google Analytics, Matomo | ❌ Consent required |
+| 📣 **Marketing** | Advertising & retargeting — Facebook Pixel, Google Ads | ❌ Consent required |
+| ⚙️ **Preferences** | User preference storage — language, UI settings | ❌ Consent required |
 
-### Microsoft UET Consent Mode Setup
+---
 
-**Prerequisites:**
-- Microsoft UET (Universal Event Tracking) tag already installed
-- UET tag must load AFTER consent mode initialization
+## 📋 Consent Logging
 
-**Setup Steps:**
+All consent interactions are logged with:
 
-1. **Enable Microsoft Consent Mode**
-   - Go to **Cookie Consent > Settings**
-   - Scroll to "Consent Mode Integration"
-   - Check "Enable Microsoft UET Consent Mode"
+- 🕐 Timestamp
+- 👤 User ID (if logged in)
+- 🌐 Anonymised IP address
+- ✅ Consent given (yes/no)
+- 📂 Categories accepted
+- 🖱️ Consent method (accept_all / reject_all / preferences)
 
-2. **Configure Default Behavior**
-   - ✅ **Default to "Denied"** - Recommended for EU compliance (GDPR)
+**Export:** Cookie Consent > Consent Logs > **Export to CSV**
 
-3. **Verify UET Tag**
-   - Your existing UET tag will automatically receive consent signals
-   - No modifications needed to UET implementation
-   - Consent mode script loads before UET tag
+**Housekeeping:** Cookie Consent > Consent Logs → specify days → **Delete Old Logs**
 
-4. **Test UET Consent**
-   - Open browser DevTools > Console
-   - Look for `uetq` (UET queue) consent commands
-   - Accept cookies and verify consent updates
+---
 
-**What It Does:**
-- Controls Microsoft Advertising cookie behavior
-- Signals consent state to UET tags
-- Ensures GDPR compliance for Microsoft ads
-- Maintains conversion tracking within consent parameters
+## ✅ Compliance Summary
 
-### Testing Both Consent Modes
-
-1. **Before Consent:**
-   - Open DevTools > Console
-   - Refresh page
-   - Look for consent mode initialization (should show "denied" by default)
-
-2. **Accept All Cookies:**
-   - Click "Accept All"
-   - Check console for consent "update" to "granted"
-   - Verify analytics and ad cookies are now set
-
-3. **Reject All / Partial Consent:**
-   - Revisit consent settings
-   - Reject all or customize categories
-   - Verify consent updates and appropriate cookies are blocked
-
-### Important Notes
-
-- Consent mode does NOT replace cookie blocking - it works alongside it
-- Tags still load but behave differently based on consent signals
-- "Denied" state enables cookieless measurement (pings without cookies)
-- Google and Microsoft can still measure conversions without full consent (aggregated/modeled data)
-- Always test in your target regions (EU behavior may differ from US)
-
-## Managing Blocked Scripts
-
-### Auto-Detection via Scanner
-
-The easiest way to manage scripts is using the built-in scanner:
-
-1. **Cookie Consent > Cookie Scanner**
-2. Click **Start Scan**
-3. Review detected scripts
-4. Click **Add to Blocked List** for scripts you want to block
-
-### Manual Script Addition
-
-To manually add scripts:
-
-1. **Cookie Consent > Cookie Scanner**
-2. Scroll to "Add Custom Script"
-3. Fill in:
-   - **Name**: Display name (e.g., "Google Analytics")
-   - **Identifier**: Script source or content pattern (e.g., "google-analytics.com/analytics.js")
-   - **Type**: src (external), inline (inline script), or iframe
-   - **Category**: necessary, analytics, marketing, or preferences
-4. Click **Add Script**
-
-### Script Types
-
-- **src**: External scripts with src attribute (e.g., `<script src="...">`)
-- **inline**: Inline scripts with specific content (e.g., containing "gtag(")
-- **iframe**: Embedded iframes (e.g., YouTube, Google Maps)
-
-## Cookie Categories
-
-### Necessary
-- Always active
-- Essential for website functionality
-- Cannot be disabled by users
-- Example: Session cookies, security cookies
-
-### Analytics
-- Tracks website usage and performance
-- Helps understand visitor behavior
-- Requires user consent
-- Example: Google Analytics, Matomo
-
-### Marketing
-- Used for advertising and retargeting
-- Tracks users across websites
-- Requires user consent
-- Example: Facebook Pixel, Google Ads
-
-### Preferences
-- Remembers user preferences
-- Enhances user experience
-- Requires user consent
-- Example: Language preferences, UI settings
-
-## Consent Logging
-
-All consent actions are logged to the database with:
-- Timestamp
-- User ID (if logged in)
-- Anonymized IP address
-- Consent given (yes/no)
-- Categories accepted
-- Consent method (accept_all, reject_all, preferences)
-
-### Exporting Logs
-
-1. Go to **Cookie Consent > Consent Logs**
-2. Optionally filter by date range
-3. Click **Export to CSV**
-4. Download the file for compliance records
-
-### Deleting Old Logs
-
-1. Go to **Cookie Consent > Consent Logs**
-2. Specify number of days
-3. Click **Delete Old Logs**
-4. Logs older than specified days will be permanently deleted
-
-## GDPR Compliance Features
-
-- ✅ Explicit opt-in required for non-essential cookies
+### GDPR
+- ✅ Explicit opt-in for all non-essential cookies
 - ✅ Clear information about cookie usage
-- ✅ Easy way to revoke consent
-- ✅ IP address anonymization
-- ✅ Consent logging and proof
+- ✅ Easy consent revocation
+- ✅ IP address anonymisation
+- ✅ Full consent audit log
 - ✅ Granular category control
-- ✅ Cookie policy generator
+- ✅ Cookie & Privacy Policy generator
 
-## CCPA Compliance Features
-
+### CCPA
 - ✅ "Do Not Sell or Share My Personal Information" link
 - ✅ Opt-out mechanism
 - ✅ Clear disclosure of data collection
 
-## Developer Notes
+### IAB TCF v2.3
+- ✅ Full `__tcfapi` JavaScript API
+- ✅ TC String generation and storage
+- ✅ 10 standard consent purposes
+- ✅ Global Vendor List integration ready
+
+---
+
+## 🛠️ Developer Notes
 
 ### Programmatic Consent Check
 
-Check if user has consented to a specific category:
-
 ```javascript
-// Check if analytics is allowed
+// Check if analytics consent has been granted
 window.MbrCcConsent.hasCategoryConsent('analytics', function(allowed) {
     if (allowed) {
-        // Load analytics script
+        // Load your analytics script
     }
 });
 ```
 
-### Hooks & Filters
-
-Coming in future versions.
-
 ### Script Blocking Mechanism
 
-The plugin uses output buffering to intercept and modify HTML before it reaches the browser. Scripts matching the blocked list have their `type` attribute changed to `text/plain` and a `data-mbr-cc-blocked` attribute added. When consent is given, the scripts are unblocked and executed.
+The plugin uses PHP output buffering to intercept HTML before it reaches the browser. Blocked scripts have their `type` attribute changed to `text/plain` and receive a `data-mbr-cc-blocked` attribute. On consent, scripts are restored and executed client-side.
 
-## Technical Requirements
+### Hooks & Filters
 
-- WordPress 5.8 or higher
-- PHP 7.4 or higher
-- MySQL 5.6 or higher
-
-## Support
-
-For support, feature requests, or bug reports:
-- Email: [rob@littlewebshack.com]
-- Website: [Little Web Shack](https://littlewebshack.com)
-- Documentation: See plugin admin pages
-
-## Roadmap
-
-### Phase 2 (Completed in v1.1.0)
-- ✅ Google Consent Mode v2 integration
-- ✅ Microsoft UET Consent Mode
-
-### Phase 3 (Completed in v1.2.0)
-- ✅ Auto-translation (40+ languages)
-- ✅ WPML and Polylang compatibility
-- ✅ WCAG/ADA accessibility enhancements
-
-### Phase 4 (Completed in v1.3.0)
-- ✅ Page-specific banner controls
-- ✅ Custom CSS editor
-- ✅ Subdomain consent sharing
-
-### Phase 5 (Completed in v1.4.0)
-- ✅ IAB TCF v2.3 framework
-- ✅ Google Additional Consent Mode
-
-### Future Enhancements
-- Consent Mode API for developers
-- ✅ Integration with popular form builders (v1.9.0)
-- ✅ A/B testing for banner variations (v1.9.0)
-
-## Changelog
-
-### 1.9.1 - Bug Fixes
-- **Elementor Forms modal** now reliably shows instead of the inline error message. Uses a dual-strategy approach: fetch() intercept for modern Elementor Pro, plus a MutationObserver DOM sentinel as a universal fallback
-- **Form re-submit after consent** — page no longer reloads and clears the form after accepting cookies from the modal. The form re-submits automatically with data intact
-- **Form blocking hard-stops** corrected for all four builders. CF7 now uses the `wpcf7_spam` filter. WPForms blocks entry saving and email notifications. Elementor uses `add_error()` on the first field with `add_response_data()` to signal the modal
-- **Remove last blocked script** — re-indexes remaining DOM items after each removal to stay in sync with server-side `array_values()` re-index
-- **Delete Old Logs UI** restored to Consent Logs page (handler and JS existed but the HTML form was missing)
-- **Blocked content placeholder** now always renders when an iframe is blocked, regardless of the admin overlay toggle
-- **Service-specific messaging** in blocked content placeholder (e.g. "YouTube video blocked")
-- **Branding logo** recommended size corrected to 150×150 px
-
-### 1.9.0 - Form Integration & A/B Testing
-- **New: Form Builder Integration** — blocks form submissions server-side until cookie consent is granted. Supports Contact Form 7, WPForms, Gravity Forms, and Elementor Forms. Elementor shows a clean consent modal instead of inline errors. Configurable required category and custom blocked message
-- **New: A/B Testing** — randomly assigns visitors to three banner position variants (bottom bar, popup, box-left). Tracks impressions and accept-all conversions per variant. Winner (highest accept-all rate) can be promoted to live with one click
-
-### 1.5.1 - Minor Bug Fixing
-- **Minor bug fixing to the Consent Log
-
-### 1.5.0 - Multi-Site Support
-- **Automatic Detection of multi-site set-up
-
-### 1.4.1 - Privacy Policy Generator
-- **Intelligent Privacy Policy Generator**
-  - Analyzes site configuration and generates comprehensive privacy policy
-  - Detects e-commerce, analytics, advertising, email marketing automatically
-  - Customizes policy based on enabled features (TCF, ACM, GDPR, CCPA)
-  - Includes sections for all major privacy frameworks
-  - GDPR-compliant sections (legal basis, data retention, user rights)
-  - CCPA-compliant sections (California rights, do not sell)
-  - IAB TCF section when enabled
-  - Children's privacy protection
-  - International data transfers
-  - Data security measures
-  - Third-party service disclosure
-  - E-commerce specific sections
-  - Generated in draft status for legal review
-  - One-click generation from dashboard
-
-### 1.4.0 - Phase 5: Advanced Consent Management (IAB TCF v2.3 & Google ACM)
-- **IAB Transparency & Consent Framework v2.3**
-  - Full __tcfapi JavaScript API implementation
-  - TC String generation and storage (euconsent-v2 cookie)
-  - Support for 10 standard consent purposes
-  - Support for 2 special features (geolocation, device scanning)
-  - Global Vendor List (GVL) integration ready
-  - GDPR applies detection
-  - Publisher country code configuration
-  - Purpose One Treatment support
-  - Consent string encoding/decoding infrastructure
-  - Event listener support for vendor tags
-  - IAB CMP registration ready
-- **Google Additional Consent Mode (ACM)**
-  - AC String generation for Google Ad Tech Providers
-  - Support for Google ATPs outside IAB GVL
-  - Integration with Google Ads, DoubleClick, AdSense, etc.
-  - AC String format: 1~{provider.ids}
-  - Cookie storage (mbr_cc_ac_string)
-  - Automatic provider consent mapping
-  - Google FC (Funding Choices) compatibility
-- **Combined TCF + ACM Support**
-  - Simultaneous operation of both frameworks
-  - Unified consent collection
-  - Comprehensive ad tech coverage
-  - Enterprise publisher compliance
-
-### 1.3.0 - Phase 4: Enhanced Customization
-- **Page-Specific Banner Controls**
-  - Quick toggles for login, checkout, cart, and account pages
-  - URL pattern exclusion with wildcard support
-  - WooCommerce and Easy Digital Downloads detection
-  - Regex-based pattern matching for flexible exclusions
-- **Custom CSS Editor**
-  - Built-in CSS editor in settings
-  - Override any banner styles
-  - Helpful class reference guide
-  - Safe CSS sanitization
-- **Subdomain Consent Sharing**
-  - Share consent across all subdomains automatically
-  - Auto-detection of root domain
-  - Manual domain override for complex setups
-  - Works with .co.uk and other TLDs
-  - Proper cookie domain and path handling
-  - Real-time configuration preview
-
-### 1.2.0 - Phase 3: Internationalization & Accessibility
-- **Auto-Translation (40+ Languages)**
-  - Automatic browser language detection
-  - Support for 40+ languages covering global audience
-  - Seamless integration - no configuration required
-  - Covers all major European languages (Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, etc.)
-  - Asian language support (Japanese, Chinese, Korean, Thai, Vietnamese, etc.)
-  - Middle Eastern languages (Arabic, Hebrew, Turkish, Persian)
-  - Nordic languages (Swedish, Danish, Finnish, Norwegian, Icelandic)
-  - And many more regional languages
-- **WPML & Polylang Compatibility**
-  - Automatic string registration for translation
-  - Full integration with WPML's string translation
-  - Complete Polylang support with string translation
-  - Automatic detection and setup
-  - Category names and descriptions fully translatable
-- **WCAG/ADA Compliance Features**
-  - Screen reader announcements (ARIA live regions)
-  - Full keyboard navigation with proper focus management
-  - Focus trap in modal dialogs (Tab/Shift+Tab containment)
-  - Escape key closes modals
-  - WCAG 2.1 AA focus indicators (3px outline, 2px offset)
-  - Semantic HTML with proper heading structure
-  - ARIA labels, roles, and attributes throughout
-  - Dialog roles for banner and modal
-  - High contrast mode CSS support
-  - Reduced motion support (respects prefers-reduced-motion)
-  - Screen reader only content for context
-  - Accessible form labels and descriptions
-
-### 1.1.0 - Phase 2: Consent Mode Integration
-- **Google Consent Mode v2 Integration**
-  - Full support for all consent types (ad_storage, ad_user_data, ad_personalization, analytics_storage, functionality_storage, personalization_storage)
-  - Automatic consent signal updates to Google tags
-  - Configurable default consent states (recommended: denied for EU/EEA)
-  - Ads data redaction when marketing consent not given
-  - Optional URL passthrough for cookieless conversion tracking
-  - Proper loading order (consent mode loads before Google tags)
-- **Microsoft UET Consent Mode Integration**
-  - Full Microsoft Advertising (Bing Ads) consent mode support
-  - EU consent requirements compliance
-  - Automatic UET tag behavior adjustment
-  - Configurable default states for GDPR compliance
-- **Enhanced Admin Interface**
-  - New "Consent Mode Integration" settings section
-  - Detailed configuration options for both platforms
-  - Helpful tooltips and compliance recommendations
-  - Important notices for proper tag installation
-
-### 1.0.7 - Banner Layout Enhancements
-- Added Box Layout (Bottom Left) - Compact banner in bottom left corner
-- Added Box Layout (Bottom Right) - Compact banner in bottom right corner  
-- Added Popup Layout (Center) - Modal-style banner in center with overlay
-- Enhanced animations for new layouts
-- Improved responsive behavior for box and popup layouts
-
-### 1.0.0 - Phase 1 MVP
-- Initial release
-- Cookie consent banner with customization
-- Script tag interception and blocking
-- Cookie categories (Necessary, Analytics, Marketing, Preferences)
-- Preference center modal
-- Consent logging to database
-- Cookie scanner
-- CSV export
-- Cookie policy generator
-- GDPR and CCPA basic compliance features
-
-## License
-
-GPL v2 or later
-
-## Credits
-
-**Author**: Robert Palmer
-**Website**: [madeberobert.com](https://madeberobert.co.uk)  
-**Plugin Home**: [Little Web Shack](https://littlewebshack.com)
+Coming in a future version.
 
 ---
 
-**Remember:** This plugin helps with technical implementation but does not provide legal advice. Always consult with a qualified legal professional for compliance guidance.
+## 📋 Technical Requirements
+
+| Requirement | Minimum |
+|---|---|
+| WordPress | 5.8 or higher |
+| PHP | 7.4 or higher |
+| MySQL | 5.6 or higher |
+
+---
+
+## 🗺️ Roadmap
+
+- ✅ Google Consent Mode v2 *(v1.1.0)*
+- ✅ Microsoft UET Consent Mode *(v1.1.0)*
+- ✅ Auto-translation — 40+ languages *(v1.2.0)*
+- ✅ WPML & Polylang compatibility *(v1.2.0)*
+- ✅ WCAG/ADA accessibility *(v1.2.0)*
+- ✅ Page-specific banner controls *(v1.3.0)*
+- ✅ Custom CSS editor *(v1.3.0)*
+- ✅ Subdomain consent sharing *(v1.3.0)*
+- ✅ IAB TCF v2.3 *(v1.4.0)*
+- ✅ Google Additional Consent Mode *(v1.4.0)*
+- ✅ Privacy Policy Generator *(v1.4.1)*
+- ✅ Multisite support *(v1.5.0)*
+- ✅ Geolocation detection *(v1.6.0)*
+- ✅ Form builder integration *(v1.9.0)*
+- ✅ A/B testing for banner variations *(v1.9.0)*
+- 🔲 Consent Mode API for developers
+
+---
+
+## 📜 Changelog
+
+### 1.9.1 — Bug Fixes
+- **Elementor Forms modal** — dual-strategy intercept (fetch + XHR) ensures the modal always shows instead of inline errors
+- **Form auto re-submit** — raw request body captured and replayed after consent; page no longer reloads and clears the form
+- **Form blocking hard-stops** — CF7 uses `wpcf7_spam` filter; WPForms blocks entry saving and email notifications; Elementor uses direct `wp_send_json` response
+- **Remove last blocked script** — DOM re-indexes remaining items after each removal to stay in sync with server
+- **Delete Old Logs UI** — restored to Consent Logs page (handler existed, HTML form was missing)
+- **Blocked content placeholder** — always renders when an iframe is blocked, regardless of admin toggle
+- **Service-specific messaging** — placeholder shows e.g. "YouTube video blocked"
+- **Branding logo** — recommended size corrected to 150×150 px
+
+### 1.9.0 — Form Integration & A/B Testing
+- **New:** Form Builder Integration — CF7, WPForms, Gravity Forms, Elementor Forms
+- **New:** A/B Testing — three banner position variants with conversion tracking and one-click winner promotion
+
+### 1.8.1 — Bug Fixes
+- Banner reappearance after consent resolved
+- Cookie write verification and domain scoping fallback
+- Blocked content placeholder style update and service-specific messaging
+
+### 1.8.0 — Elementor Video Blocking
+- Elementor YouTube widget blocking pending consent
+- Built-in service library (YouTube, Vimeo, Google Maps, and more)
+- WP Rocket lazy-load compatibility
+- Per-category unblocking fix
+
+### 1.7.0 — Blocked Content Overlay
+- Branded placeholder shown in place of blocked iframes
+
+### 1.6.0 — Geolocation
+- Auto-detects visitor country, displays region-appropriate banner (GDPR/CCPA/LGPD/PIPEDA)
+
+### 1.5.0 — Multisite
+- Network-aware with automatic detection and settings adjustment
+
+### 1.4.1 — Privacy Policy Generator
+- Intelligent generator that analyses site configuration
+
+### 1.4.0 — IAB TCF v2.3 & Google ACM
+- Full `__tcfapi` implementation, TC String generation, Google Additional Consent Mode
+
+### 1.3.0 — Enhanced Customisation
+- Page-specific controls, custom CSS editor, subdomain consent sharing
+
+### 1.2.0 — Internationalisation & Accessibility
+- 40+ language auto-translation, WPML/Polylang, WCAG 2.1 AA
+
+### 1.1.0 — Consent Mode Integration
+- Google Consent Mode v2, Microsoft UET Consent Mode
+
+### 1.0.0 — Initial Release
+- Banner, script blocking, categories, preference centre, consent logging, scanner, CSV export, cookie policy generator
+
+---
+
+## 💬 Support
+
+| Channel | Link |
+|---|---|
+| 🌐 Website | [littlewebshack.com](https://littlewebshack.com) |
+| 📧 Email | [rob@littlewebshack.com](mailto:rob@littlewebshack.com) |
+| 🐙 GitHub | [github.com/HarbourBob](https://github.com/HarbourBob) |
+| 📖 Docs | See plugin admin pages |
+
+---
+
+## 📄 License
+
+GPL v2 or later — free to use, modify, and distribute.
+
+---
+
+> ⚠️ **Legal Disclaimer:** This plugin provides technical tools to help implement cookie consent mechanisms. It does not constitute legal advice. Always consult a qualified legal professional for compliance guidance specific to your situation.
+
+---
+
+<div align="center">
+
+Made with ❤️ by Robert Palmer in Cleethorpes, England
+
+**[Little Web Shack](https://littlewebshack.com)** · **[Made by Robert](https://madeberobert.co.uk)**
+
+</div>
