@@ -411,10 +411,12 @@ class MBR_CC_Script_Blocker {
                         . $after
                         . ' style="display:none !important" aria-hidden="true">';
 
-                    $overlay = '';
-                    if ( class_exists( $placeholder_class ) && $placeholder_class::is_enabled() ) {
-                        $overlay = $placeholder_class::render( array( 'service' => $service_name ) );
-                    }
+                    // Always render a placeholder — silently hiding content with no
+                    // explanation is bad UX and leaves users with no way to unblock it.
+                    // The admin toggle controls customisation options, not visibility.
+                    $overlay = class_exists( $placeholder_class )
+                        ? $placeholder_class::render( array( 'service' => $service_name ) )
+                        : '';
 
                     return $overlay . $blocked;
                 },

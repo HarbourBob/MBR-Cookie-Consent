@@ -36,26 +36,38 @@ class MBR_CC_Blocked_Placeholder {
      */
     public static function render( array $args = [] ) {
 
-        // Return an invisible div when the feature is off.
-        if ( ! self::is_enabled() ) {
-            return '<div class="mbr-cc-blocked-content-placeholder"></div>';
+        // ── Text — use service name for specific messaging if provided ──────
+        $service  = ! empty( $args['service'] ) ? sanitize_text_field( $args['service'] ) : '';
+
+        // Heading: prefer explicit override, then service-specific, then admin setting, then generic.
+        if ( ! empty( $args['heading'] ) ) {
+            $heading = sanitize_text_field( $args['heading'] );
+        } elseif ( $service ) {
+            /* translators: %s: service name e.g. "YouTube" */
+            $heading = sprintf( __( '%s video blocked', 'mbr-cookie-consent' ), $service );
+        } else {
+            $heading = self::get_opt( 'blocked_overlay_heading', __( 'Content blocked', 'mbr-cookie-consent' ) );
         }
 
-        // ── Text ──────────────────────────────────────────────────────────
-        $heading = ! empty( $args['heading'] )
-            ? sanitize_text_field( $args['heading'] )
-            : self::get_opt( 'blocked_overlay_heading', __( 'Content blocked', 'mbr-cookie-consent' ) );
-
-        $message = ! empty( $args['message'] )
-            ? sanitize_text_field( $args['message'] )
-            : self::get_opt(
+        // Message: prefer explicit override, then service-specific, then admin setting, then generic.
+        if ( ! empty( $args['message'] ) ) {
+            $message = sanitize_text_field( $args['message'] );
+        } elseif ( $service ) {
+            /* translators: %s: service name e.g. "YouTube" */
+            $message = sprintf(
+                __( 'This %s video is blocked because marketing cookies have not been accepted. Accept cookies to watch it.', 'mbr-cookie-consent' ),
+                $service
+            );
+        } else {
+            $message = self::get_opt(
                 'blocked_overlay_message',
                 __( "Some content on this page requires cookie consent that hasn't been granted yet. Update your preferences to view it.", 'mbr-cookie-consent' )
             );
+        }
 
         $btn_text = ! empty( $args['btn_text'] )
             ? sanitize_text_field( $args['btn_text'] )
-            : self::get_opt( 'blocked_overlay_btn_text', __( 'Cookie Settings', 'mbr-cookie-consent' ) );
+            : self::get_opt( 'blocked_overlay_btn_text', __( 'Accept cookies & play video', 'mbr-cookie-consent' ) );
 
         // ── Colours ───────────────────────────────────────────────────────
         $accent      = self::get_opt( 'primary_color', '#0073aa' );
@@ -65,12 +77,10 @@ class MBR_CC_Blocked_Placeholder {
         $logo_html = self::get_logo_html();
 
         // ── SVG icons (inline — zero external dependencies) ───────────────
+        // Play icon — makes it immediately clear this is a blocked video.
         $lock_svg =
-            '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"'
-            . ' fill="none" stroke="currentColor" stroke-width="2"'
-            . ' stroke-linecap="round" stroke-linejoin="round">'
-            . '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>'
-            . '<path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+            '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="white">'
+            . '<path d="M8 5v14l11-7z"/>'
             . '</svg>';
 
         $cog_svg =

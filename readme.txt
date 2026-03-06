@@ -5,7 +5,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, goog
 Requires at least: 5.8
 Tested up to: 6.9.1
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,7 +28,7 @@ MBR Cookie Consent is the most comprehensive, enterprise-grade cookie consent ma
 = 🎯 Core Features =
 
 **Consent Management**
-✓ Customizable cookie banner (5 layouts)
+✓ Customizable cookie banner (4 layouts)
 ✓ Automatic script blocking until consent
 ✓ Granular category-level control
 ✓ Preference center for users
@@ -464,6 +464,14 @@ No. There is no pro/premium version. All features are included free forever.
 10. Accessibility settings - WCAG compliance options
 
 == Changelog ==
+
+= 1.8.1 =
+* Fix: Cookie consent banner reappearing immediately after accepting, rejecting, or saving preferences. A session flag now prevents the banner re-displaying regardless of cookie propagation timing or any other post-save trigger.
+* Fix: Cookie write verification added — if an explicit domain scope (e.g. .example.com) prevents the consent cookie being read back immediately, the cookie is rewritten without a domain attribute so the browser scopes it correctly to the current host.
+* Fix: Banner hide and script unblocking no longer depend on the AJAX consent log succeeding. Both now fire immediately on user interaction; the AJAX database log runs as fire-and-forget with no UI consequence if it fails (e.g. stale nonce on cached pages).
+* Fix: PHP placeholder (used for standard iframe embeds such as Gutenberg YouTube blocks) now always renders when content is blocked, regardless of the admin overlay toggle setting. Previously the iframe was hidden but replaced with an invisible empty div, leaving users with no explanation or way to unblock content.
+* Fix: PHP placeholder now displays service-specific messaging (e.g. "YouTube video blocked") and an "Accept cookies & play video" button, consistent with the Elementor video placeholder style.
+* Improvement: PHP placeholder visual style updated to match the Elementor video placeholder — dark background, diagonal stripe pattern, play icon, white heading, and accent-coloured button.
 
 = 1.8.0 =
 * New: Elementor video widget blocking — YouTube and other embeds placed via Elementor's Video widget and the newer e-youtube-base component are now correctly blocked pending consent. Previously only standard HTML iframes were intercepted; Elementor renders videos entirely via JavaScript making PHP-level blocking ineffective.
