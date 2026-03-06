@@ -1,10 +1,5 @@
 # MBR Cookie Consent
 
-[![GitHub Release](https://img.shields.io/github/v/release/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
-[![GitHub Forks](https://img.shields.io/github/forks/harbourbob/MBR-Cookie-Consent?style=social)](https://github.com/harbourbob/MBR-Cookie-Consent)
-[![GitHub Issues](https://img.shields.io/github/issues/harbourbob/MBR-Cookie-Consent)](https://github.com/harbourbob/MBR-Cookie-Consent/issues)
-[![GitHub Downloads](https://img.shields.io/github/downloads/harbourbob/MBR-Cookie-Consent/total?style=flat-square&color=brightgreen&logo=github)](https://github.com/harbourbob/MBR-Cookie-Consent/releases)
-
 A comprehensive WordPress cookie consent plugin supporting GDPR, CCPA, and global privacy compliance.
 
 ## Description
@@ -73,6 +68,20 @@ From version 1.5.0 the plugin now offers multisite enterprise-level support.
 - **Automatic Scanning**: One-click scan to detect scripts on your site
 - **Manual Management**: Add, edit, or delete cookies and scripts
 - **Category Management**: Organize scripts by Necessary, Analytics, Marketing, Preferences
+
+#### Form Builder Integration *(v1.9.0)*
+- **Block on No Consent**: Form submissions are rejected server-side until cookie consent is granted — cannot be bypassed by disabling JavaScript
+- **Supported Builders**: Contact Form 7, WPForms, Gravity Forms, Elementor Forms
+- **Elementor Modal**: Clean dark overlay modal replaces inline error messages in Elementor, with Accept Cookies and Not Now buttons
+- **Auto Re-submit**: After accepting cookies from the form modal, the pending form re-submits automatically — no page reload, no re-typing
+- **Configurable**: Choose required consent category and customise the blocked message
+
+#### A/B Testing *(v1.9.0)*
+- **Three Variants**: Bottom bar (A), Popup (B), Box-left (C) — visitors randomly assigned on first visit
+- **Session Persistence**: Same visitor always sees the same variant via session cookie
+- **Conversion Tracking**: Impressions and accept-all conversions tracked per variant
+- **Results Dashboard**: Live table with accept rates, mini bar charts, and winner indicator
+- **Promote Winner**: One-click promotes the winning variant to the live banner position and disables the test
 
 #### Legal Policy Tools
 - **Policy Generator**: Creates WordPress Cookie Policy page template
@@ -368,7 +377,7 @@ The plugin uses output buffering to intercept and modify HTML before it reaches 
 ## Support
 
 For support, feature requests, or bug reports:
-- Email: [rob@littlewebshack.com]
+- Email: [Your contact email]
 - Website: [Little Web Shack](https://littlewebshack.com)
 - Documentation: See plugin admin pages
 
@@ -394,28 +403,24 @@ For support, feature requests, or bug reports:
 
 ### Future Enhancements
 - Consent Mode API for developers
-- Integration with popular form builders
-- A/B testing for banner variations
+- ✅ Integration with popular form builders (v1.9.0)
+- ✅ A/B testing for banner variations (v1.9.0)
 
 ## Changelog
 
-### 1.8.0
-- **New: Elementor video widget blocking — YouTube and other embeds placed via Elementor's Video widget and the newer e-youtube-base component are now correctly blocked pending consent. Previously only standard HTML iframes were intercepted; Elementor renders videos entirely via JavaScript making PHP-level blocking ineffective.
-- **New: Automatic built-in service library — common third-party services (YouTube, Vimeo, Google Maps, Google Analytics, Facebook Pixel, and more) are now blocked automatically by consent category with no manual configuration required.
-- **New: After accepting cookies on a page with blocked Elementor videos, the page automatically reloads so videos initialise cleanly.
-- **New: Blocked video placeholder shown in place of Elementor video widgets, matching the existing blocked content overlay style, with an "Accept cookies & play video" button.
-- **Fix: Script blocker now matches iframes using data-lazy-src and data-src attributes in addition to src, ensuring compatibility with WP Rocket and other lazy-load plugins.
-- **Fix: Per-category unblocking — accepting one cookie category (e.g. Analytics) no longer incorrectly unblocks services from a different category (e.g. Marketing/YouTube).
-- **Fix: WP Rocket exclusion filters added so lazy-load transformation of blocked iframes is suppressed.
-- **Improvement: Blocked elements now carry a data-mbr-cc-category attribute enabling precise per-category restore logic on consent.
+### 1.9.1 - Bug Fixes
+- **Elementor Forms modal** now reliably shows instead of the inline error message. Uses a dual-strategy approach: fetch() intercept for modern Elementor Pro, plus a MutationObserver DOM sentinel as a universal fallback
+- **Form re-submit after consent** — page no longer reloads and clears the form after accepting cookies from the modal. The form re-submits automatically with data intact
+- **Form blocking hard-stops** corrected for all four builders. CF7 now uses the `wpcf7_spam` filter. WPForms blocks entry saving and email notifications. Elementor uses `add_error()` on the first field with `add_response_data()` to signal the modal
+- **Remove last blocked script** — re-indexes remaining DOM items after each removal to stay in sync with server-side `array_values()` re-index
+- **Delete Old Logs UI** restored to Consent Logs page (handler and JS existed but the HTML form was missing)
+- **Blocked content placeholder** now always renders when an iframe is blocked, regardless of the admin overlay toggle
+- **Service-specific messaging** in blocked content placeholder (e.g. "YouTube video blocked")
+- **Branding logo** recommended size corrected to 150×150 px
 
-
-### 1.6.1 - Minor Bug Fixing
-- **Minor bug fixing to Admin Interface
-
-### 1.6.0 - Geolocation
-- **Geolocation Feature
-- **Redesigned Admin Interface for better UX
+### 1.9.0 - Form Integration & A/B Testing
+- **New: Form Builder Integration** — blocks form submissions server-side until cookie consent is granted. Supports Contact Form 7, WPForms, Gravity Forms, and Elementor Forms. Elementor shows a clean consent modal instead of inline errors. Configurable required category and custom blocked message
+- **New: A/B Testing** — randomly assigns visitors to three banner position variants (bottom bar, popup, box-left). Tracks impressions and accept-all conversions per variant. Winner (highest accept-all rate) can be promoted to live with one click
 
 ### 1.5.1 - Minor Bug Fixing
 - **Minor bug fixing to the Consent Log

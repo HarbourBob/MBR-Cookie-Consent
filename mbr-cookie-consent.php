@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com
  * Description: GDPR, CCPA, and global privacy law compliant cookie consent management with automatic script blocking and consent logging.
- * Version: 1.8.1
+ * Version: 1.9.1
  * Author: Made by Robert
  * Author URI: https://madebyrobert.com
  * License: GPL v2 or later
@@ -47,7 +47,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '1.8.1');
+define('MBR_CC_VERSION', '1.9.1');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -104,6 +104,8 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-cookie-scanner.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-policy-generator.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-privacy-policy-generator.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-form-integration.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-ab-testing.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-admin.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-settings.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/geolocation-ajax.php';
@@ -189,6 +191,8 @@ class MBR_Cookie_Consent {
         
         // Initialize privacy policy generator.
         MBR_CC_Privacy_Policy_Generator::get_instance();
+        MBR_CC_Form_Integration::get_instance();
+        MBR_CC_AB_Testing::get_instance();
     }
     
     /**

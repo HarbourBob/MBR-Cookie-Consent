@@ -828,7 +828,7 @@ if (!defined('ABSPATH')) {
                                value="<?php echo esc_attr( get_option( 'mbr_cc_blocked_overlay_logo_url', '' ) ); ?>"
                                class="large-text"
                                placeholder="https://example.com/logo.png">
-                        <p class="description"><?php esc_html_e( 'Recommended size: up to 360&thinsp;&times;&thinsp;96 px. Leave blank to use the automatic logo cascade described above.', 'mbr-cookie-consent' ); ?></p>
+                        <p class="description"><?php esc_html_e( 'Recommended size: up to 150&thinsp;&times;&thinsp;150 px. Leave blank to use the automatic logo cascade described above.', 'mbr-cookie-consent' ); ?></p>
                     </div>
 
                     <div style="margin-top: 16px; padding: 12px 16px; background: #f0f6fc; border-left: 4px solid #0073aa;">

@@ -5,7 +5,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, goog
 Requires at least: 5.8
 Tested up to: 6.9.1
 Requires PHP: 7.4
-Stable tag: 1.8.1
+Stable tag: 1.9.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -465,7 +465,7 @@ No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
 
-= 1.8.1 =
+= 1.9.1 =
 * Fix: Cookie consent banner reappearing immediately after accepting, rejecting, or saving preferences. A session flag now prevents the banner re-displaying regardless of cookie propagation timing or any other post-save trigger.
 * Fix: Cookie write verification added — if an explicit domain scope (e.g. .example.com) prevents the consent cookie being read back immediately, the cookie is rewritten without a domain attribute so the browser scopes it correctly to the current host.
 * Fix: Banner hide and script unblocking no longer depend on the AJAX consent log succeeding. Both now fire immediately on user interaction; the AJAX database log runs as fire-and-forget with no UI consequence if it fails (e.g. stale nonce on cached pages).

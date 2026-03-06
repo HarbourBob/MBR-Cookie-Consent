@@ -45,6 +45,8 @@ class MBR_CC_Admin {
         // AJAX handlers.
         add_action('wp_ajax_mbr_cc_export_logs', array($this, 'ajax_export_logs'));
         add_action('wp_ajax_mbr_cc_delete_logs', array($this, 'ajax_delete_logs'));
+        add_action('wp_ajax_mbr_cc_save_form_settings', array($this, 'ajax_save_form_settings'));
+        add_action('wp_ajax_mbr_cc_save_ab_enabled', array($this, 'ajax_save_ab_enabled'));
     }
     
     /**
@@ -104,6 +106,24 @@ class MBR_CC_Admin {
             'manage_options',
             'mbr-cookie-consent-categories',
             array($this, 'render_categories_page')
+        );
+
+        add_submenu_page(
+            'mbr-cookie-consent',
+            __('Form Integration', 'mbr-cookie-consent'),
+            __('Form Integration', 'mbr-cookie-consent'),
+            'manage_options',
+            'mbr-cookie-consent-forms',
+            array($this, 'render_forms_page')
+        );
+
+        add_submenu_page(
+            'mbr-cookie-consent',
+            __('A/B Testing', 'mbr-cookie-consent'),
+            __('A/B Testing', 'mbr-cookie-consent'),
+            'manage_options',
+            'mbr-cookie-consent-ab-testing',
+            array($this, 'render_ab_testing_page')
         );
     }
     
@@ -203,6 +223,14 @@ class MBR_CC_Admin {
     public function render_categories_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/categories.php';
     }
+
+    public function render_forms_page() {
+        require_once MBR_CC_PLUGIN_DIR . 'admin/views/form-integration.php';
+    }
+
+    public function render_ab_testing_page() {
+        require_once MBR_CC_PLUGIN_DIR . 'admin/views/ab-testing.php';
+    }
     
     /**
      * AJAX: Export consent logs to CSV.
@@ -264,5 +292,31 @@ class MBR_CC_Admin {
             'message' => sprintf(__('Deleted %d log entries.', 'mbr-cookie-consent'), $deleted),
             'deleted' => $deleted,
         ));
+    }
+
+    /**
+     * AJAX: Save form integration settings.
+     */
+    public function ajax_save_form_settings() {
+        check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized.'));
+        }
+        update_option('mbr_cc_form_integration_enabled', !empty($_POST['enabled']));
+        update_option('mbr_cc_form_integration_message', sanitize_text_field($_POST['message'] ?? ''));
+        update_option('mbr_cc_form_required_category', sanitize_key($_POST['category'] ?? 'necessary'));
+        wp_send_json_success(array('message' => __('Form integration settings saved.', 'mbr-cookie-consent')));
+    }
+
+    /**
+     * AJAX: Save A/B testing enabled state.
+     */
+    public function ajax_save_ab_enabled() {
+        check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized.'));
+        }
+        update_option('mbr_cc_ab_testing_enabled', !empty($_POST['enabled']));
+        wp_send_json_success(array('message' => __('A/B testing setting saved.', 'mbr-cookie-consent')));
     }
 }

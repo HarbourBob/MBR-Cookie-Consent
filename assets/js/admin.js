@@ -94,6 +94,35 @@
                     self.deleteOldLogs();
                 }
             });
+
+            // Form integration — save settings
+            $('#mbr-cc-form-save').on('click', function(e) {
+                e.preventDefault();
+                self.saveFormSettings();
+            });
+
+            // A/B testing — save enabled state
+            $('#mbr-cc-ab-save-enabled').on('click', function(e) {
+                e.preventDefault();
+                self.saveAbEnabled();
+            });
+
+            // A/B testing — promote winner
+            $(document).on('click', '.mbr-cc-ab-promote', function(e) {
+                e.preventDefault();
+                var label = $(this).data('label');
+                if (confirm('Promote ' + label + ' to the live banner position? A/B testing will be disabled.')) {
+                    self.promoteAbWinner();
+                }
+            });
+
+            // A/B testing — reset stats
+            $('#mbr-cc-ab-reset').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('Reset all A/B test stats? This cannot be undone.')) {
+                    self.resetAbStats();
+                }
+            });
             
             // Update categories
             $('#mbr-cc-save-categories').on('click', function(e) {
@@ -492,10 +521,18 @@
                         $item.fadeOut(300, function() {
                             $(this).remove();
                             
-                            // Check if any blocked scripts remain
                             var $blockedSection = $('.mbr-cc-blocked-scripts');
-                            if ($blockedSection.find('.mbr-cc-script-item').length === 0) {
+                            var $remaining = $blockedSection.find('.mbr-cc-script-item');
+
+                            if ($remaining.length === 0) {
+                                // No scripts left — remove the whole section.
                                 $blockedSection.remove();
+                            } else {
+                                // Re-index remaining remove buttons to match the
+                                // server-side array_values() re-index after removal.
+                                $remaining.each(function(newIndex) {
+                                    $(this).find('.mbr-cc-remove-script').data('index', newIndex);
+                                });
                             }
                         });
                         
@@ -575,6 +612,88 @@
                     if (response.success) {
                         self.showNotice(response.data.message, 'success');
                         location.reload();
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                    }
+                }
+            });
+        },
+
+        saveFormSettings: function() {
+            var self = this;
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_save_form_settings',
+                    nonce: mbrCcAdmin.nonce,
+                    enabled: $('#mbr-cc-form-enabled').is(':checked') ? 1 : 0,
+                    message: $('#mbr-cc-form-message').val(),
+                    category: $('#mbr-cc-form-required-category').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.showNotice(response.data.message, 'success');
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                    }
+                }
+            });
+        },
+
+        saveAbEnabled: function() {
+            var self = this;
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_save_ab_enabled',
+                    nonce: mbrCcAdmin.nonce,
+                    enabled: $('#mbr-cc-ab-enabled').is(':checked') ? 1 : 0
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.showNotice(response.data.message, 'success');
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                    }
+                }
+            });
+        },
+
+        promoteAbWinner: function() {
+            var self = this;
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_ab_promote_winner',
+                    nonce: mbrCcAdmin.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.showNotice(response.data.message, 'success');
+                        setTimeout(function() { location.reload(); }, 1500);
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                    }
+                }
+            });
+        },
+
+        resetAbStats: function() {
+            var self = this;
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_ab_reset_stats',
+                    nonce: mbrCcAdmin.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.showNotice(response.data.message, 'success');
+                        setTimeout(function() { location.reload(); }, 1000);
                     } else {
                         self.showNotice(response.data.message, 'error');
                     }

@@ -24,6 +24,21 @@ $logs = $db->get_consent_logs(array('limit' => 100));
                 <?php esc_html_e('Export to CSV', 'mbr-cookie-consent'); ?>
             </button>
         </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+            <label for="mbr-cc-delete-logs-days" style="font-weight:600;">
+                <?php esc_html_e('Delete logs older than:', 'mbr-cookie-consent'); ?>
+            </label>
+            <input type="number"
+                   id="mbr-cc-delete-logs-days"
+                   class="small-text"
+                   value="365"
+                   min="1"
+                   style="width:70px;" />
+            <span><?php esc_html_e('days', 'mbr-cookie-consent'); ?></span>
+            <button type="button" id="mbr-cc-delete-old-logs" class="button button-secondary">
+                <?php esc_html_e('Delete Old Logs', 'mbr-cookie-consent'); ?>
+            </button>
+        </div>
     </div>
     
     <div class="mbr-cc-settings-section">

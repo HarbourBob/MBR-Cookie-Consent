@@ -271,7 +271,8 @@
             this.unblockScripts(consent);
 
             // Reload page if enabled (e.g. to restore Elementor videos).
-            if (mbrCcConsent.reloadOnConsent) {
+            // Suppressed when the form consent modal is handling a re-submit.
+            if (mbrCcConsent.reloadOnConsent && !window._mbrCcSuppressReload) {
                 location.reload();
                 return; // No point doing anything else if we're reloading.
             }
