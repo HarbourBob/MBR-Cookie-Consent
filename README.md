@@ -377,7 +377,7 @@ The plugin uses output buffering to intercept and modify HTML before it reaches 
 ## Support
 
 For support, feature requests, or bug reports:
-- Email: [Your contact email]
+- Email: [rob@littlewebshack.com]
 - Website: [Little Web Shack](https://littlewebshack.com)
 - Documentation: See plugin admin pages
 
@@ -565,7 +565,7 @@ GPL v2 or later
 
 ## Credits
 
-**Author**: Made by Robert  
+**Author**: Robert Palmer
 **Website**: [madeberobert.com](https://madeberobert.co.uk)  
 **Plugin Home**: [Little Web Shack](https://littlewebshack.com)
 
