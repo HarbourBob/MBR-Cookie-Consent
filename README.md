@@ -1,4 +1,4 @@
-# MBR Cookie Consent
+# MBR Cookie Consent - v1.9.1
 
 A comprehensive WordPress cookie consent plugin supporting GDPR, CCPA, and global privacy compliance.
 
