@@ -296,6 +296,11 @@ Coming in a future version.
 
 ## 📜 Changelog
 
+### 1.9.2 - Bug Fixes
+- **Button colours** - set in admin now correctly apply to the preferences modal Save and Reject buttons
+- **Banner close X** now correctly inherits the admin-set text colour
+- **All colour declarations** hardened with !important and extended to cover :hover/:focus states to prevent theme/Elementor CSS overrides
+
 ### 1.9.1 — Bug Fixes
 - **Elementor Forms modal** — dual-strategy intercept (fetch + XHR) ensures the modal always shows instead of inline errors
 - **Form auto re-submit** — raw request body captured and replayed after consent; page no longer reloads and clears the form
