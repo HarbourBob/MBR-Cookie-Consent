@@ -3,9 +3,9 @@ Contributors: madebyrobert
 Donate link: https://littlewebshack.com/donate
 Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, google consent mode
 Requires at least: 5.8
-Tested up to: 6.9.1
+Tested up to: 6.9.4
 Requires PHP: 7.4
-Stable tag: 1.9.1
+Stable tag: 1.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -464,6 +464,11 @@ No. There is no pro/premium version. All features are included free forever.
 10. Accessibility settings - WCAG compliance options
 
 == Changelog ==
+
+= 1.9.2 =
+* Fix: Button colours set in admin now correctly apply to the preferences modal Save and Reject buttons
+* Fix: Banner close X now correctly inherits the admin-set text colour
+* Fix: All colour declarations hardened with !important and extended to cover :hover/:focus states to prevent theme/Elementor CSS overrides
 
 = 1.9.1 =
 * Fix: Cookie consent banner reappearing immediately after accepting, rejecting, or saving preferences. A session flag now prevents the banner re-displaying regardless of cookie propagation timing or any other post-save trigger.

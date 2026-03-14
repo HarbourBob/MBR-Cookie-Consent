@@ -117,31 +117,57 @@ class MBR_CC_Banner {
         $revisit_text_color = get_option('mbr_cc_revisit_button_text_color', '#000000');
         
         $custom_css = "
+            /* ── Banner ───────────────────────────────────────────── */
             .mbr-cc-banner {
-                background-color: {$primary_color};
-                color: {$text_color};
+                background-color: {$primary_color} !important;
+                color: {$text_color} !important;
             }
-            .mbr-cc-banner .mbr-cc-btn-accept {
-                background-color: {$accept_color};
+
+            /* Accept buttons — banner and modal footer */
+            .mbr-cc-banner .mbr-cc-btn-accept,
+            .mbr-cc-banner .mbr-cc-btn-accept:hover,
+            .mbr-cc-banner .mbr-cc-btn-accept:focus,
+            .mbr-cc-modal .mbr-cc-btn-accept,
+            .mbr-cc-modal .mbr-cc-btn-accept:hover,
+            .mbr-cc-modal .mbr-cc-btn-accept:focus {
+                background-color: {$accept_color} !important;
+                background: {$accept_color} !important;
                 color: #ffffff !important;
             }
-            .mbr-cc-banner .mbr-cc-btn-reject {
-                background-color: {$reject_color};
+
+            /* Reject buttons — banner and modal footer */
+            .mbr-cc-banner .mbr-cc-btn-reject,
+            .mbr-cc-banner .mbr-cc-btn-reject:hover,
+            .mbr-cc-banner .mbr-cc-btn-reject:focus,
+            .mbr-cc-modal .mbr-cc-btn-reject,
+            .mbr-cc-modal .mbr-cc-btn-reject:hover,
+            .mbr-cc-modal .mbr-cc-btn-reject:focus {
+                background-color: {$reject_color} !important;
+                background: {$reject_color} !important;
                 color: #ffffff !important;
             }
+
+            /* Customise button on banner */
             .mbr-cc-banner .mbr-cc-btn-customize {
-                border-color: {$text_color};
-                color: {$text_color};
+                border-color: {$text_color} !important;
+                color: {$text_color} !important;
             }
+
+            /* Banner close X — inherits banner text colour */
+            .mbr-cc-banner .mbr-cc-close {
+                color: {$text_color} !important;
+            }
+
+            /* ── Revisit button ───────────────────────────────────── */
             .mbr-cc-revisit-consent {
-                background-color: {$primary_color};
+                background-color: {$primary_color} !important;
                 color: {$revisit_text_color} !important;
             }
             .mbr-cc-revisit-consent span {
                 color: {$revisit_text_color} !important;
             }
             .mbr-cc-revisit-consent svg {
-                stroke: {$revisit_text_color};
+                stroke: {$revisit_text_color} !important;
             }
         ";
         
