@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Downloads](https://img.shields.io/badge/downloads-free%20%26%20open%20source-brightgreen?style=flat-square)](https://littlewebshack.com)
+[![Downloads](https://img.shields.io/github/downloads/harbourbob/mbr-cookie-consent/total)](https://github.com/harbourbob/mbr-cookie-consent/releases)
 [![GDPR](https://img.shields.io/badge/GDPR-compliant-success?style=flat-square)](https://littlewebshack.com)
 [![IAB TCF](https://img.shields.io/badge/IAB%20TCF-v2.3-orange?style=flat-square)](https://iabeurope.eu)
 
