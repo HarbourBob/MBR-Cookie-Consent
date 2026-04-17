@@ -3,7 +3,7 @@
  * Geolocation AJAX Handlers
  *
  * @package MBR_Cookie_Consent
- * @version 1.6.0
+ * @version 2.0.0
  */
 
 // Exit if accessed directly.
@@ -28,29 +28,38 @@ function mbr_cc_ajax_test_geolocation() {
     }
     
     // Determine region directly
-    $eu_uk = array('AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','UK');
+    $eu = array('AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE');
+    $uk = array('GB','UK');
     
-    if (in_array($country, $eu_uk)) {
-        $region = 'eu_uk';
-        $region_name = 'EU/UK (GDPR)';
+    if (in_array($country, $uk)) {
+        $region = 'uk_duaa';
+        $region_name = 'United Kingdom (UK GDPR + DUAA 2025)';
+    } elseif (in_array($country, $eu)) {
+        $region = 'eu_gdpr';
+        $region_name = 'EU (GDPR / ePrivacy Directive)';
     } elseif ($country === 'US') {
-        $region = 'ccpa';
-        $region_name = 'United States (CCPA)';
+        $region = 'us_multi';
+        $region_name = 'United States (CCPA + 20 State Laws / GPC)';
     } elseif ($country === 'BR') {
         $region = 'lgpd';
         $region_name = 'Brazil (LGPD)';
     } elseif ($country === 'CA') {
         $region = 'pipeda';
-        $region_name = 'Canada (PIPEDA)';
+        $region_name = 'Canada (PIPEDA / CASL)';
+    } elseif ($country === 'IN') {
+        $region = 'india_dpdp';
+        $region_name = 'India (DPDP Act 2023)';
     } else {
         $region = 'default';
         $region_name = 'Rest of World';
     }
     
     // Get config
-    $requires_consent = in_array($region, array('eu_uk', 'lgpd', 'pipeda'));
-    $show_reject = in_array($region, array('eu_uk', 'lgpd'));
-    $enable_ccpa = ($region === 'ccpa');
+    $requires_consent = in_array($region, array('eu_gdpr', 'uk_duaa', 'lgpd', 'pipeda', 'india_dpdp'));
+    $show_reject = in_array($region, array('eu_gdpr', 'uk_duaa', 'lgpd', 'india_dpdp'));
+    $enable_ccpa = ($region === 'us_multi');
+    $gpc_enabled = ($region === 'us_multi');
+    $duaa_exempt = ($region === 'uk_duaa');
     
     wp_send_json_success(array(
         'country' => $country,
@@ -59,6 +68,8 @@ function mbr_cc_ajax_test_geolocation() {
         'requires_consent' => $requires_consent,
         'show_reject' => $show_reject,
         'enable_ccpa' => $enable_ccpa,
+        'gpc_enabled' => $gpc_enabled,
+        'duaa_exempt' => $duaa_exempt,
     ));
 }
 

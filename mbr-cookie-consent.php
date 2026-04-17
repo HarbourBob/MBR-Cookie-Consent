@@ -2,8 +2,8 @@
 /**
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com
- * Description: GDPR, CCPA, and global privacy law compliant cookie consent management with automatic script blocking and consent logging.
- * Version: 1.9.2
+ * Description: GDPR, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, DPDP, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
+ * Version: 2.0.0
  * Author: Made by Robert
  * Author URI: https://madebyrobert.com
  * License: GPL v2 or later
@@ -47,7 +47,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '1.9.2');
+define('MBR_CC_VERSION', '2.0.0');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -91,6 +91,7 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-database.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-geolocation.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-region-config.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-gpc-handler.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-script-blocker.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-blocked-placeholder.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-banner.php';
@@ -168,6 +169,9 @@ class MBR_Cookie_Consent {
         // Initialize geolocation and regional config (must run before banner).
         MBR_CC_Geolocation::get_instance();
         MBR_CC_Region_Config::get_instance();
+        
+        // Initialize GPC (Global Privacy Control) handler (must run before banner).
+        MBR_CC_GPC_Handler::get_instance();
         
         // Initialize banner display.
         MBR_CC_Banner::get_instance();

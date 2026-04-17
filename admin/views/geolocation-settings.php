@@ -3,7 +3,7 @@
  * Geolocation Settings View
  *
  * @package MBR_Cookie_Consent
- * @version 1.6.0
+ * @version 2.0.0
  */
 
 // Exit if accessed directly.
@@ -28,7 +28,7 @@ $region_name = $geo->get_region_name();
 
 <div class="mbr-cc-settings-section">
     <h2><?php esc_html_e('Geolocation & Regional Compliance', 'mbr-cookie-consent'); ?></h2>
-    <p><?php esc_html_e('Automatically detect user location and apply appropriate privacy law requirements (GDPR, CCPA, LGPD, etc.)', 'mbr-cookie-consent'); ?></p>
+    <p><?php esc_html_e('Automatically detect user location and apply appropriate privacy law requirements (EU GDPR, UK DUAA, US Multi-State/GPC, LGPD, PIPEDA, India DPDP, etc.)', 'mbr-cookie-consent'); ?></p>
     
     <!-- Current Detection Status -->
     <div class="mbr-cc-info-box" style="background: #e7f3e7; border-color: #46b450;">
@@ -99,13 +99,13 @@ $region_name = $geo->get_region_name();
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
         
-        <!-- EU/UK GDPR -->
+        <!-- EU GDPR -->
         <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #2271b1;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-                🇪🇺 <?php esc_html_e('EU/UK - GDPR', 'mbr-cookie-consent'); ?>
+                🇪🇺 <?php esc_html_e('EU - GDPR / ePrivacy', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('27 EU countries + United Kingdom', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('27 EU member states — strict opt-in regime', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
                 <li>✓ <?php esc_html_e('Explicit opt-in required', 'mbr-cookie-consent'); ?></li>
@@ -120,24 +120,45 @@ $region_name = $geo->get_region_name();
             </p>
         </div>
         
-        <!-- California CCPA -->
-        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #d63638;">
+        <!-- UK DUAA -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #0073aa;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-                🇺🇸 <?php esc_html_e('California - CCPA', 'mbr-cookie-consent'); ?>
+                🇬🇧 <?php esc_html_e('UK - GDPR + DUAA 2025', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('California residents (US)', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('UK — separate regime from EU since February 2026', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
-                <li>✓ <?php esc_html_e('"Do Not Sell" link required', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Opt-out based (not opt-in)', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Honor opt-out requests', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Disclose data practices', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Allow data deletion requests', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Analytics cookies exempt (opt-out)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Functionality cookies exempt (opt-out)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Advertising still requires consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Clear info + easy opt-out for all', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Complaints procedure by June 2026', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
-                <?php esc_html_e('Up to $7,500 per violation', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('Up to £17.5M or 4% of turnover (35x increase)', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- US Multi-State -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #d63638;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇺🇸 <?php esc_html_e('US - Multi-State + GPC', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('20 states with privacy laws (CCPA/CPRA + 19 more)', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('"Do Not Sell or Share" link (CCPA)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Honour GPC signals (12+ states)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Opt-out based (not opt-in)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Show "Opt-Out Honored" (CA)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Sensitive data opt-in (16+ states)', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to $7,988 per violation (CA); varies by state', 'mbr-cookie-consent'); ?>
             </p>
         </div>
         
@@ -162,13 +183,55 @@ $region_name = $geo->get_region_name();
             </p>
         </div>
         
+        <!-- Canada PIPEDA -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #8c5e58;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇨🇦 <?php esc_html_e('Canada - PIPEDA / CASL', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('Canada — meaningful consent + CASL', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Meaningful consent required', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Purpose before collection', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Quebec requires express opt-in', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('CASL treats cookies as programs', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Bill C-27 may tighten rules', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to $10M CAD per violation', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- India DPDP -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #ff6b35;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇮🇳 <?php esc_html_e('India - DPDP Act 2023', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('India — phased enforcement through May 2027', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Granular consent + one-click withdrawal', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Standalone privacy notice', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Parental consent for minors', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('CM registration Nov 2026 (India only)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Full compliance by May 2027', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to ₹250 crore (~£25M) per violation', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
         <!-- Rest of World -->
         <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #999;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
                 🌍 <?php esc_html_e('Rest of World', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('Other countries & regions', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('Other countries and regions', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
                 <li>✓ <?php esc_html_e('Best practice transparency', 'mbr-cookie-consent'); ?></li>
@@ -244,6 +307,12 @@ jQuery(document).ready(function($) {
                 html += '<p><strong>Requires Consent:</strong> ' + (response.data.requires_consent ? 'Yes' : 'No') + '</p>';
                 html += '<p><strong>Show Reject Button:</strong> ' + (response.data.show_reject ? 'Yes' : 'No') + '</p>';
                 html += '<p><strong>Enable CCPA Link:</strong> ' + (response.data.enable_ccpa ? 'Yes' : 'No') + '</p>';
+                if (response.data.gpc_enabled) {
+                    html += '<p><strong>GPC Signal Honoured:</strong> Yes (12+ states mandate)</p>';
+                }
+                if (response.data.duaa_exempt) {
+                    html += '<p><strong>DUAA Exempt Categories:</strong> Analytics, Preferences (opt-out)</p>';
+                }
                 html += '</div>';
                 $('#test-results').html(html);
             } else {

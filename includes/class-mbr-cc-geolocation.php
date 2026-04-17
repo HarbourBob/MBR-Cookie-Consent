@@ -4,7 +4,7 @@
  * Detects user location and applies appropriate privacy regulations
  *
  * @package MBR_Cookie_Consent
- * @version 1.6.0
+ * @version 2.0.0
  */
 
 // Exit if accessed directly.
@@ -30,15 +30,19 @@ class MBR_CC_Geolocation {
     private $region = null;
     
     /**
-     * EU/UK country codes (GDPR)
+     * EU country codes (ePrivacy Directive / GDPR — strict opt-in)
      */
-    private $eu_uk_countries = array(
-        // EU Countries
+    private $eu_countries = array(
         'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
         'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
         'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-        // UK (post-Brexit but maintains GDPR)
-        'GB', 'UK'
+    );
+    
+    /**
+     * UK country codes (UK GDPR + DUAA 2025 — separate regime from EU since Feb 2026)
+     */
+    private $uk_countries = array(
+        'GB', 'UK',
     );
     
     /**
@@ -224,26 +228,34 @@ class MBR_CC_Geolocation {
      * Determine privacy region from country code
      */
     private function determine_region($country_code) {
-        // EU/UK - GDPR
-        if (in_array($country_code, $this->eu_uk_countries)) {
-            return 'eu_uk';
+        // UK — UK GDPR + DUAA 2025 (separate from EU since Feb 2026)
+        if (in_array($country_code, $this->uk_countries)) {
+            return 'uk_duaa';
         }
         
-        // California - CCPA (requires state detection)
+        // EU — ePrivacy Directive / GDPR (strict opt-in)
+        if (in_array($country_code, $this->eu_countries)) {
+            return 'eu_gdpr';
+        }
+        
+        // United States — multi-state privacy laws + GPC (20 states by 2026)
         if ($country_code === 'US') {
-            // For now, treat all US as potentially CCPA
-            // Could be enhanced with state detection
-            return 'ccpa';
+            return 'us_multi';
         }
         
-        // Brazil - LGPD
+        // Brazil — LGPD
         if ($country_code === 'BR') {
             return 'lgpd';
         }
         
-        // Canada - PIPEDA
+        // Canada — PIPEDA / CASL
         if ($country_code === 'CA') {
             return 'pipeda';
+        }
+        
+        // India — Digital Personal Data Protection Act 2023
+        if ($country_code === 'IN') {
+            return 'india_dpdp';
         }
         
         // Default for rest of world
@@ -311,17 +323,40 @@ class MBR_CC_Geolocation {
     }
     
     /**
-     * Check if user is in EU/UK
+     * Check if user is in EU (GDPR strict opt-in)
+     */
+    public function is_eu() {
+        return $this->get_region() === 'eu_gdpr';
+    }
+    
+    /**
+     * Check if user is in UK (DUAA 2025 regime)
+     */
+    public function is_uk() {
+        return $this->get_region() === 'uk_duaa';
+    }
+    
+    /**
+     * Check if user is in EU or UK (either GDPR-derived regime)
+     * Backwards-compatible helper.
      */
     public function is_eu_uk() {
-        return $this->get_region() === 'eu_uk';
+        return in_array($this->get_region(), array('eu_gdpr', 'uk_duaa'));
+    }
+    
+    /**
+     * Check if user is in US multi-state region
+     */
+    public function is_us() {
+        return $this->get_region() === 'us_multi';
     }
     
     /**
      * Check if user is in California/CCPA region
+     * Backwards-compatible alias — now maps to the broader US multi-state region.
      */
     public function is_ccpa() {
-        return $this->get_region() === 'ccpa';
+        return $this->get_region() === 'us_multi';
     }
     
     /**
@@ -332,15 +367,27 @@ class MBR_CC_Geolocation {
     }
     
     /**
+     * Check if user is in India
+     */
+    public function is_dpdp() {
+        return $this->get_region() === 'india_dpdp';
+    }
+    
+    /**
      * Get region display name
      */
     public function get_region_name() {
         $names = array(
-            'eu_uk' => 'EU/UK (GDPR)',
-            'ccpa' => 'United States (CCPA)',
-            'lgpd' => 'Brazil (LGPD)',
-            'pipeda' => 'Canada (PIPEDA)',
-            'default' => 'Rest of World'
+            'eu_gdpr'    => 'EU (GDPR / ePrivacy Directive)',
+            'uk_duaa'    => 'United Kingdom (UK GDPR + DUAA 2025)',
+            'us_multi'   => 'United States (CCPA + 20 State Laws / GPC)',
+            'lgpd'       => 'Brazil (LGPD)',
+            'pipeda'     => 'Canada (PIPEDA / CASL)',
+            'india_dpdp' => 'India (DPDP Act 2023)',
+            'default'    => 'Rest of World',
+            // Legacy keys for backwards compatibility with cached transients.
+            'eu_uk'      => 'EU/UK (GDPR)',
+            'ccpa'       => 'United States (CCPA)',
         );
         
         $region = $this->get_region();

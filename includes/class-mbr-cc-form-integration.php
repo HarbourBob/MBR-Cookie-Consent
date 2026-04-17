@@ -31,6 +31,21 @@ class MBR_CC_Form_Integration {
         return self::$instance;
     }
 
+    /**
+     * Get the error message, applying the translated default lazily.
+     *
+     * The default is not set in the constructor because __() must not be
+     * called before the 'init' action (WordPress 6.7+).
+     *
+     * @return string
+     */
+    private function get_error_message() {
+        if ( empty( $this->error_message ) ) {
+            $this->error_message = __( 'Please accept cookies before submitting this form.', 'mbr-cookie-consent' );
+        }
+        return $this->error_message;
+    }
+
     private function __construct() {
         // Only hook when the feature is enabled.
         if ( ! get_option( 'mbr_cc_form_integration_enabled', false ) ) {
@@ -39,7 +54,7 @@ class MBR_CC_Form_Integration {
 
         $this->error_message = get_option(
             'mbr_cc_form_integration_message',
-            __( 'Please accept cookies before submitting this form.', 'mbr-cookie-consent' )
+            '' // Default set lazily in get_error_message() to avoid early translation loading.
         );
 
         // ── Contact Form 7 ────────────────────────────────────────────────
@@ -127,7 +142,7 @@ class MBR_CC_Form_Integration {
         // Set a human-readable response so CF7's AJAX returns our message.
         $submission = WPCF7_Submission::get_instance();
         if ( $submission ) {
-            $submission->set_response( $this->error_message );
+            $submission->set_response( $this->get_error_message() );
         }
         return true; // Mark as spam = hard stop.
     }
@@ -164,7 +179,7 @@ class MBR_CC_Form_Integration {
             return;
         }
         $form_id = $form_data['id'];
-        wpforms()->process->errors[ $form_id ]['header'] = $this->error_message;
+        wpforms()->process->errors[ $form_id ]['header'] = $this->get_error_message();
         // Prevent entry save and notifications by marking process as errored.
         add_filter( 'wpforms_entry_save', '__return_false' );
         add_filter( 'wpforms_entry_email_send', '__return_false' );
@@ -192,7 +207,7 @@ class MBR_CC_Form_Integration {
         foreach ( $form['fields'] as &$field ) {
             if ( $field->type !== 'hidden' ) {
                 $field->failed_validation  = true;
-                $field->validation_message = $this->error_message;
+                $field->validation_message = $this->get_error_message();
                 break;
             }
         }
@@ -228,7 +243,7 @@ class MBR_CC_Form_Integration {
             'success' => false,
             'data'    => array(
                 'mbr_cc_consent_required' => true,
-                'mbr_cc_message'          => $this->error_message,
+                'mbr_cc_message'          => $this->get_error_message(),
             ),
         ) );
     }
@@ -257,7 +272,7 @@ class MBR_CC_Form_Integration {
         // Pass the blocked message to JS so the DOM sentinel can match it
         // exactly, regardless of language or admin customisation.
         wp_localize_script( 'mbr-cc-form-modal', 'mbrCcFormModal', array(
-            'message' => $this->error_message,
+            'message' => $this->get_error_message(),
             'ajaxUrl' => admin_url( 'admin-ajax.php' ),
         ) );
     }

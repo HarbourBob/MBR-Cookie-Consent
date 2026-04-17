@@ -68,12 +68,127 @@
         checkConsent: function() {
             var consent = this.getCookie(mbrCcBanner.categories ? 'mbr_cc_consent' : 'mbr_cc_consent');
             
+            // Check for Global Privacy Control (GPC) signal.
+            // Required by 12+ US states as of January 2026.
+            if (this.isGpcActive()) {
+                this.handleGpcSignal(consent);
+                return;
+            }
+            
             if (!consent) {
                 this.showBanner();
             } else {
                 this.showRevisitButton();
                 this.unblockScripts(JSON.parse(consent));
             }
+        },
+        
+        /**
+         * Detect Global Privacy Control signal.
+         * Checks both the JS API (navigator.globalPrivacyControl) and
+         * the server-side detection passed via mbrCcGpc localized data.
+         */
+        isGpcActive: function() {
+            // Client-side: navigator.globalPrivacyControl
+            if (typeof navigator !== 'undefined' && navigator.globalPrivacyControl === true) {
+                return true;
+            }
+            
+            // Server-side: Sec-GPC header detected by PHP (passed via wp_localize_script)
+            if (typeof mbrCcGpc !== 'undefined' && mbrCcGpc.serverDetected === true) {
+                return true;
+            }
+            
+            return false;
+        },
+        
+        /**
+         * Handle an active GPC signal.
+         * Suppress marketing/advertising cookies, show opt-out confirmation,
+         * and still allow the banner for categories not covered by GPC.
+         */
+        handleGpcSignal: function(existingConsent) {
+            var self = this;
+            var suppressedCategories = (typeof mbrCcGpc !== 'undefined' && mbrCcGpc.suppressCategories)
+                ? mbrCcGpc.suppressCategories
+                : ['marketing'];
+            
+            // Build a consent object that honours GPC:
+            // - necessary: always true
+            // - suppressed categories: forced false
+            // - other categories: use existing consent or leave for banner
+            var consent;
+            if (existingConsent) {
+                consent = JSON.parse(existingConsent);
+            } else {
+                consent = { necessary: true };
+            }
+            
+            // Force suppressed categories off regardless of stored consent
+            for (var i = 0; i < suppressedCategories.length; i++) {
+                consent[suppressedCategories[i]] = false;
+            }
+            
+            // Remove the 'all' flag if it was set — GPC overrides blanket acceptance
+            if (consent.all === true) {
+                delete consent.all;
+                // Restore non-suppressed categories to true since they had "all"
+                if (mbrCcBanner.categories) {
+                    $.each(mbrCcBanner.categories, function(slug) {
+                        if (suppressedCategories.indexOf(slug) === -1) {
+                            consent[slug] = true;
+                        }
+                    });
+                }
+            }
+            
+            // Apply the GPC-modified consent
+            this.unblockScripts(consent);
+            this.showRevisitButton();
+            
+            // Show the "Opt-Out Request Honored" confirmation (California requirement)
+            if (typeof mbrCcGpc !== 'undefined' && mbrCcGpc.showHonoredConfirmation) {
+                this.showGpcConfirmation(mbrCcGpc.honoredMessage || 'Opt-Out Request Honored');
+            }
+            
+            // If the visitor has NOT yet interacted with the banner at all,
+            // still show it so they can make choices for non-GPC categories.
+            if (!existingConsent) {
+                this.showBanner();
+            }
+        },
+        
+        /**
+         * Show the GPC "Opt-Out Request Honored" confirmation toast.
+         * Required by California CCPA regulations effective January 2026.
+         * Brief, non-intrusive — appears for a few seconds then fades.
+         */
+        showGpcConfirmation: function(message) {
+            // Don't show if already shown this session
+            if (this._gpcConfirmShown) {
+                return;
+            }
+            this._gpcConfirmShown = true;
+            
+            var $toast = $('<div/>', {
+                'id': 'mbr-cc-gpc-toast',
+                'role': 'status',
+                'aria-live': 'polite',
+                'style': 'position:fixed;bottom:20px;left:20px;z-index:999999;' +
+                          'background:#1a7a1a;color:#fff;padding:12px 20px;border-radius:6px;' +
+                          'font-size:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
+                          'box-shadow:0 4px 12px rgba(0,0,0,0.2);display:none;max-width:360px;' +
+                          'line-height:1.4;'
+            }).html('&#x2714; ' + message);
+            
+            $('body').append($toast);
+            $toast.fadeIn(300);
+            
+            setTimeout(function() {
+                $toast.fadeOut(500, function() {
+                    $toast.remove();
+                });
+            }, 5000);
         },
         
         bindEvents: function() {
