@@ -3,16 +3,26 @@
  * Global Privacy Control (GPC) Handler
  *
  * Detects and honours the GPC browser signal (Sec-GPC header / navigator.globalPrivacyControl).
- * Required by 12+ US states as of January 2026 including California, Colorado, Connecticut,
- * Montana, Nebraska, New Hampshire, New Jersey, Minnesota, Maryland, Delaware, Oregon, and Texas.
  *
- * When a GPC signal is detected, the handler automatically treats the visitor as having
- * opted out of data selling, sharing, and targeted advertising. Marketing/analytics cookies
- * that fall under "sale or sharing" definitions are suppressed without requiring the visitor
- * to interact with the consent banner.
+ * As of 2026, GPC must be honoured as a valid opt-out signal in: California,
+ * Colorado, Connecticut, Delaware, Maryland (effective 1 Oct 2025), Minnesota,
+ * Montana, Nebraska, New Hampshire, New Jersey, Oregon, and Texas — with
+ * additional states recognising it through universal opt-out preference signal
+ * (UOOM) requirements each year. Treating GPC as a global opt-out is therefore
+ * the safest US-wide posture.
+ *
+ * California CCPA regulations effective 1 January 2026 additionally require
+ * visible confirmation when an opt-out request — including a GPC signal — is
+ * processed; this is delivered via the showGpcConfirmation() toast in banner.js.
+ *
+ * When a GPC signal is detected, the handler automatically treats the visitor
+ * as having opted out of data selling, sharing, and targeted advertising.
+ * Marketing/analytics cookies that fall under "sale or sharing" definitions
+ * are suppressed without requiring the visitor to interact with the consent
+ * banner.
  *
  * @package MBR_Cookie_Consent
- * @version 2.0.0
+ * @version 2.1.0
  * @since 2.0.0
  */
 

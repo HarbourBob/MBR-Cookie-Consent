@@ -5,7 +5,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, goog
 Requires at least: 5.8
 Tested up to: 6.9.4
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -158,10 +158,17 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, J
 
 = 📊 Compliance Standards =
 
-✓ GDPR (General Data Protection Regulation)
-✓ CCPA (California Consumer Privacy Act)
+✓ GDPR (EU-27 + EEA: Iceland, Liechtenstein, Norway)
+✓ UK GDPR + Data (Use and Access) Act 2025 / PECR
+✓ CCPA / CPRA + 19 additional US state privacy laws (20 states total)
+✓ Global Privacy Control (GPC) — honoured in CA, CO, CT, DE, MD, MN, MT, NE, NH, NJ, OR, TX
+✓ Quebec Law 25 (express opt-in, French-default banner)
+✓ Switzerland revFADP / nFADP
+✓ Australia Privacy Act 1988 (as amended by the 2024 Amendment Act)
+✓ Brazil LGPD
+✓ Canada PIPEDA / CASL
+✓ India DPDP Act 2023 + DPDP Rules 2025
 ✓ ePrivacy Directive (Cookie Law)
-✓ PECR (UK Privacy Regulations)
 ✓ IAB Europe TCF v2.3
 ✓ WCAG 2.1 Level AA
 ✓ Section 508 (US Accessibility)
@@ -465,6 +472,24 @@ No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
 
+= 2.1.0 - May 8, 2026 =
+* New: Quebec (Law 25) detected as a separate region from the rest of Canada. Visitors with Canadian IP and ISO 3166-2 region "QC" now receive an express opt-in banner with French-default messaging, equally-prominent reject, and the stricter Law 25 consent recording posture. Visitors elsewhere in Canada continue to receive the PIPEDA / CASL config.
+* New: Switzerland (revFADP / nFADP) detected as a separate region. Swiss visitors no longer fall through to the lenient default config — they get a GDPR-equivalent opt-in banner reflecting the revised Federal Act on Data Protection in force since 1 September 2023.
+* New: Australia (Privacy Act 1988, as amended by the Privacy and Other Legislation Amendment Act 2024) detected as a separate region. Australian visitors receive an APP-aligned banner with informed consent and a clear opt-out path.
+* New: EEA non-EU members (Iceland, Liechtenstein, Norway) added to the GDPR detection list. These countries apply GDPR via the EEA Agreement and previously fell through to the default config — a compliance gap that is now closed.
+* New: Geolocation now captures sub-national region codes from ip-api.com and ipapi.co (and Cloudflare Enterprise) so that province/state-level rules can be applied correctly. Cache layer extended to store the region code alongside the country.
+* New: Admin geolocation testing tool now accepts an optional region/province code (e.g. CA + QC) so admins can verify Quebec-specific behaviour before going live.
+* New: Helper methods MBR_CC_Geolocation::is_quebec(), is_switzerland(), is_australia(), and get_region_code() exposed for theme/plugin integrations.
+* Compliance: UK DUAA region config rewritten to align with the ICO's "Storage and Access Technologies" guidance finalised on 29 April 2026. Documents the five PECR exemption categories (communications transmission, requested service, statistical analytics, appearance/functionality, software updates / emergency assistance) and the ICO's "simple means of objecting" expectation. Purpose limitation noted as mandatory.
+* Compliance: US multi-state region config and compliance info updated for the California CCPA regulations effective 1 January 2026 — mandatory visible confirmation when an opt-out request (including a GPC signal) is processed, expanded "sensitive personal information" definition covering neural data and data of consumers under 16, and the new dark-pattern prohibition on false-urgency consent UX.
+* Compliance: GPC handler documentation updated to list the actual 2026 state mandate set (CA, CO, CT, DE, MD, MN, MT, NE, NH, NJ, OR, TX) instead of the previous "12+ states" placeholder. The opt-out confirmation toast remains the mechanism that satisfies California's mandatory confirmation requirement.
+* Compliance: India DPDP region config and compliance info updated to reflect that the DPDP Rules 2025 were notified by MeitY on 13 November 2025 and gazetted on 14 November 2025. Phased compliance dates documented: Data Protection Board operational from 13 November 2025, Consent Manager registration opens 13 November 2026, full compliance mandatory by 13 May 2027. 72-hour breach notification noted.
+* Compliance: EU/EEA region docstring notes the formal withdrawal of the proposed ePrivacy Regulation by the European Commission on 11 February 2026; the 2002/58/EC Directive (as amended) remains the controlling instrument, supplemented by limited Digital Omnibus amendments.
+* Improvement: Admin Geolocation & Regional Compliance settings panel restructured — EU tile renamed to EU/EEA, UK tile rewritten around the five PECR exemptions, US tile updated for the CCPA 2026 amendments, PIPEDA tile clarifies that Quebec visitors are routed to Law 25, India tile reflects DPDP Rules notification. Three new tiles added for Quebec, Switzerland, and Australia.
+* Improvement: admin/geolocation-ajax.php refactored to call MBR_CC_Geolocation::determine_region() via reflection rather than maintaining a duplicate country list. The admin tester and live detection can no longer drift apart.
+* Improvement: ipapi.co provider switched to the JSON endpoint so country and region code can be fetched in a single request rather than two.
+* Note: This release contains no breaking API changes. Existing options, helper functions (mbr_cc_geolocation(), mbr_cc_region_config()), filters, and stored consent records continue to work unchanged. Visitors whose region resolves to a new key (ca_quebec, ch_nfadp, au_privacy) will see the appropriate region-specific banner on next page load; cached transients refresh automatically as they expire.
+
 = 1.9.2 =
 * Fix: Button colours set in admin now correctly apply to the preferences modal Save and Reject buttons
 * Fix: Banner close X now correctly inherits the admin-set text colour
@@ -591,6 +616,9 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: CCPA support
 
 == Upgrade Notice ==
+
+= 2.1.0 =
+Adds Quebec Law 25, Switzerland nFADP, and Australia Privacy Act as separate detected regions. Closes a compliance gap by adding EEA non-EU members (Iceland, Liechtenstein, Norway) to GDPR detection. Refreshes UK DUAA, US CCPA, and India DPDP configs to match the latest 2026 guidance and rules. Recommended for all sites with international visitors.
 
 = 1.4.1 =
 Privacy Policy Generator added! Automatically creates comprehensive, intelligent privacy policies based on your site configuration. Highly recommended upgrade for all users.
