@@ -261,11 +261,12 @@ class MBR_CC_Admin {
         }
         
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="cookie-consent-logs-' . date('Y-m-d') . '.csv"');
+        header('Content-Disposition: attachment; filename="cookie-consent-logs-' . gmdate('Y-m-d') . '.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
         
-        echo $csv;
+        // CSV is generated internally from sanitized log data and streamed as a file attachment, not rendered as HTML; standard output escaping functions are not applicable to CSV content.
+        echo $csv; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
     }
     
@@ -289,6 +290,7 @@ class MBR_CC_Admin {
         }
         
         wp_send_json_success(array(
+            /* translators: %d: number of consent log entries that were deleted. */
             'message' => sprintf(__('Deleted %d log entries.', 'mbr-cookie-consent'), $deleted),
             'deleted' => $deleted,
         ));

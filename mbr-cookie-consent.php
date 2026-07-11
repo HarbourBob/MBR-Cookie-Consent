@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: MBR Cookie Consent
- * Plugin URI: https://littlewebshack.com
- * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.1.0
- * Author: Made by Robert
- * Author URI: https://madebyrobert.com
+ * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
+ * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
+ * Version: 2.1.1
+ * Author: Robert Palmer
+ * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: mbr-cookie-consent
@@ -19,10 +19,9 @@
  * their use of this plugin complies with applicable laws and should consult with legal
  * counsel regarding their specific compliance requirements.
  *
- * @package MBR_Cookie_Consent
  */
 
-// Exit if accessed directly.
+
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -47,10 +46,25 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.1.0');
+define('MBR_CC_VERSION', '2.1.1');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
+
+/**
+ * Self-hosted update delivery via Plugin Update Checker (PUC).
+ *
+ * Checks littlewebshack.com for new releases so updates appear in the standard
+ * WordPress "Plugins" screen. No telemetry is sent; PUC only requests the
+ * metadata JSON below and, when an update is available, the packaged ZIP.
+ */
+require_once MBR_CC_PLUGIN_DIR . 'lib/plugin-update-checker/plugin-update-checker.php';
+
+$mbr_cc_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+    'https://raw.githubusercontent.com/HarbourBob/mbr-updates/main/mbr-cookie-consent.json',
+    __FILE__,
+    'mbr-cookie-consent'
+);
 
 /**
  * Main plugin class.

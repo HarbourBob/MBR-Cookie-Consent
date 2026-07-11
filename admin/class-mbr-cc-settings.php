@@ -49,92 +49,112 @@ class MBR_CC_Settings {
      * Register plugin settings.
      */
     public function register_settings() {
+        $bool   = array('sanitize_callback' => 'rest_sanitize_boolean');
+        $text   = array('sanitize_callback' => 'sanitize_text_field');
+        $area   = array('sanitize_callback' => 'sanitize_textarea_field');
+        $url    = array('sanitize_callback' => 'esc_url_raw');
+        $color  = array('sanitize_callback' => 'sanitize_hex_color');
+        $int    = array('sanitize_callback' => 'absint');
+        $css    = array('sanitize_callback' => array($this, 'sanitize_css'));
+
         // Banner settings.
-        register_setting('mbr_cc_settings', 'mbr_cc_banner_position');
-        register_setting('mbr_cc_settings', 'mbr_cc_banner_layout');
-        register_setting('mbr_cc_settings', 'mbr_cc_primary_color');
-        register_setting('mbr_cc_settings', 'mbr_cc_accept_button_color');
-        register_setting('mbr_cc_settings', 'mbr_cc_reject_button_color');
-        register_setting('mbr_cc_settings', 'mbr_cc_text_color');
-        register_setting('mbr_cc_settings', 'mbr_cc_revisit_button_text_color');
-        register_setting('mbr_cc_settings', 'mbr_cc_show_reject_button');
-        register_setting('mbr_cc_settings', 'mbr_cc_show_customize_button');
-        register_setting('mbr_cc_settings', 'mbr_cc_show_close_button');
-        register_setting('mbr_cc_settings', 'mbr_cc_reload_on_consent');
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_position', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_layout', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_primary_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_accept_button_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_reject_button_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_text_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_revisit_button_text_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_show_reject_button', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_show_customize_button', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_show_close_button', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_reload_on_consent', $bool);
         
         // Text settings.
-        register_setting('mbr_cc_settings', 'mbr_cc_banner_heading');
-        register_setting('mbr_cc_settings', 'mbr_cc_banner_description');
-        register_setting('mbr_cc_settings', 'mbr_cc_accept_button_text');
-        register_setting('mbr_cc_settings', 'mbr_cc_reject_button_text');
-        register_setting('mbr_cc_settings', 'mbr_cc_customize_button_text');
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_heading', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_description', $area);
+        register_setting('mbr_cc_settings', 'mbr_cc_accept_button_text', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_reject_button_text', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_customize_button_text', $text);
         
         // Cookie settings.
-        register_setting('mbr_cc_settings', 'mbr_cc_cookie_expiry_days');
+        register_setting('mbr_cc_settings', 'mbr_cc_cookie_expiry_days', $int);
         
         // CCPA settings.
-        register_setting('mbr_cc_settings', 'mbr_cc_enable_ccpa');
-        register_setting('mbr_cc_settings', 'mbr_cc_ccpa_link_text');
+        register_setting('mbr_cc_settings', 'mbr_cc_enable_ccpa', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_ccpa_link_text', $text);
         
         // Revisit consent.
-        register_setting('mbr_cc_settings', 'mbr_cc_revisit_consent_enabled');
-        register_setting('mbr_cc_settings', 'mbr_cc_revisit_consent_text');
+        register_setting('mbr_cc_settings', 'mbr_cc_revisit_consent_enabled', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_revisit_consent_text', $text);
         
         // Policy links.
-        register_setting('mbr_cc_settings', 'mbr_cc_show_privacy_policy_link');
-        register_setting('mbr_cc_settings', 'mbr_cc_privacy_policy_url');
-        register_setting('mbr_cc_settings', 'mbr_cc_privacy_policy_text');
-        register_setting('mbr_cc_settings', 'mbr_cc_show_cookie_policy_link');
-        register_setting('mbr_cc_settings', 'mbr_cc_cookie_policy_url');
-        register_setting('mbr_cc_settings', 'mbr_cc_cookie_policy_text');
+        register_setting('mbr_cc_settings', 'mbr_cc_show_privacy_policy_link', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_privacy_policy_url', $url);
+        register_setting('mbr_cc_settings', 'mbr_cc_privacy_policy_text', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_show_cookie_policy_link', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_cookie_policy_url', $url);
+        register_setting('mbr_cc_settings', 'mbr_cc_cookie_policy_text', $text);
         
         // Branding.
-        register_setting('mbr_cc_settings', 'mbr_cc_banner_logo_url');
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_logo_url', $url);
         
         // Google Consent Mode v2.
-        register_setting('mbr_cc_settings', 'mbr_cc_google_consent_mode');
-        register_setting('mbr_cc_settings', 'mbr_cc_google_default_deny');
-        register_setting('mbr_cc_settings', 'mbr_cc_google_ads_redaction');
-        register_setting('mbr_cc_settings', 'mbr_cc_google_url_passthrough');
+        register_setting('mbr_cc_settings', 'mbr_cc_google_consent_mode', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_google_default_deny', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_google_ads_redaction', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_google_url_passthrough', $bool);
         
         // Microsoft UET Consent Mode.
-        register_setting('mbr_cc_settings', 'mbr_cc_microsoft_consent_mode');
-        register_setting('mbr_cc_settings', 'mbr_cc_microsoft_default_deny');
+        register_setting('mbr_cc_settings', 'mbr_cc_microsoft_consent_mode', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_microsoft_default_deny', $bool);
         
         // Internationalization & Accessibility.
-        register_setting('mbr_cc_settings', 'mbr_cc_auto_translate');
-        register_setting('mbr_cc_settings', 'mbr_cc_wcag_compliance');
+        register_setting('mbr_cc_settings', 'mbr_cc_auto_translate', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_wcag_compliance', $text);
         
         // Page-Specific Controls.
-        register_setting('mbr_cc_settings', 'mbr_cc_excluded_pages');
-        register_setting('mbr_cc_settings', 'mbr_cc_excluded_url_patterns');
-        register_setting('mbr_cc_settings', 'mbr_cc_exclude_login');
-        register_setting('mbr_cc_settings', 'mbr_cc_exclude_checkout');
-        register_setting('mbr_cc_settings', 'mbr_cc_exclude_cart');
-        register_setting('mbr_cc_settings', 'mbr_cc_exclude_account');
+        register_setting('mbr_cc_settings', 'mbr_cc_excluded_pages', $area);
+        register_setting('mbr_cc_settings', 'mbr_cc_excluded_url_patterns', $area);
+        register_setting('mbr_cc_settings', 'mbr_cc_exclude_login', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_exclude_checkout', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_exclude_cart', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_exclude_account', $bool);
         
         // Custom CSS.
-        register_setting('mbr_cc_settings', 'mbr_cc_custom_css');
+        register_setting('mbr_cc_settings', 'mbr_cc_custom_css', $css);
         
         // Subdomain Consent.
-        register_setting('mbr_cc_settings', 'mbr_cc_subdomain_sharing');
-        register_setting('mbr_cc_settings', 'mbr_cc_subdomain_root_domain');
+        register_setting('mbr_cc_settings', 'mbr_cc_subdomain_sharing', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_subdomain_root_domain', $text);
         
         // IAB TCF v2.3.
-        register_setting('mbr_cc_settings', 'mbr_cc_iab_tcf_enabled');
-        register_setting('mbr_cc_settings', 'mbr_cc_publisher_country_code');
-        register_setting('mbr_cc_settings', 'mbr_cc_purpose_one_treatment');
-        register_setting('mbr_cc_settings', 'mbr_cc_gdpr_applies');
+        register_setting('mbr_cc_settings', 'mbr_cc_iab_tcf_enabled', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_publisher_country_code', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_purpose_one_treatment', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_gdpr_applies', $bool);
         
         // Google ACM.
-        register_setting('mbr_cc_settings', 'mbr_cc_google_acm_enabled');
+        register_setting('mbr_cc_settings', 'mbr_cc_google_acm_enabled', $bool);
         
         // Blocked Content Overlay (v1.7.0).
-        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_enabled');
-        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_heading');
-        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_message');
-        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_btn_text');
-        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_logo_url');
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_enabled', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_heading', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_message', $area);
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_btn_text', $text);
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_logo_url', $url);
+    }
+
+    /**
+     * Sanitize the custom CSS option.
+     *
+     * Strips any HTML tags while preserving CSS rules and line breaks.
+     *
+     * @param string $css Raw CSS input.
+     * @return string Sanitized CSS.
+     */
+    public function sanitize_css($css) {
+        return wp_strip_all_tags((string) $css);
     }
     
     /**

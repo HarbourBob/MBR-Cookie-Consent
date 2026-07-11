@@ -359,8 +359,8 @@ class MBR_CC_Cookie_Scanner {
         }
         
         // Default to marketing for third-party scripts.
-        $site_domain = parse_url(home_url(), PHP_URL_HOST);
-        $script_domain = parse_url($src, PHP_URL_HOST);
+        $site_domain = wp_parse_url(home_url(), PHP_URL_HOST);
+        $script_domain = wp_parse_url($src, PHP_URL_HOST);
         
         if ($script_domain && $script_domain !== $site_domain) {
             return 'marketing';
@@ -398,7 +398,7 @@ class MBR_CC_Cookie_Scanner {
         }
         
         // Extract domain from URL.
-        $parsed = parse_url($src);
+        $parsed = wp_parse_url($src);
         if (isset($parsed['host'])) {
             return ucfirst(str_replace('www.', '', $parsed['host']));
         }
@@ -425,7 +425,7 @@ class MBR_CC_Cookie_Scanner {
             return 'Google Maps';
         }
         
-        $parsed = parse_url($src);
+        $parsed = wp_parse_url($src);
         if (isset($parsed['host'])) {
             return ucfirst(str_replace('www.', '', $parsed['host'])) . ' Embed';
         }

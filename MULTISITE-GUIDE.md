@@ -538,14 +538,3 @@ WHERE blog_id IS NULL;
 
 ---
 
-## Support
-
-- 📖 [GitHub Wiki](https://github.com/yourusername/mbr-cookie-consent/wiki)
-- 🐛 [Report Issues](https://github.com/yourusername/mbr-cookie-consent/issues)
-- 💬 [Discussions](https://github.com/yourusername/mbr-cookie-consent/discussions)
-
----
-
-**Version:** 1.5.0
-**Last Updated:** February 2026
-**Multisite Support:** Enterprise Level

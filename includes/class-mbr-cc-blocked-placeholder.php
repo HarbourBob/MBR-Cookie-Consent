@@ -53,8 +53,8 @@ class MBR_CC_Blocked_Placeholder {
         if ( ! empty( $args['message'] ) ) {
             $message = sanitize_text_field( $args['message'] );
         } elseif ( $service ) {
-            /* translators: %s: service name e.g. "YouTube" */
             $message = sprintf(
+                /* translators: %s: service name e.g. "YouTube" */
                 __( 'This %s video is blocked because marketing cookies have not been accepted. Accept cookies to watch it.', 'mbr-cookie-consent' ),
                 $service
             );

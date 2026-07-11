@@ -124,9 +124,9 @@ class MBR_CC_IAB_TCF {
                         cmpLoaded: false,
                         cmpStatus: 'loading',
                         displayStatus: 'hidden',
-                        apiVersion: '<?php echo self::TCF_VERSION; ?>.0',
-                        cmpVersion: <?php echo self::CMP_VERSION; ?>,
-                        cmpId: <?php echo self::CMP_ID; ?>
+                        apiVersion: '<?php echo (int) self::TCF_VERSION; ?>.0',
+                        cmpVersion: <?php echo (int) self::CMP_VERSION; ?>,
+                        cmpId: <?php echo (int) self::CMP_ID; ?>
                     };
                     
                     if (typeof args[2] === 'function') {

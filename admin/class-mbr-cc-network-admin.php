@@ -119,7 +119,7 @@ class MBR_CC_Network_Admin {
      */
     public function render_network_settings_page() {
         if (!current_user_can('manage_network_options')) {
-            wp_die(__('You do not have permission to access this page.', 'mbr-cookie-consent'));
+            wp_die(esc_html__('You do not have permission to access this page.', 'mbr-cookie-consent'));
         }
         
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/network-settings.php';
@@ -130,7 +130,7 @@ class MBR_CC_Network_Admin {
      */
     public function render_network_reports_page() {
         if (!current_user_can('manage_network_options')) {
-            wp_die(__('You do not have permission to access this page.', 'mbr-cookie-consent'));
+            wp_die(esc_html__('You do not have permission to access this page.', 'mbr-cookie-consent'));
         }
         
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/network-reports.php';
@@ -141,7 +141,7 @@ class MBR_CC_Network_Admin {
      */
     public function render_site_management_page() {
         if (!current_user_can('manage_network_options')) {
-            wp_die(__('You do not have permission to access this page.', 'mbr-cookie-consent'));
+            wp_die(esc_html__('You do not have permission to access this page.', 'mbr-cookie-consent'));
         }
         
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/site-management.php';
@@ -154,7 +154,7 @@ class MBR_CC_Network_Admin {
         check_admin_referer('mbr-cc-network-settings');
         
         if (!current_user_can('manage_network_options')) {
-            wp_die(__('You do not have permission to perform this action.', 'mbr-cookie-consent'));
+            wp_die(esc_html__('You do not have permission to perform this action.', 'mbr-cookie-consent'));
         }
         
         // Network-wide settings
@@ -232,7 +232,7 @@ class MBR_CC_Network_Admin {
         // Consents in last 30 days
         $recent_consents = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE timestamp >= %s",
-            date('Y-m-d H:i:s', strtotime('-30 days'))
+            gmdate('Y-m-d H:i:s', strtotime('-30 days'))
         ));
         
         // Acceptance rate
@@ -280,7 +280,7 @@ class MBR_CC_Network_Admin {
         
         // Set headers for CSV download
         header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="network-consent-logs-' . date('Y-m-d') . '.csv"');
+        header('Content-Disposition: attachment; filename="network-consent-logs-' . gmdate('Y-m-d') . '.csv"');
         
         $output = fopen('php://output', 'w');
         
@@ -303,7 +303,8 @@ class MBR_CC_Network_Admin {
             fputcsv($output, $row);
         }
         
-        fclose($output);
+        // Output stream (php://output) is used to stream the CSV download directly to the browser; WP_Filesystem operates on the local filesystem and cannot write to an output stream.
+        fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         exit;
     }
 }

@@ -436,7 +436,12 @@ if (!defined('ABSPATH')) {
                     if ($multilingual_plugin) : 
                     ?>
                         <div style="margin-top: 15px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
-                            <p style="margin: 0;"><strong><?php echo sprintf(esc_html__('%s Detected', 'mbr-cookie-consent'), esc_html($multilingual_plugin)); ?></strong></p>
+                            <p style="margin: 0;"><strong>
+                                <?php
+                                /* translators: %s: name of the detected multilingual plugin. */
+                                echo sprintf( esc_html__( '%s Detected', 'mbr-cookie-consent' ), esc_html( $multilingual_plugin ) );
+                                ?>
+                            </strong></p>
                             <p style="margin: 5px 0 0 0;"><?php esc_html_e('Your multilingual plugin will handle translations. Banner strings have been registered for translation.', 'mbr-cookie-consent'); ?></p>
                         </div>
                     <?php endif; ?>
@@ -452,7 +457,12 @@ if (!defined('ABSPATH')) {
                             }
                             echo esc_html(implode(', ', array_slice($lang_names, 0, 20)));
                             ?>
-                            <em><?php echo sprintf(esc_html__('and %d more...', 'mbr-cookie-consent'), count($lang_names) - 20); ?></em>
+                            <em>
+                                <?php
+                                /* translators: %d: number of additional languages not shown. */
+                                echo sprintf( esc_html__( 'and %d more...', 'mbr-cookie-consent' ), count( $lang_names ) - 20 );
+                                ?>
+                            </em>
                         </p>
                     </div>
                 </div>

@@ -398,6 +398,62 @@ class MBR_CC_Region_Config {
     }
     
     /**
+     * Vietnam (Personal Data Protection Law — PDPL) Configuration
+     *
+     * Law No. 91/2025/QH15 was passed by the National Assembly on 26 June 2025
+     * and entered into force on 1 January 2026, elevating the earlier Decree
+     * 13/2023/ND-CP (PDPD) to full statutory law. Decree 356/2025/ND-CP
+     * (promulgated 31 December 2025) is the implementing decree.
+     *
+     * The PDPL is consent-centric and broadly GDPR-like, with some stricter
+     * local features:
+     *   - Consent must be voluntary, specific, fully informed and expressed in
+     *     text or a verifiable electronic format.
+     *   - Silence or non-response does NOT constitute consent.
+     *   - Consent must be granular — obtained separately for each distinct
+     *     processing purpose; bundled consent is prohibited.
+     *   - Consent must be easily withdrawable at any time.
+     *   - Refusing consent for non-essential processing must not deny basic
+     *     services.
+     *   - Heightened protection for children (representative + child consent
+     *     for those over 7 where sensitive data is involved).
+     *   - Applies extraterritorially to any organisation processing the data
+     *     of Vietnamese residents, regardless of where it is based.
+     *
+     * A five-year grace period applies to some obligations (DPIA/TIA, DPO) for
+     * small businesses and start-ups, but the core consent requirements for
+     * non-essential cookies apply from day one. The plugin therefore serves an
+     * opt-in banner to visitors detected in Vietnam.
+     */
+    private function get_vn_pdpl_config() {
+        return array(
+            // PDPL requires explicit, prior, opt-in consent for non-essential cookies
+            'require_consent' => true,
+            
+            // Reject/withdraw must be at least as easy as giving consent
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            // Granular, per-purpose consent — show categories
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            // Silence is not consent — never auto-accept
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            // Vietnam-specific text. Vietnamese heading is a safe default; the
+            // auto-translate layer / admin can localise the description.
+            'banner_heading' => get_option('mbr_cc_geolocation_vietnam_heading', 'Chúng tôi tôn trọng quyền riêng tư của bạn'),
+            'banner_description' => get_option('mbr_cc_geolocation_vietnam_description',
+                'We use cookies and similar technologies. Under Vietnam\'s Personal Data Protection Law (Law 91/2025/QH15), we ask for your voluntary, specific consent before processing personal data through non-essential cookies. You can give or withdraw consent for each purpose at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
      * Switzerland (revFADP / nFADP) Configuration
      *
      * The revised Federal Act on Data Protection (revFADP, also known as the
@@ -564,6 +620,9 @@ class MBR_CC_Region_Config {
                     'Withdrawal of consent must be as easy as giving it',
                     'Applies in all 27 EU Member States plus Iceland, Liechtenstein and Norway (EEA)',
                     'Proposed ePrivacy Regulation withdrawn 11 February 2026 — Directive remains in force',
+                    'Digital Omnibus (proposal, in trilogue 2026): would move cookie rules into GDPR Arts 88a/88b',
+                    'If adopted: single-click refusal, 6-month cooldown after refusal, new low-risk exemptions (audience measurement, security)',
+                    'Browser-level consent signals not expected to be mandatory before ~2028 — monitor, no action required yet',
                 ),
                 'penalties' => 'Up to €20 million or 4% of annual global turnover',
             ),
@@ -596,6 +655,10 @@ class MBR_CC_Region_Config {
                     'Sensitive data requires opt-in consent in 16+ states',
                     'Indiana, Kentucky and Rhode Island laws took effect 1 January 2026',
                     'Maryland MODPA effective 1 October 2025 with strict data-minimisation rules',
+                    '20 laws now in effect; enacted total grew past 20 during the 2026 session (~24 states)',
+                    'Connecticut amendments (enhanced sensitive-data + youth protections) effective 1 July 2026',
+                    'Utah correction right + social-media portability effective July 2026',
+                    'California Delete Act DROP platform: brokers must process deletions from 1 August 2026',
                 ),
                 'penalties' => 'Up to $7,988 per intentional violation (CA); varies by state',
             ),
@@ -683,6 +746,23 @@ class MBR_CC_Region_Config {
                     'Automated deletion with proof required',
                 ),
                 'penalties' => 'Up to ₹250 crore (approx. £25M) per violation',
+            ),
+            'vn_pdpl' => array(
+                'name' => 'Vietnam PDPL (Law 91/2025)',
+                'law' => 'Personal Data Protection Law 91/2025/QH15 + Decree 356/2025/ND-CP',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'In force 1 January 2026 (replaces Decree 13/2023 PDPD)',
+                    'Consent must be voluntary, specific, informed and in a verifiable format',
+                    'Silence or non-response does NOT constitute consent',
+                    'Granular, per-purpose consent — bundled consent prohibited',
+                    'Consent must be easily withdrawable at any time',
+                    'Refusing non-essential processing must not deny basic services',
+                    'Heightened protection for children (representative consent)',
+                    'Applies extraterritorially to processors of Vietnamese residents\' data',
+                    'Five-year grace period for DPIA/TIA and DPO obligations (SMEs/start-ups)',
+                ),
+                'penalties' => 'Up to 5% of prior-year revenue (cross-border); up to 10x unlawful data-trading gains; up to VND 3 billion for other violations',
             ),
             'default' => array(
                 'name' => 'General Best Practices',

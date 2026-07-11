@@ -117,7 +117,7 @@ class MBR_CC_Policy_Generator {
 <!-- /wp:heading -->
 
 <!-- wp:paragraph -->
-<p><strong>Last Updated:</strong> <?php echo esc_html(date('F j, Y')); ?></p>
+<p><strong>Last Updated:</strong> <?php echo esc_html(gmdate('F j, Y')); ?></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:heading {"level":3} -->

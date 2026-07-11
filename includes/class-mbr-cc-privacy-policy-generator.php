@@ -108,7 +108,7 @@ class MBR_CC_Privacy_Policy_Generator {
         $site_name = get_bloginfo('name');
         $site_url = get_bloginfo('url');
         $admin_email = get_bloginfo('admin_email');
-        $last_updated = date('F j, Y');
+        $last_updated = gmdate('F j, Y');
         
         // Detect what features are being used.
         $features = $this->detect_site_features();
@@ -367,28 +367,25 @@ class MBR_CC_Privacy_Policy_Generator {
      * Section: Introduction
      */
     private function section_introduction($site_name, $last_updated) {
-        return <<<HTML
-<p><strong>Last Updated:</strong> $last_updated</p>
+        return '<p><strong>Last Updated:</strong> ' . $last_updated . '</p>
 
-<p>Welcome to $site_name. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and share information about you when you use our website.</p>
+<p>Welcome to ' . $site_name . '. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and share information about you when you use our website.</p>
 
 <p>Please read this privacy policy carefully. By using our website, you agree to the collection and use of information in accordance with this policy.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: Information We Collect
      */
     private function section_information_collected($features) {
-        $content = <<<HTML
-<h2>1. Information We Collect</h2>
+        $content = '<h2>1. Information We Collect</h2>
 
 <p>We collect several types of information from and about users of our website:</p>
 
 <h3>1.1 Information You Provide Directly</h3>
-<ul>
-HTML;
+<ul>';
         
         if ($features['registration']) {
             $content .= '<li><strong>Account Information:</strong> When you create an account, we collect your name, email address, username, and password.</li>';
@@ -410,27 +407,24 @@ HTML;
             $content .= '<li><strong>Newsletter Subscriptions:</strong> When you subscribe to our newsletter, we collect your email address and optionally your name.</li>';
         }
         
-        $content .= <<<HTML
-</ul>
+        $content .= '</ul>
 
 <h3>1.2 Information Collected Automatically</h3>
 <ul>
 <li><strong>Device Information:</strong> We collect information about the device you use to access our website, including IP address, browser type, operating system, and device identifiers.</li>
 <li><strong>Usage Information:</strong> We collect information about your interactions with our website, including pages viewed, time spent on pages, links clicked, and navigation paths.</li>
-<li><strong>Location Information:</strong> We may collect general location information based on your IP address.</li>
-HTML;
+<li><strong>Location Information:</strong> We may collect general location information based on your IP address.</li>';
         
         if ($features['analytics']) {
             $content .= '<li><strong>Analytics Data:</strong> We use analytics services to collect data about how you use our website, including referral sources, search terms, and browsing behavior.</li>';
         }
         
-        $content .= <<<HTML
-</ul>
+        $content .= '</ul>
 
 <h3>1.3 Information from Cookies and Similar Technologies</h3>
 <p>We use cookies and similar tracking technologies to collect information about your browsing activities. For detailed information about our use of cookies, please see our <a href="#">Cookie Policy</a>.</p>
 
-HTML;
+';
         
         return $content;
     }
@@ -439,14 +433,12 @@ HTML;
      * Section: How We Use Your Information
      */
     private function section_how_we_use_information($features) {
-        $content = <<<HTML
-<h2>2. How We Use Your Information</h2>
+        $content = '<h2>2. How We Use Your Information</h2>
 
 <p>We use the information we collect for the following purposes:</p>
 
 <ul>
-<li><strong>To Provide Our Services:</strong> To operate and maintain our website, process your requests, and provide customer support.</li>
-HTML;
+<li><strong>To Provide Our Services:</strong> To operate and maintain our website, process your requests, and provide customer support.</li>';
         
         if ($features['ecommerce']) {
             $content .= '<li><strong>To Process Transactions:</strong> To process your orders, handle payments, and deliver products or services you purchase.</li>';
@@ -456,9 +448,7 @@ HTML;
             $content .= '<li><strong>To Manage Your Account:</strong> To create and manage your user account and provide you with account-related services.</li>';
         }
         
-        $content .= <<<HTML
-<li><strong>To Communicate With You:</strong> To respond to your inquiries, send important notices, and provide you with information you request.</li>
-HTML;
+        $content .= '<li><strong>To Communicate With You:</strong> To respond to your inquiries, send important notices, and provide you with information you request.</li>';
         
         if ($features['email_marketing']) {
             $content .= '<li><strong>To Send Marketing Communications:</strong> To send you newsletters, promotional materials, and other information that may interest you (you can opt out at any time).</li>';
@@ -472,12 +462,11 @@ HTML;
             $content .= '<li><strong>To Deliver Advertising:</strong> To show you relevant advertisements based on your interests and browsing behavior.</li>';
         }
         
-        $content .= <<<HTML
-<li><strong>To Ensure Security:</strong> To detect, prevent, and address technical issues, fraud, and other harmful activities.</li>
+        $content .= '<li><strong>To Ensure Security:</strong> To detect, prevent, and address technical issues, fraud, and other harmful activities.</li>
 <li><strong>To Comply With Legal Obligations:</strong> To comply with applicable laws, regulations, and legal processes.</li>
 </ul>
 
-HTML;
+';
         
         return $content;
     }
@@ -486,15 +475,13 @@ HTML;
      * Section: Cookies and Tracking
      */
     private function section_cookies_tracking($features) {
-        $content = <<<HTML
-<h2>3. Cookies and Tracking Technologies</h2>
+        $content = '<h2>3. Cookies and Tracking Technologies</h2>
 
 <p>We use cookies and similar tracking technologies to collect and store information about your preferences and browsing activities.</p>
 
 <h3>Types of Cookies We Use:</h3>
 <ul>
-<li><strong>Necessary Cookies:</strong> Essential for the website to function properly. These cannot be disabled.</li>
-HTML;
+<li><strong>Necessary Cookies:</strong> Essential for the website to function properly. These cannot be disabled.</li>';
         
         if ($features['analytics']) {
             $content .= '<li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with our website by collecting and reporting information anonymously.</li>';
@@ -504,20 +491,18 @@ HTML;
             $content .= '<li><strong>Marketing Cookies:</strong> Used to track visitors across websites to display relevant and engaging advertisements.</li>';
         }
         
-        $content .= <<<HTML
-<li><strong>Preference Cookies:</strong> Remember your preferences and settings to provide a personalized experience.</li>
+        $content .= '<li><strong>Preference Cookies:</strong> Remember your preferences and settings to provide a personalized experience.</li>
 </ul>
 
 <p>You can control cookies through our cookie consent banner and your browser settings. For more detailed information, please see our <a href="#">Cookie Policy</a>.</p>
 
-HTML;
+';
         
         if ($features['google_consent_mode']) {
-            $content .= <<<HTML
-<h3>Google Consent Mode</h3>
-<p>We use Google Consent Mode, which adjusts how Google tags behave based on your consent choices. When you deny consent, Google tags operate in a limited mode that doesn't use cookies for advertising or personalization.</p>
+            $content .= '<h3>Google Consent Mode</h3>
+<p>We use Google Consent Mode, which adjusts how Google tags behave based on your consent choices. When you deny consent, Google tags operate in a limited mode that doesn\'t use cookies for advertising or personalization.</p>
 
-HTML;
+';
         }
         
         return $content;
@@ -527,14 +512,12 @@ HTML;
      * Section: Data Sharing
      */
     private function section_data_sharing($features) {
-        $content = <<<HTML
-<h2>4. How We Share Your Information</h2>
+        $content = '<h2>4. How We Share Your Information</h2>
 
 <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
 
 <ul>
-<li><strong>Service Providers:</strong> We share information with third-party service providers who perform services on our behalf, such as hosting, analytics, payment processing, and customer support.</li>
-HTML;
+<li><strong>Service Providers:</strong> We share information with third-party service providers who perform services on our behalf, such as hosting, analytics, payment processing, and customer support.</li>';
         
         if ($features['ecommerce']) {
             $content .= '<li><strong>Payment Processors:</strong> When you make a purchase, we share necessary payment information with our payment processors to complete the transaction securely.</li>';
@@ -544,13 +527,12 @@ HTML;
             $content .= '<li><strong>Advertising Partners:</strong> We may share information with advertising partners to deliver relevant ads to you on our website and other sites.</li>';
         }
         
-        $content .= <<<HTML
-<li><strong>Legal Requirements:</strong> We may disclose information if required by law or in response to valid legal requests from authorities.</li>
+        $content .= '<li><strong>Legal Requirements:</strong> We may disclose information if required by law or in response to valid legal requests from authorities.</li>
 <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may be transferred to the acquiring entity.</li>
 <li><strong>With Your Consent:</strong> We may share information with third parties when you give us permission to do so.</li>
 </ul>
 
-HTML;
+';
         
         return $content;
     }
@@ -561,8 +543,7 @@ HTML;
     private function section_your_rights($features) {
         $admin_email = get_bloginfo('admin_email');
         
-        return <<<HTML
-<h2>5. Your Privacy Rights</h2>
+        return '<h2>5. Your Privacy Rights</h2>
 
 <p>Depending on your location, you may have certain rights regarding your personal information:</p>
 
@@ -576,17 +557,16 @@ HTML;
 <li><strong>Withdraw Consent:</strong> Where we rely on consent, you can withdraw it at any time through our cookie consent banner or by contacting us.</li>
 </ul>
 
-<p>To exercise these rights, please contact us at <a href="mailto:$admin_email">$admin_email</a>.</p>
+<p>To exercise these rights, please contact us at <a href="mailto:' . $admin_email . '">' . $admin_email . '</a>.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: Data Security
      */
     private function section_data_security() {
-        return <<<HTML
-<h2>6. Data Security</h2>
+        return '<h2>6. Data Security</h2>
 
 <p>We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
 
@@ -601,7 +581,7 @@ HTML;
 
 <p>However, no method of transmission over the internet or electronic storage is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.</p>
 
-HTML;
+';
     }
     
     /**
@@ -611,30 +591,26 @@ HTML;
         $services = $features['third_party_services'];
         $services_list = implode(', ', $services);
         
-        return <<<HTML
-<h2>7. Third-Party Services</h2>
+        return '<h2>7. Third-Party Services</h2>
 
 <p>We use the following third-party services that may collect information about you:</p>
 
-<ul>
-HTML
+<ul>'
         . implode('', array_map(function($service) {
-            return "<li>$service</li>";
-        }, $services)) . 
-<<<HTML
-</ul>
+            return '<li>' . $service . '</li>';
+        }, $services)) .
+'</ul>
 
 <p>These third-party services have their own privacy policies. We encourage you to review their policies to understand how they collect and use your information.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: E-commerce
      */
     private function section_ecommerce($features) {
-        return <<<HTML
-<h2>8. Online Purchases and Payment Processing</h2>
+        return '<h2>8. Online Purchases and Payment Processing</h2>
 
 <p>When you make a purchase through our website:</p>
 
@@ -647,15 +623,14 @@ HTML;
 
 <p>We retain your purchase history to provide customer service, process returns, and improve our services.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: Email Marketing
      */
     private function section_email_marketing() {
-        return <<<HTML
-<h2>9. Email Communications and Marketing</h2>
+        return '<h2>9. Email Communications and Marketing</h2>
 
 <p>If you subscribe to our newsletter or marketing emails:</p>
 
@@ -666,33 +641,31 @@ HTML;
 <li>Your email address will not be sold or shared with third parties for their marketing purposes.</li>
 </ul>
 
-HTML;
+';
     }
     
     /**
      * Section: Children's Privacy
      */
     private function section_childrens_privacy() {
-        return <<<HTML
-<h2>10. Children's Privacy</h2>
+        return '<h2>10. Children\'s Privacy</h2>
 
 <p>Our website is not intended for children under the age of 16. We do not knowingly collect personal information from children under 16. If you are a parent or guardian and believe your child has provided us with personal information, please contact us, and we will delete such information.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: International Users
      */
     private function section_international_users() {
-        return <<<HTML
-<h2>11. International Data Transfers</h2>
+        return '<h2>11. International Data Transfers</h2>
 
 <p>Your information may be transferred to and processed in countries other than your country of residence. These countries may have data protection laws that differ from your country.</p>
 
 <p>When we transfer information internationally, we ensure appropriate safeguards are in place to protect your information in accordance with applicable data protection laws.</p>
 
-HTML;
+';
     }
     
     /**
@@ -701,8 +674,7 @@ HTML;
     private function section_ccpa() {
         $admin_email = get_bloginfo('admin_email');
         
-        return <<<HTML
-<h2>12. California Privacy Rights (CCPA)</h2>
+        return '<h2>12. California Privacy Rights (CCPA)</h2>
 
 <p>If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA):</p>
 
@@ -717,9 +689,9 @@ HTML;
 <h3>Do Not Sell My Personal Information</h3>
 <p>We do not sell personal information as defined by the CCPA. However, you can manage how your information is used for advertising through our cookie consent banner.</p>
 
-<p>To exercise your CCPA rights, contact us at <a href="mailto:$admin_email">$admin_email</a> or click "Do Not Sell or Share My Personal Information" in our website footer.</p>
+<p>To exercise your CCPA rights, contact us at <a href="mailto:' . $admin_email . '">' . $admin_email . '</a> or click "Do Not Sell or Share My Personal Information" in our website footer.</p>
 
-HTML;
+';
     }
     
     /**
@@ -728,8 +700,7 @@ HTML;
     private function section_gdpr() {
         $admin_email = get_bloginfo('admin_email');
         
-        return <<<HTML
-<h2>13. EU/EEA Privacy Rights (GDPR)</h2>
+        return '<h2>13. EU/EEA Privacy Rights (GDPR)</h2>
 
 <p>If you are in the European Union or European Economic Area, you have rights under the General Data Protection Regulation (GDPR):</p>
 
@@ -757,17 +728,16 @@ HTML;
 <h3>Data Retention</h3>
 <p>We retain your personal data only for as long as necessary for the purposes outlined in this policy or as required by law. When data is no longer needed, we securely delete or anonymize it.</p>
 
-<p>To exercise your GDPR rights, contact us at <a href="mailto:$admin_email">$admin_email</a>.</p>
+<p>To exercise your GDPR rights, contact us at <a href="mailto:' . $admin_email . '">' . $admin_email . '</a>.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: IAB TCF
      */
     private function section_iab_tcf() {
-        return <<<HTML
-<h2>14. IAB Transparency & Consent Framework</h2>
+        return '<h2>14. IAB Transparency & Consent Framework</h2>
 
 <p>We participate in the IAB Europe Transparency & Consent Framework (TCF) to manage consent for digital advertising.</p>
 
@@ -787,17 +757,16 @@ HTML;
 <li>Manage special features like geolocation use</li>
 </ul>
 
-<p>For more information about the TCF, visit <a href="https://iabeurope.eu/transparency-consent-framework/" target="_blank">IAB Europe's website</a>.</p>
+<p>For more information about the TCF, visit <a href="https://iabeurope.eu/transparency-consent-framework/" target="_blank">IAB Europe\'s website</a>.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: Changes to Policy
      */
     private function section_changes_to_policy() {
-        return <<<HTML
-<h2>15. Changes to This Privacy Policy</h2>
+        return '<h2>15. Changes to This Privacy Policy</h2>
 
 <p>We may update this privacy policy from time to time to reflect changes in our practices or for legal, regulatory, or operational reasons.</p>
 
@@ -805,21 +774,20 @@ HTML;
 
 <p>If we make material changes, we will provide notice through our website or by other means as appropriate.</p>
 
-HTML;
+';
     }
     
     /**
      * Section: Contact
      */
     private function section_contact($site_name, $admin_email) {
-        return <<<HTML
-<h2>16. Contact Us</h2>
+        return '<h2>16. Contact Us</h2>
 
 <p>If you have questions about this privacy policy or our privacy practices, please contact us:</p>
 
 <ul>
-<li><strong>Website:</strong> $site_name</li>
-<li><strong>Email:</strong> <a href="mailto:$admin_email">$admin_email</a></li>
+<li><strong>Website:</strong> ' . $site_name . '</li>
+<li><strong>Email:</strong> <a href="mailto:' . $admin_email . '">' . $admin_email . '</a></li>
 </ul>
 
 <p>We will respond to your inquiry as soon as possible, typically within 30 days.</p>
@@ -828,6 +796,6 @@ HTML;
 
 <p><em>This privacy policy was generated by MBR Cookie Consent plugin and should be reviewed by legal counsel before publication.</em></p>
 
-HTML;
+';
     }
 }

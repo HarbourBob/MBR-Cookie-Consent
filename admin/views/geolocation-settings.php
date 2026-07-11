@@ -226,6 +226,27 @@ $region_name = $geo->get_region_name();
             </p>
         </div>
         
+        <!-- Vietnam PDPL -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #da251d;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇻🇳 <?php esc_html_e('Vietnam - PDPL (Law 91/2025)', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('In force 1 Jan 2026 — consent-centric, GDPR-like, extraterritorial', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Voluntary, specific, informed opt-in consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Silence is NOT consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Granular per-purpose consent (no bundling)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Easy withdrawal at any time', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Heightened protection for children', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to 5% of prior-year revenue; up to 10x unlawful data-trading gains', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
         <!-- Quebec Law 25 -->
         <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #d62828;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
@@ -365,7 +386,7 @@ jQuery(document).ready(function($) {
             action: 'mbr_cc_test_geolocation',
             country: country,
             region:  region,
-            nonce: '<?php echo wp_create_nonce("mbr_cc_geo_test"); ?>'
+            nonce: '<?php echo esc_js(wp_create_nonce("mbr_cc_geo_test")); ?>'
         }, function(response) {
             if (response.success) {
                 var html = '<div style="padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">';
@@ -397,7 +418,7 @@ jQuery(document).ready(function($) {
         
         $.post(ajaxurl, {
             action: 'mbr_cc_clear_geo_cache',
-            nonce: '<?php echo wp_create_nonce("mbr_cc_geo_cache"); ?>'
+            nonce: '<?php echo esc_js(wp_create_nonce("mbr_cc_geo_cache")); ?>'
         }, function(response) {
             if (response.success) {
                 alert('Geolocation cache cleared successfully!');

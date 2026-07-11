@@ -107,6 +107,7 @@ $total_impressions = array_sum( array_column( $stats, 'impressions' ) );
 
             <p style="margin-top:12px;color:#6b7280;font-size:13px;">
                 <?php printf(
+                    /* translators: %s: total number of banner impressions. */
                     esc_html__( 'Total impressions: %s. A winner requires at least 10 impressions per variant.', 'mbr-cookie-consent' ),
                     number_format( $total_impressions )
                 ); ?>

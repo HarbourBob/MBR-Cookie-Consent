@@ -43,7 +43,7 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         
         <div class="mbr-cc-stat-card" style="background: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">
             <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #666;"><?php esc_html_e('Acceptance Rate', 'mbr-cookie-consent'); ?></h3>
-            <p style="margin: 0; font-size: 32px; font-weight: bold; color: #d63638;"><?php echo $stats['acceptance_rate']; ?>%</p>
+            <p style="margin: 0; font-size: 32px; font-weight: bold; color: #d63638;"><?php echo esc_html($stats['acceptance_rate']); ?>%</p>
         </div>
         
         <div class="mbr-cc-stat-card" style="background: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 4px;">
@@ -104,7 +104,7 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
             GROUP BY DATE(timestamp) 
             ORDER BY date DESC 
             LIMIT 30",
-            date('Y-m-d H:i:s', strtotime('-30 days'))
+            gmdate('Y-m-d H:i:s', strtotime('-30 days'))
         ));
         ?>
         
@@ -124,7 +124,7 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
                         $percentage = $max_count > 0 ? ($day_stat->count / $max_count) * 100 : 0;
                     ?>
                         <tr>
-                            <td><?php echo esc_html(date('M j, Y', strtotime($day_stat->date))); ?></td>
+                            <td><?php echo esc_html(gmdate('M j, Y', strtotime($day_stat->date))); ?></td>
                             <td><?php echo number_format($day_stat->count); ?></td>
                             <td>
                                 <div style="background: #e0e0e0; height: 20px; border-radius: 3px; overflow: hidden;">
@@ -169,7 +169,7 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
                         <tr>
                             <td><?php echo esc_html(ucfirst($method_stat->consent_method)); ?></td>
                             <td><?php echo number_format($method_stat->count); ?></td>
-                            <td><?php echo round($percentage, 2); ?>%</td>
+                            <td><?php echo esc_html(round($percentage, 2)); ?>%</td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

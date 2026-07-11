@@ -173,34 +173,48 @@ class MBR_CC_Database {
         
         $args = wp_parse_args($args, $defaults);
         
-        $where = array('1=1');
+        $where  = array('1=1');
+        $values = array();
         
         // Always filter by blog_id (critical for multisite)
         if (!is_null($args['blog_id'])) {
-            $where[] = $wpdb->prepare('blog_id = %d', $args['blog_id']);
+            $where[]  = 'blog_id = %d';
+            $values[] = $args['blog_id'];
         }
         
         if (!is_null($args['user_id'])) {
-            $where[] = $wpdb->prepare('user_id = %d', $args['user_id']);
+            $where[]  = 'user_id = %d';
+            $values[] = $args['user_id'];
         }
         
         if (!is_null($args['date_from'])) {
-            $where[] = $wpdb->prepare('timestamp >= %s', $args['date_from']);
+            $where[]  = 'timestamp >= %s';
+            $values[] = $args['date_from'];
         }
         
         if (!is_null($args['date_to'])) {
-            $where[] = $wpdb->prepare('timestamp <= %s', $args['date_to']);
+            $where[]  = 'timestamp <= %s';
+            $values[] = $args['date_to'];
         }
         
         $where_clause = implode(' AND ', $where);
         
-        $query = "SELECT * FROM {$this->consent_table} 
-                  WHERE {$where_clause} 
-                  ORDER BY {$args['orderby']} {$args['order']} 
+        // Whitelist orderby/order: these are SQL identifiers and cannot be bound as prepared values.
+        $allowed_orderby = array('id', 'blog_id', 'user_id', 'consent_given', 'consent_method', 'timestamp', 'cookie_hash');
+        $orderby = in_array($args['orderby'], $allowed_orderby, true) ? $args['orderby'] : 'timestamp';
+        $order   = strtoupper((string) $args['order']) === 'ASC' ? 'ASC' : 'DESC';
+        
+        $values[] = (int) $args['limit'];
+        $values[] = (int) $args['offset'];
+        
+        $query = "SELECT * FROM {$this->consent_table}
+                  WHERE {$where_clause}
+                  ORDER BY {$orderby} {$order}
                   LIMIT %d OFFSET %d";
         
+        // The interpolated parts are a constant internal table name and whitelisted orderby/order identifiers; every user-supplied value is bound through prepare().
         $results = $wpdb->get_results(
-            $wpdb->prepare($query, $args['limit'], $args['offset']),
+            $wpdb->prepare( $query, $values ), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
             ARRAY_A
         );
         
@@ -257,7 +271,7 @@ class MBR_CC_Database {
     public function delete_old_logs($days = 365) {
         global $wpdb;
         
-        $date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        $date = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         
         return $wpdb->query(
             $wpdb->prepare("DELETE FROM {$this->consent_table} WHERE timestamp < %s", $date)
@@ -317,13 +331,14 @@ class MBR_CC_Database {
         }
         
         // Convert to CSV string.
-        $output = fopen('php://temp', 'r+');
+        // Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
+        $output = fopen('php://temp', 'r+'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         foreach ($csv as $row) {
             fputcsv($output, $row);
         }
         rewind($output);
         $csv_content = stream_get_contents($output);
-        fclose($output);
+        fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         
         return $csv_content;
     }

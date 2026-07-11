@@ -64,12 +64,12 @@ class MBR_CC_Consent_Modes {
         function gtag(){dataLayer.push(arguments);}
         
         gtag('consent', 'default', {
-            'ad_storage': '<?php echo $this->get_google_consent_state($consent, 'marketing'); ?>',
-            'ad_user_data': '<?php echo $this->get_google_consent_state($consent, 'marketing'); ?>',
-            'ad_personalization': '<?php echo $this->get_google_consent_state($consent, 'marketing'); ?>',
-            'analytics_storage': '<?php echo $this->get_google_consent_state($consent, 'analytics'); ?>',
-            'functionality_storage': '<?php echo $this->get_google_consent_state($consent, 'preferences'); ?>',
-            'personalization_storage': '<?php echo $this->get_google_consent_state($consent, 'preferences'); ?>',
+            'ad_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
+            'ad_user_data': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
+            'ad_personalization': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
+            'analytics_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'analytics')); ?>',
+            'functionality_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'preferences')); ?>',
+            'personalization_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'preferences')); ?>',
             'security_storage': 'granted', // Always granted for security cookies
             'wait_for_update': 500 // Wait 500ms for user interaction
         });
@@ -89,7 +89,7 @@ class MBR_CC_Consent_Modes {
         // Microsoft UET Consent Mode
         window.uetq = window.uetq || [];
         window.uetq.push('consent', 'default', {
-            'ad_storage': '<?php echo $this->get_microsoft_consent_state($consent, 'marketing'); ?>'
+            'ad_storage': '<?php echo esc_js($this->get_microsoft_consent_state($consent, 'marketing')); ?>'
         });
         <?php endif; ?>
         

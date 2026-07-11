@@ -1,11 +1,10 @@
 === MBR Cookie Consent ===
-Contributors: madebyrobert
-Donate link: https://littlewebshack.com/donate
-Tags: cookie consent, gdpr, ccpa, privacy, cookie banner, cookies, iab tcf, google consent mode
+Contributors: Robert Palmer
+Tags: cookie consent, gdpr, ccpa, privacy, cookie banner
 Requires at least: 5.8
-Tested up to: 6.9.4
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -145,7 +144,6 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, J
 **Design Options**
 ✓ Custom colors
 ✓ Logo upload
-✓ Custom CSS editor
 ✓ Button text customization
 ✓ Position control
 ✓ Animation settings
@@ -237,7 +235,6 @@ Other plugins charge for these. We don't:
 ✓ Privacy Policy generator
 ✓ Cookie Policy generator
 ✓ Subdomain consent sharing
-✓ Custom CSS editor
 ✓ Advanced analytics
 ✓ Page-specific controls
 ✓ URL exclusions
@@ -352,7 +349,6 @@ Absolutely! Multiple options:
 - 4 built-in layouts
 - Color picker for all elements
 - Custom logo upload
-- Full custom CSS editor
 - Button text customization
 - Position and animation control
 
@@ -444,51 +440,17 @@ Yes! Under GPL license you can:
 - Distribute to clients
 - Include in client packages
 
-= How do I get support? =
-
-**Free support via:**
-- Documentation (included in plugin)
-- Email: info@littlewebshack.com
-- Website: https://littlewebshack.com
-
-Response time: Usually 24-48 hours
-
 = Is there a pro version? =
 
 No. There is no pro/premium version. All features are included free forever.
 
-== Screenshots ==
-
-1. Cookie consent banner - Bar layout at bottom
-2. Cookie consent banner - Popup layout with overlay
-3. Preference center - Manage cookie categories
-4. Admin dashboard - Overview and quick actions
-5. Settings page - Banner customization options
-6. Cookie scanner - Automatic cookie detection
-7. Consent logs - GDPR-compliant audit trail
-8. Privacy Policy Generator - Intelligent policy creation
-9. IAB TCF settings - Advanced publisher features
-10. Accessibility settings - WCAG compliance options
-
 == Changelog ==
 
-= 2.1.0 - May 8, 2026 =
-* New: Quebec (Law 25) detected as a separate region from the rest of Canada. Visitors with Canadian IP and ISO 3166-2 region "QC" now receive an express opt-in banner with French-default messaging, equally-prominent reject, and the stricter Law 25 consent recording posture. Visitors elsewhere in Canada continue to receive the PIPEDA / CASL config.
-* New: Switzerland (revFADP / nFADP) detected as a separate region. Swiss visitors no longer fall through to the lenient default config — they get a GDPR-equivalent opt-in banner reflecting the revised Federal Act on Data Protection in force since 1 September 2023.
-* New: Australia (Privacy Act 1988, as amended by the Privacy and Other Legislation Amendment Act 2024) detected as a separate region. Australian visitors receive an APP-aligned banner with informed consent and a clear opt-out path.
-* New: EEA non-EU members (Iceland, Liechtenstein, Norway) added to the GDPR detection list. These countries apply GDPR via the EEA Agreement and previously fell through to the default config — a compliance gap that is now closed.
-* New: Geolocation now captures sub-national region codes from ip-api.com and ipapi.co (and Cloudflare Enterprise) so that province/state-level rules can be applied correctly. Cache layer extended to store the region code alongside the country.
-* New: Admin geolocation testing tool now accepts an optional region/province code (e.g. CA + QC) so admins can verify Quebec-specific behaviour before going live.
-* New: Helper methods MBR_CC_Geolocation::is_quebec(), is_switzerland(), is_australia(), and get_region_code() exposed for theme/plugin integrations.
-* Compliance: UK DUAA region config rewritten to align with the ICO's "Storage and Access Technologies" guidance finalised on 29 April 2026. Documents the five PECR exemption categories (communications transmission, requested service, statistical analytics, appearance/functionality, software updates / emergency assistance) and the ICO's "simple means of objecting" expectation. Purpose limitation noted as mandatory.
-* Compliance: US multi-state region config and compliance info updated for the California CCPA regulations effective 1 January 2026 — mandatory visible confirmation when an opt-out request (including a GPC signal) is processed, expanded "sensitive personal information" definition covering neural data and data of consumers under 16, and the new dark-pattern prohibition on false-urgency consent UX.
-* Compliance: GPC handler documentation updated to list the actual 2026 state mandate set (CA, CO, CT, DE, MD, MN, MT, NE, NH, NJ, OR, TX) instead of the previous "12+ states" placeholder. The opt-out confirmation toast remains the mechanism that satisfies California's mandatory confirmation requirement.
-* Compliance: India DPDP region config and compliance info updated to reflect that the DPDP Rules 2025 were notified by MeitY on 13 November 2025 and gazetted on 14 November 2025. Phased compliance dates documented: Data Protection Board operational from 13 November 2025, Consent Manager registration opens 13 November 2026, full compliance mandatory by 13 May 2027. 72-hour breach notification noted.
-* Compliance: EU/EEA region docstring notes the formal withdrawal of the proposed ePrivacy Regulation by the European Commission on 11 February 2026; the 2002/58/EC Directive (as amended) remains the controlling instrument, supplemented by limited Digital Omnibus amendments.
-* Improvement: Admin Geolocation & Regional Compliance settings panel restructured — EU tile renamed to EU/EEA, UK tile rewritten around the five PECR exemptions, US tile updated for the CCPA 2026 amendments, PIPEDA tile clarifies that Quebec visitors are routed to Law 25, India tile reflects DPDP Rules notification. Three new tiles added for Quebec, Switzerland, and Australia.
-* Improvement: admin/geolocation-ajax.php refactored to call MBR_CC_Geolocation::determine_region() via reflection rather than maintaining a duplicate country list. The admin tester and live detection can no longer drift apart.
-* Improvement: ipapi.co provider switched to the JSON endpoint so country and region code can be fetched in a single request rather than two.
-* Note: This release contains no breaking API changes. Existing options, helper functions (mbr_cc_geolocation(), mbr_cc_region_config()), filters, and stored consent records continue to work unchanged. Visitors whose region resolves to a new key (ca_quebec, ch_nfadp, au_privacy) will see the appropriate region-specific banner on next page load; cached transients refresh automatically as they expire.
+= 2.1.1 =
+* New: Vietnam PDPL (Personal Data Protection Law 91/2025/QH15, in force 1 January 2026) added as a dedicated privacy region. Visitors detected in Vietnam now receive a GDPR-style opt-in banner with granular, per-purpose consent, reflecting the PDPL's consent-centric requirements (silence is not consent, bundled consent prohibited, easy withdrawal).
+* New: Vietnam compliance card added to Geolocation settings, and a Vietnamese-language banner heading default.
+* Update: US multi-state compliance notes refreshed — enacted state total grew during the 2026 session (~24 states), Connecticut amendments and Utah portability rights effective 1 July 2026, and the California Delete Act DROP platform broker deadline (1 August 2026).
+* Update: EU/EEA notes now flag the Digital Omnibus proposal (Articles 88a/88b, single-click refusal, six-month cooldown, new low-risk exemptions) as a forward-looking item in trilogue during 2026 — no action required yet.
 
 = 1.9.2 =
 * Fix: Button colours set in admin now correctly apply to the preferences modal Save and Reject buttons
@@ -522,7 +484,7 @@ No. There is no pro/premium version. All features are included free forever.
 
 = 1.6.1 =
 
-= 1.4.1 - February 6, 2026 =
+= 1.4.1 =
 * **New:** Intelligent Privacy Policy Generator
 * Feature: Automatic site analysis (e-commerce, analytics, advertising)
 * Feature: GDPR, CCPA, IAB TCF sections auto-included
@@ -532,7 +494,7 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: One-click generation from dashboard
 * Note: Generated policies require legal review
 
-= 1.4.0 - February 6, 2026 =
+= 1.4.0 =
 * **New:** IAB Transparency & Consent Framework v2.3
 * **New:** Google Additional Consent Mode (ACM)
 * Feature: Full __tcfapi JavaScript API
@@ -547,9 +509,8 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: Publisher country code configuration
 * Feature: Purpose One Treatment option
 
-= 1.3.0 - February 5, 2026 =
+= 1.3.0 =
 * **New:** Page-specific banner controls
-* **New:** Custom CSS editor
 * **New:** Subdomain consent sharing
 * Feature: Quick exclusions (login, checkout, cart, account)
 * Feature: URL pattern exclusions with wildcards
@@ -561,7 +522,7 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: Cookie domain configuration
 * Feature: Cookie path configuration
 
-= 1.2.0 - February 4, 2026 =
+= 1.2.0 =
 * **New:** Auto-translation (40+ languages)
 * **New:** WPML integration
 * **New:** Polylang integration
@@ -577,7 +538,7 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: String registration for WPML/Polylang
 * Feature: Category translation support
 
-= 1.1.0 - February 3, 2026 =
+= 1.1.0 =
 * **New:** Google Consent Mode v2 integration
 * **New:** Microsoft UET Consent Mode
 * Feature: All 7 Google consent types
@@ -587,7 +548,7 @@ No. There is no pro/premium version. All features are included free forever.
 * Feature: Automatic consent signal updates
 * Feature: Works with existing Google/Microsoft tags
 
-= 1.0.7 - February 2, 2026 =
+= 1.0.7 =
 * **New:** Box layout (bottom-left)
 * **New:** Box layout (bottom-right)
 * **New:** Popup layout (center with overlay)
@@ -597,14 +558,14 @@ No. There is no pro/premium version. All features are included free forever.
 * CSS: Layout-specific styling
 * CSS: Mobile responsive improvements
 
-= 1.0.6 - February 1, 2026 =
+= 1.0.6 =
 * Fix: Nonce verification improvements
 * Fix: Input sanitization enhancements
 * Fix: Text domain consistency
 * Security: Enhanced security measures
 * Performance: Code optimization
 
-= 1.0.0 - January 30, 2026 =
+= 1.0.0 =
 * Initial public release
 * Feature: Cookie consent banner
 * Feature: Automatic script blocking
@@ -627,7 +588,7 @@ Privacy Policy Generator added! Automatically creates comprehensive, intelligent
 Major update: IAB TCF v2.3 and Google Additional Consent Mode for professional publishers and advertisers. Enterprise-grade consent management now available.
 
 = 1.3.0 =
-Enhanced customization features including page controls, custom CSS, and subdomain sharing. Recommended for all e-commerce and multi-domain sites.
+Enhanced customization features including page controls and subdomain sharing. Recommended for all e-commerce and multi-domain sites.
 
 = 1.2.0 =
 Internationalization and accessibility update: 40+ languages and full WCAG compliance. Essential for international and accessible websites.
@@ -680,8 +641,6 @@ All cookies:
 - Use SameSite=Lax
 - Are HttpOnly where appropriate
 - Respect subdomain settings
-
-== Developer Documentation ==
 
 = Hooks & Filters =
 
@@ -768,11 +727,6 @@ Full API documentation in plugin files.
 
 == Credits ==
 
-**Developed by:**
-Robert Palmer - Little Web Shack
-https://littlewebshack.com
-info@littlewebshack.com
-
 **Based on:**
 - WordPress Coding Standards
 - IAB Europe TCF Specifications
@@ -807,39 +761,14 @@ Under the terms that:
 IAB TCF implementation follows IAB Europe's open specifications.
 Google Consent Mode follows Google's published specifications.
 
-== Support ==
-
-**Free Support:**
-- Email: info@littlewebshack.com
-- Website: https://littlewebshack.com/
-- Documentation: Included in plugin
-
-**Response Time:**
-Typically 24-48 hours for email support
-
-**Before Contacting Support:**
-1. Check included documentation
-2. Review FAQ above
-3. Search WordPress.org support forum
-4. Check for plugin conflicts
-5. Test with default theme
-
-**When Contacting Support, Include:**
-- WordPress version
-- PHP version
-- Plugin version
-- Active theme
-- Active plugins
-- Error messages
-- Steps to reproduce
 
 == Roadmap ==
 
 **Planned Features:**
 
 - Visual banner builder
-- Geo-location based consent
-- A/B testing for banner variations
+- Geo-location based consent (Completed)
+- A/B testing for banner variations (Completed)
 - Additional banner animations
 - Advanced analytics dashboard
 - More third-party integrations
@@ -847,7 +776,6 @@ Typically 24-48 hours for email support
 - Import/export settings
 
 **Suggestions Welcome:**
-Email feature requests to info@littlewebshack.com
 
 We actively develop based on user feedback!
 

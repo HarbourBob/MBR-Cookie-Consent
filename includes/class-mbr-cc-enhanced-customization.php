@@ -196,13 +196,16 @@ class MBR_CC_Enhanced_Customization {
             return;
         }
         
-        // Sanitize CSS (basic sanitization - removes <script> tags).
+        // Sanitize CSS: wp_strip_all_tags() removes any HTML tags, neutralising a </style> breakout and leaving only CSS rules.
         $custom_css = wp_strip_all_tags($custom_css);
         
         ?>
         <!-- MBR Cookie Consent - Custom CSS -->
         <style id="mbr-cc-custom-css">
-            <?php echo $custom_css; ?>
+            <?php
+            // HTML escaping is intentionally not applied: the value is CSS, already stripped of tags above, and esc_html() would corrupt valid CSS such as child selectors using ">".
+            echo $custom_css; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            ?>
         </style>
         <?php
     }

@@ -31,6 +31,3 @@
 - Verify banner appears
 - Test Accept/Reject/Customize buttons
 
-## Support
-
-For support visit littlewebshack.com or contact madeberobert.com

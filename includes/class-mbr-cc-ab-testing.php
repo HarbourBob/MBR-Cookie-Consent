@@ -207,7 +207,8 @@ class MBR_CC_AB_Testing {
 
         wp_send_json_success( array(
             'message'  => sprintf(
-                __( 'Variant %s promoted. Banner position set to "%s". A/B testing disabled.', 'mbr-cookie-consent' ),
+                /* translators: 1: promoted variant label, 2: banner position the variant maps to. */
+                __( 'Variant %1$s promoted. Banner position set to "%2$s". A/B testing disabled.', 'mbr-cookie-consent' ),
                 strtoupper( $winner ),
                 $position
             ),

@@ -358,6 +358,16 @@ class MBR_CC_Geolocation {
             return 'india_dpdp';
         }
         
+        // Vietnam — Personal Data Protection Law (PDPL, Law 91/2025/QH15) in force
+        // 1 January 2026, with Decree 356/2025/ND-CP. Consent-centric and GDPR-like:
+        // consent must be voluntary, specific, informed, granular per purpose, and
+        // easily withdrawable, with silence explicitly NOT constituting consent.
+        // Applies extraterritorially to any entity processing Vietnamese residents'
+        // data, so visitors detected in Vietnam get an opt-in banner.
+        if ($country_code === 'VN') {
+            return 'vn_pdpl';
+        }
+        
         // Default for rest of world
         return 'default';
     }
@@ -528,6 +538,7 @@ class MBR_CC_Geolocation {
             'au_privacy' => 'Australia (Privacy Act 1988, as amended)',
             'lgpd'       => 'Brazil (LGPD)',
             'india_dpdp' => 'India (DPDP Act 2023, Rules 2025)',
+            'vn_pdpl'    => 'Vietnam (PDPL, Law 91/2025 — in force 1 Jan 2026)',
             'default'    => 'Rest of World',
             // Legacy keys for backwards compatibility with cached transients.
             'eu_uk'      => 'EU/UK (GDPR)',

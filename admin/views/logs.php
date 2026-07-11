@@ -42,7 +42,12 @@ $logs = $db->get_consent_logs(array('limit' => 100));
     </div>
     
     <div class="mbr-cc-settings-section">
-        <p><?php printf(esc_html__('Total logs: %s', 'mbr-cookie-consent'), number_format($total)); ?></p>
+        <p>
+            <?php
+            /* translators: %s: total number of consent log entries. */
+            printf( esc_html__( 'Total logs: %s', 'mbr-cookie-consent' ), number_format( $total ) );
+            ?>
+        </p>
         
         <?php if (!empty($logs)) : ?>
             <table class="widefat">

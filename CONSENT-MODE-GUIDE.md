@@ -339,7 +339,6 @@ A: Use Google Tag Assistant (Chrome extension) or check browser console for data
 
 - **Google Consent Mode Documentation**: https://support.google.com/google-ads/answer/10000067
 - **Microsoft UET Consent Mode**: https://help.ads.microsoft.com/apex/index/3/en/56916
-- **MBR Cookie Consent Support**: https://littlewebshack.com/support
 - **GDPR Guidelines**: https://gdpr.eu/cookies/
 
 ---
@@ -366,7 +365,3 @@ var consent = JSON.parse(getCookie('mbr_cc_consent'));
 
 ---
 
-**Version**: 1.1.0  
-**Last Updated**: February 6, 2026  
-**Author**: Made by Robert  
-**Website**: https://littlewebshack.com
