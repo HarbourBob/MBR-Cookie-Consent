@@ -2,7 +2,7 @@
 
 # 🍪 MBR Cookie Consent
 
-[![Version](https://img.shields.io/badge/version-2.1.0-blue?style=flat-square)](https://github.com/harbourbob/mbr-cookie-consent/releases)
+[![Version](https://img.shields.io/badge/version-2.1.1-blue?style=flat-square)](https://github.com/harbourbob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
