@@ -22,11 +22,10 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 [![UK DUAA](https://img.shields.io/badge/UK%20DUAA%202025-compliant-success?style=flat-square)](https://littlewebshack.com)
 [![IAB TCF](https://img.shields.io/badge/IAB%20TCF-v2.3-orange?style=flat-square)](https://iabeurope.eu)
 [![GPC](https://img.shields.io/badge/Global%20Privacy%20Control-supported-blueviolet?style=flat-square)](https://globalprivacycontrol.org)
-[![Security audit](https://img.shields.io/badge/security%20audit-2.3.1-success?style=flat-square)](MBR-Cookie-Consent-Security-Audit.pdf)
 
 <br>
 
-**[Download](https://littlewebshack.com)** · **[Releases](https://github.com/HarbourBob/mbr-cookie-consent/releases)** · **[User Guide (PDF)](mbr-cookie-consent-user-guide.pdf)** · **[Security Audit (PDF)](MBR-Cookie-Consent-Security-Audit.pdf)** · **[Report an issue](https://github.com/HarbourBob/mbr-cookie-consent/issues)**
+**[Download](https://littlewebshack.com)** · **[Releases](https://github.com/HarbourBob/mbr-cookie-consent/releases)** · **[Report an issue](https://github.com/HarbourBob/mbr-cookie-consent/issues)**
 
 </div>
 
