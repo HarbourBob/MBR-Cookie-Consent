@@ -81,7 +81,8 @@
             document.cookie = 'mbr_cc_ac_string=' + acString + 
                             '; expires=' + expires.toUTCString() + 
                             domain + 
-                            '; path=/; SameSite=Lax';
+                            '; path=/; SameSite=Lax' +
+                            (window.location.protocol === 'https:' ? '; Secure' : '');
         },
         
         bindEvents: function() {

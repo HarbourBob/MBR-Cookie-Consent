@@ -3,7 +3,7 @@
  * Geolocation AJAX Handlers
  *
  * @package MBR_Cookie_Consent
- * @version 2.1.0
+ * @version 2.3.0
  */
 
 // Exit if accessed directly.
@@ -49,38 +49,21 @@ function mbr_cc_ajax_test_geolocation() {
         wp_send_json_error('Region resolution failed: ' . $e->getMessage());
     }
     
-    // Pull the friendly name and config flags from the canonical sources.
-    $names = array(
-        'eu_gdpr'    => 'EU/EEA (GDPR / ePrivacy Directive)',
-        'uk_duaa'    => 'United Kingdom (UK GDPR + DUAA 2025)',
-        'us_multi'   => 'United States (CCPA + 20 State Laws / GPC)',
-        'ca_quebec'  => 'Canada — Quebec (Law 25)',
-        'pipeda'     => 'Canada (PIPEDA / CASL)',
-        'ch_nfadp'   => 'Switzerland (revFADP / nFADP)',
-        'au_privacy' => 'Australia (Privacy Act 1988, as amended)',
-        'lgpd'       => 'Brazil (LGPD)',
-        'india_dpdp' => 'India (DPDP Act 2023, Rules 2025)',
-        'default'    => 'Rest of World',
-    );
-    $region_name = isset($names[$region]) ? $names[$region] : 'Rest of World';
+    // Pull the friendly name and behaviour flags from the canonical sources.
+    //
+    // These were previously hardcoded here as three parallel arrays, which meant
+    // every region added after 2.1.0 (Vietnam, Indonesia, and then the 2.3.0
+    // batch) reported as "Rest of World" in this tool even though live detection
+    // was resolving them correctly. Reading the real configuration instead means
+    // this tool cannot drift from actual banner behaviour again.
+    $region_name = $geo->get_region_name($region);
+    $cfg         = mbr_cc_region_config()->get_config_for_region($region);
     
-    // Regions where opt-in / express consent is the regime.
-    $consent_required_regions = array(
-        'eu_gdpr', 'uk_duaa', 'ca_quebec', 'ch_nfadp', 'au_privacy',
-        'lgpd', 'pipeda', 'india_dpdp',
-    );
-    
-    // Regions where the banner shows a prominent equally-weighted reject.
-    $show_reject_regions = array(
-        'eu_gdpr', 'uk_duaa', 'ca_quebec', 'ch_nfadp', 'au_privacy',
-        'lgpd', 'india_dpdp',
-    );
-    
-    $requires_consent = in_array($region, $consent_required_regions, true);
-    $show_reject      = in_array($region, $show_reject_regions, true);
-    $enable_ccpa      = ($region === 'us_multi');
-    $gpc_enabled      = ($region === 'us_multi');
-    $duaa_exempt      = ($region === 'uk_duaa');
+    $requires_consent = !empty($cfg['require_consent']);
+    $show_reject      = !empty($cfg['show_reject_button']);
+    $enable_ccpa      = !empty($cfg['enable_ccpa']);
+    $gpc_enabled      = !empty($cfg['gpc_enabled']);
+    $duaa_exempt      = !empty($cfg['duaa_exempt_categories']);
     
     wp_send_json_success(array(
         'country' => $country,
@@ -92,6 +75,8 @@ function mbr_cc_ajax_test_geolocation() {
         'enable_ccpa' => $enable_ccpa,
         'gpc_enabled' => $gpc_enabled,
         'duaa_exempt' => $duaa_exempt,
+        'auto_accept_on_scroll' => !empty($cfg['auto_accept_on_scroll']),
+        'show_categories' => !empty($cfg['show_categories']),
     ));
 }
 

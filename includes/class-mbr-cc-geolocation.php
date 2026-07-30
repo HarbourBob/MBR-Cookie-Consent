@@ -4,7 +4,7 @@
  * Detects user location and applies appropriate privacy regulations
  *
  * @package MBR_Cookie_Consent
- * @version 2.1.0
+ * @version 2.1.2
  */
 
 // Exit if accessed directly.
@@ -105,9 +105,11 @@ class MBR_CC_Geolocation {
         
         // Detect country (and optional sub-national region) from IP
         $detection = $this->detect_country_from_ip($ip);
+        $was_detected = true;
         if (is_array($detection)) {
             $this->country_code = isset($detection['country']) ? $detection['country'] : null;
             $this->region_code  = isset($detection['region_code']) ? $detection['region_code'] : null;
+            $was_detected       = !isset($detection['detected']) || $detection['detected'];
         } else {
             // Backwards-compatible scalar return.
             $this->country_code = $detection;
@@ -117,38 +119,27 @@ class MBR_CC_Geolocation {
         // Determine privacy region
         $this->region = $this->determine_region($this->country_code, $this->region_code);
         
-        // Cache the result
-        $this->cache_location($this->country_code, $this->region, $this->region_code);
+        // Cache the result. Genuine provider answers are cached for the full
+        // configured duration; fallbacks only briefly, so a provider hiccup
+        // self-heals within minutes instead of persisting for a day.
+        $this->cache_location($this->country_code, $this->region, $this->region_code, $was_detected);
     }
     
     /**
      * Get user's IP address
      */
     private function get_user_ip() {
-        // Check for IP in various headers (proxy support)
-        $ip_keys = array(
-            'HTTP_CF_CONNECTING_IP', // Cloudflare
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_REAL_IP',
-            'REMOTE_ADDR'
-        );
-        
-        foreach ($ip_keys as $key) {
-            if (!empty($_SERVER[$key])) {
-                $ip = $_SERVER[$key];
-                // Handle comma-separated IPs (X-Forwarded-For)
-                if (strpos($ip, ',') !== false) {
-                    $ips = explode(',', $ip);
-                    $ip = trim($ips[0]);
-                }
-                // Validate IP
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
-            }
+        // Proxy headers are only honoured when the request demonstrably came
+        // through a proxy we trust, so a visitor can no longer nominate their
+        // own IP — and therefore their own privacy regime — with a forged
+        // X-Forwarded-For. See includes/mbr-cc-ip.php.
+        if (function_exists('mbr_cc_get_client_ip')) {
+            return mbr_cc_get_client_ip();
         }
-        
-        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+
+        return isset($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)
+            ? $_SERVER['REMOTE_ADDR']
+            : '';
     }
     
     /**
@@ -164,22 +155,30 @@ class MBR_CC_Geolocation {
      */
     private function detect_country_from_ip($ip) {
         
-        // Allow manual override for testing
+        // Allow manual override for testing. Marked as not-detected so it is
+        // only cached briefly and clears itself quickly when the constant is
+        // removed.
         if (defined('MBR_CC_TEST_COUNTRY')) {
-            $result = array('country' => MBR_CC_TEST_COUNTRY, 'region_code' => null);
+            $result = array('country' => MBR_CC_TEST_COUNTRY, 'region_code' => null, 'detected' => false);
             if (defined('MBR_CC_TEST_REGION')) {
                 $result['region_code'] = MBR_CC_TEST_REGION;
             }
             return $result;
         }
         
-        // Skip for local/private IPs
-        if (empty($ip) || 
-            strpos($ip, '127.') === 0 || 
-            strpos($ip, '192.168.') === 0 || 
-            strpos($ip, '10.') === 0 ||
-            $ip === '::1') {
-            return array('country' => $this->get_default_country(), 'region_code' => null);
+        // Skip local/private/reserved IPs. String prefix matching missed the
+        // 172.16.0.0/12 block and every IPv6 private range, so a LAN visitor
+        // could trigger a pointless outbound lookup on every request.
+        if (empty($ip) || !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return array('country' => $this->get_default_country(), 'region_code' => null, 'detected' => false);
+        }
+
+        // Bound outbound lookups. Even with correct IP resolution, a burst of
+        // real traffic with cold caches can stack up blocking HTTP calls and
+        // trip the provider's own rate limit; when that happens every caller
+        // gets the default region instead of waiting on a doomed request.
+        if (!$this->can_make_lookup()) {
+            return array('country' => $this->get_default_country(), 'region_code' => null, 'detected' => false);
         }
         
         // Get API provider
@@ -206,9 +205,18 @@ class MBR_CC_Geolocation {
             $detected = array('country' => $detected, 'region_code' => null);
         }
         
-        // Fallback to default if detection fails
+        // Fallback to default if detection fails.
+        //
+        // The 'detected' flag records whether this is a genuine provider
+        // answer or a fallback. Fallbacks (provider down, rate-limited, or
+        // outbound blocked) must NOT be cached for the full duration -
+        // caching a failure for 24 hours pins the wrong region for that
+        // visitor's IP all day, and if a page cache primes during that
+        // window, for every visitor to that page.
         if (!is_array($detected) || empty($detected['country'])) {
-            $detected = array('country' => $this->get_default_country(), 'region_code' => null);
+            $detected = array('country' => $this->get_default_country(), 'region_code' => null, 'detected' => false);
+        } elseif (!isset($detected['detected'])) {
+            $detected['detected'] = true;
         }
         
         $detected['country'] = strtoupper($detected['country']);
@@ -226,25 +234,53 @@ class MBR_CC_Geolocation {
      * province/state-level rules (e.g. Quebec Law 25) can be applied correctly.
      */
     private function detect_via_ipapi($ip) {
-        $response = wp_remote_get("http://ip-api.com/json/{$ip}?fields=countryCode,region", array(
+        // ip-api.com serves HTTPS only on its paid endpoint. Over plain HTTP an
+        // on-path attacker can rewrite countryCode and silently downgrade a
+        // visitor's privacy regime, so HTTPS is used when a key is configured
+        // and the plaintext endpoint requires an explicit opt-in.
+        $api_key = trim((string) get_option('mbr_cc_ipapi_key', ''));
+
+        if ($api_key !== '') {
+            $url = add_query_arg(
+                array(
+                    'fields' => 'countryCode,region',
+                    'key'    => $api_key,
+                ),
+                'https://pro.ip-api.com/json/' . rawurlencode($ip)
+            );
+        } else {
+            if (!get_option('mbr_cc_allow_insecure_geo_lookup', false)) {
+                return false;
+            }
+
+            $url = add_query_arg(
+                array('fields' => 'countryCode,region'),
+                'http://ip-api.com/json/' . rawurlencode($ip)
+            );
+        }
+
+        $response = wp_remote_get($url, array(
             'timeout' => 5,
-            'sslverify' => false
         ));
-        
+
         if (is_wp_error($response)) {
             return false;
         }
-        
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        
-        if (empty($data['countryCode'])) {
+
+        if ((int) wp_remote_retrieve_response_code($response) !== 200) {
             return false;
         }
-        
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (!is_array($data) || empty($data['countryCode'])) {
+            return false;
+        }
+
         return array(
-            'country'     => $data['countryCode'],
-            'region_code' => isset($data['region']) ? $data['region'] : null,
+            'country'     => $this->sanitize_country_code($data['countryCode']),
+            'region_code' => isset($data['region']) ? $this->sanitize_region_code($data['region']) : null,
         );
     }
     
@@ -255,24 +291,39 @@ class MBR_CC_Geolocation {
      * in a single request.
      */
     private function detect_via_ipapi_com($ip) {
-        $response = wp_remote_get("https://ipapi.co/{$ip}/json/", array(
-            'timeout' => 5
+        $response = wp_remote_get('https://ipapi.co/' . rawurlencode($ip) . '/json/', array(
+            'timeout' => 5,
         ));
         
         if (is_wp_error($response)) {
             return false;
         }
         
+        if ((int) wp_remote_retrieve_response_code($response) !== 200) {
+            return false;
+        }
+        
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
-        if (empty($data['country_code']) || strlen($data['country_code']) !== 2) {
+        if (!is_array($data)) {
+            return false;
+        }
+        
+        // ipapi.co signals quota exhaustion with a 200 and an error body.
+        if (!empty($data['error'])) {
+            return false;
+        }
+        
+        $country = isset($data['country_code']) ? $this->sanitize_country_code($data['country_code']) : '';
+        
+        if ($country === '') {
             return false;
         }
         
         return array(
-            'country'     => $data['country_code'],
-            'region_code' => isset($data['region_code']) ? $data['region_code'] : null,
+            'country'     => $country,
+            'region_code' => isset($data['region_code']) ? $this->sanitize_region_code($data['region_code']) : null,
         );
     }
     
@@ -289,17 +340,120 @@ class MBR_CC_Geolocation {
             return false;
         }
         
+        // Only trust the header when the request actually arrived from a
+        // Cloudflare edge address. Otherwise any visitor could set it and pick
+        // their own privacy regime.
+        if (function_exists('mbr_cc_ip_in_ranges') && function_exists('mbr_cc_cloudflare_ranges')) {
+            $remote = isset($_SERVER['REMOTE_ADDR']) ? trim(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+            
+            if (!filter_var($remote, FILTER_VALIDATE_IP) || !mbr_cc_ip_in_ranges($remote, mbr_cc_cloudflare_ranges())) {
+                return false;
+            }
+        }
+        
+        $country = $this->sanitize_country_code(wp_unslash($_SERVER['HTTP_CF_IPCOUNTRY']));
+        
+        // Cloudflare sends XX for unknown and T1 for Tor exit nodes.
+        if ($country === '' || $country === 'XX' || $country === 'T1') {
+            return false;
+        }
+        
         $result = array(
-            'country'     => $_SERVER['HTTP_CF_IPCOUNTRY'],
+            'country'     => $country,
             'region_code' => null,
         );
         
         // Enterprise plans expose region as CF-Region-Code (e.g. "QC", "CA").
         if (!empty($_SERVER['HTTP_CF_REGION_CODE'])) {
-            $result['region_code'] = $_SERVER['HTTP_CF_REGION_CODE'];
+            $region = $this->sanitize_region_code(wp_unslash($_SERVER['HTTP_CF_REGION_CODE']));
+            
+            if ($region !== '') {
+                $result['region_code'] = $region;
+            }
         }
         
         return $result;
+    }
+    
+    /**
+     * Normalise a country code coming from a provider or upstream header.
+     *
+     * Provider responses and proxy headers are external input. They are used to
+     * pick a legal regime and are cached, so they are constrained to the shape
+     * of an ISO 3166-1 alpha-2 code before going anywhere near that decision.
+     *
+     * @param mixed $code Raw value.
+     * @return string Two-letter uppercase code, or '' if not valid.
+     */
+    private function sanitize_country_code($code) {
+        if (!is_scalar($code)) {
+            return '';
+        }
+        
+        $code = strtoupper(preg_replace('/[^A-Za-z]/', '', (string) $code));
+        
+        return strlen($code) === 2 ? $code : '';
+    }
+    
+    /**
+     * Normalise a sub-national region code coming from a provider or header.
+     *
+     * ISO 3166-2 subdivision codes are alphanumeric and short; providers vary
+     * between "QC" and longer forms, so length is capped rather than fixed.
+     *
+     * @param mixed $code Raw value.
+     * @return string Sanitised code, or '' if not usable.
+     */
+    private function sanitize_region_code($code) {
+        if (!is_scalar($code)) {
+            return '';
+        }
+        
+        $code = strtoupper(preg_replace('/[^A-Za-z0-9\-]/', '', (string) $code));
+        
+        return strlen($code) <= 10 ? $code : '';
+    }
+    
+    /**
+     * Rate-limit outbound geolocation lookups.
+     *
+     * Providers rate-limit by origin IP, so on shared hosting the whole account
+     * shares a budget. Exceeding it makes every lookup fail, which is worse
+     * than deliberately falling back to the default region for the overflow.
+     *
+     * Counter is per-minute and best-effort: a lost race costs at most a few
+     * extra requests, which is well inside the provider's tolerance.
+     *
+     * @return bool True if a lookup may be made.
+     */
+    private function can_make_lookup() {
+        /**
+         * Filter the maximum number of outbound geolocation lookups per minute.
+         *
+         * Defaults to 40, just under ip-api.com's documented free limit of 45.
+         *
+         * @since 2.3.1
+         *
+         * @param int $limit Maximum lookups per minute. 0 disables the limit.
+         */
+        $limit = (int) apply_filters('mbr_cc_geolocation_lookups_per_minute', 40);
+        
+        if ($limit <= 0) {
+            return true;
+        }
+        
+        $key   = 'mbr_cc_geo_rate_' . gmdate('YmdHi');
+        $count = (int) get_transient($key);
+        
+        if ($count >= $limit) {
+            return false;
+        }
+        
+        // Two-minute expiry so the row cannot outlive its usefulness even if
+        // the clock or cache behaves oddly.
+        set_transient($key, $count + 1, 120);
+        
+        return true;
     }
     
     /**
@@ -368,7 +522,55 @@ class MBR_CC_Geolocation {
             return 'vn_pdpl';
         }
         
-        // Default for rest of world
+        // Indonesia — Personal Data Protection Law (UU PDP, Law No. 27 of 2022),
+        // fully effective 17 October 2024 and upheld by the Constitutional Court
+        // in January 2026. GDPR-style: explicit, purpose-specific, withdrawable
+        // consent. Applies extraterritorially to processors of Indonesian
+        // residents' data, so visitors detected in Indonesia get an opt-in banner.
+        if ($country_code === 'ID') {
+            return 'id_pdp';
+        }
+        
+        // Nigeria — NDPA 2023 + the NDPC's General Application and
+        // Implementation Directive (GAID), effective 19 September 2025. The
+        // GAID explicitly requires a prominent homepage cookie notice with a
+        // genuine accept/decline choice and no implied consent from browsing.
+        if ($country_code === 'NG') {
+            return 'ng_ndpa';
+        }
+        
+        // China — PIPL. Explicit opt-in for identifying cookies, plus separate
+        // consent for sensitive data and cross-border transfers (the latter is
+        // NOT handled by this plugin — see the region config docblock).
+        if ($country_code === 'CN') {
+            return 'cn_pipl';
+        }
+        
+        // South Korea — PIPA. Specific, informed, prior consent wherever cookie
+        // data can identify a person; notice-then-opt-out is insufficient.
+        if ($country_code === 'KR') {
+            return 'kr_pipa';
+        }
+        
+        // Saudi Arabia — PDPL. Consent is the default lawful basis, and SDAIA
+        // enforcement has been active since 2025.
+        if ($country_code === 'SA') {
+            return 'sa_pdpl';
+        }
+        
+        // South Africa — POPIA. Section 69 requires opt-in for electronic
+        // direct marketing, which covers most remarketing cookie use.
+        if ($country_code === 'ZA') {
+            return 'za_popia';
+        }
+        
+        // Default for rest of world.
+        // NOTE: as of 2.3.0 this is an opt-in posture for NEW installs — see
+        // MBR_CC_Region_Config::get_default_config(). Countries that genuinely
+        // require opt-in but are not mapped above (e.g. UAE, Thailand) are the
+        // reason. Japan is knowingly over-served: notice or opt-out is
+        // generally sufficient there under the APPI and the Telecommunications
+        // Business Act external transmission rules.
         return 'default';
     }
     
@@ -382,17 +584,35 @@ class MBR_CC_Geolocation {
     /**
      * Cache location data
      *
-     * @param string      $country     ISO 3166-1 alpha-2 country code.
-     * @param string      $region      Resolved privacy region key.
-     * @param string|null $region_code Optional ISO 3166-2 sub-national region code.
+     * Genuine provider answers are cached for the configured duration
+     * (default 24 hours). Fallback answers - produced when the provider is
+     * unreachable, rate-limited, or returns nothing - are cached for a much
+     * shorter window (default 5 minutes, filterable via
+     * 'mbr_cc_geolocation_failure_cache') so that a transient failure
+     * self-heals quickly rather than pinning a possibly-wrong region to the
+     * visitor's IP for a full day.
+     *
+     * @param string      $country      ISO 3166-1 alpha-2 country code.
+     * @param string      $region       Resolved privacy region key.
+     * @param string|null $region_code  Optional ISO 3166-2 sub-national region code.
+     * @param bool        $was_detected Whether this is a genuine provider answer.
      */
-    private function cache_location($country, $region, $region_code = null) {
+    private function cache_location($country, $region, $region_code = null, $was_detected = true) {
         $ip = $this->get_user_ip();
         if (empty($ip)) {
             return;
         }
         
-        $cache_duration = get_option('mbr_cc_geolocation_cache', 86400); // 24 hours default
+        if ($was_detected) {
+            $cache_duration = get_option('mbr_cc_geolocation_cache', 86400); // 24 hours default
+        } else {
+            /**
+             * Filter the cache duration for failed/fallback geolocation lookups.
+             *
+             * @param int $duration Seconds to cache a fallback result. Default 300.
+             */
+            $cache_duration = (int) apply_filters('mbr_cc_geolocation_failure_cache', 300);
+        }
         
         set_transient(
             'mbr_cc_geo_' . md5($ip),
@@ -400,6 +620,7 @@ class MBR_CC_Geolocation {
                 'country'     => $country,
                 'region'      => $region,
                 'region_code' => $region_code,
+                'detected'    => (bool) $was_detected,
                 'timestamp'   => time(),
             ),
             $cache_duration
@@ -527,11 +748,20 @@ class MBR_CC_Geolocation {
     /**
      * Get region display name
      */
-    public function get_region_name() {
+    /**
+     * Get region display name.
+     *
+     * @param string|null $region Optional region key. Defaults to the detected
+     *                            region. Passing an explicit key lets admin
+     *                            tooling label an arbitrary region without
+     *                            duplicating this table.
+     * @return string
+     */
+    public function get_region_name($region = null) {
         $names = array(
             'eu_gdpr'    => 'EU/EEA (GDPR / ePrivacy Directive)',
             'uk_duaa'    => 'United Kingdom (UK GDPR + DUAA 2025)',
-            'us_multi'   => 'United States (CCPA + 20 State Laws / GPC)',
+            'us_multi'   => 'United States (CCPA + 20 State Laws in effect / GPC)',
             'ca_quebec'  => 'Canada — Quebec (Law 25)',
             'pipeda'     => 'Canada (PIPEDA / CASL)',
             'ch_nfadp'   => 'Switzerland (revFADP / nFADP)',
@@ -539,13 +769,21 @@ class MBR_CC_Geolocation {
             'lgpd'       => 'Brazil (LGPD)',
             'india_dpdp' => 'India (DPDP Act 2023, Rules 2025)',
             'vn_pdpl'    => 'Vietnam (PDPL, Law 91/2025 — in force 1 Jan 2026)',
-            'default'    => 'Rest of World',
+            'id_pdp'     => 'Indonesia (UU PDP, Law 27/2022)',
+            'ng_ndpa'    => 'Nigeria (NDPA 2023 + GAID, effective 19 Sep 2025)',
+            'cn_pipl'    => 'China (PIPL)',
+            'kr_pipa'    => 'South Korea (PIPA)',
+            'sa_pdpl'    => 'Saudi Arabia (PDPL)',
+            'za_popia'   => 'South Africa (POPIA)',
+            'default'    => 'Rest of World (safe default — opt-in)',
             // Legacy keys for backwards compatibility with cached transients.
             'eu_uk'      => 'EU/UK (GDPR)',
             'ccpa'       => 'United States (CCPA)',
         );
         
-        $region = $this->get_region();
+        if ($region === null) {
+            $region = $this->get_region();
+        }
         return isset($names[$region]) ? $names[$region] : $names['default'];
     }
     

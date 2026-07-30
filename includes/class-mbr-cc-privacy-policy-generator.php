@@ -174,6 +174,11 @@ class MBR_CC_Privacy_Policy_Generator {
             $content .= $this->section_iab_tcf();
         }
         
+        // AI / LLM training disclosure
+        if ($features['ai_training']) {
+            $content .= $this->section_ai_training();
+        }
+        
         // Changes to Policy
         $content .= $this->section_changes_to_policy();
         
@@ -204,6 +209,7 @@ class MBR_CC_Privacy_Policy_Generator {
             'ccpa' => false,
             'iab_tcf' => false,
             'google_consent_mode' => false,
+            'ai_training' => false,
             'international' => false,
             'third_party_services' => array(),
         );
@@ -243,6 +249,9 @@ class MBR_CC_Privacy_Policy_Generator {
         
         // Google Consent Mode
         $features['google_consent_mode'] = get_option('mbr_cc_google_consent_mode', false);
+        
+        // AI / LLM training disclosure (Connecticut SB 1295).
+        $features['ai_training'] = get_option('mbr_cc_ai_training_enabled', false);
         
         // International
         $features['international'] = get_option('mbr_cc_auto_translate', false);
@@ -763,10 +772,91 @@ class MBR_CC_Privacy_Policy_Generator {
     }
     
     /**
+     * Section: AI / LLM training disclosure.
+     *
+     * Connecticut SB 1295 (Public Act 25-113), effective 1 July 2026, requires
+     * controllers to state in their privacy notice whether they collect, use or
+     * sell personal data for the purpose of training large language models. It
+     * is the first US state disclosure obligation aimed at the AI training
+     * supply chain, and a boilerplate "we may use data to improve our services"
+     * does not answer it.
+     *
+     * The three flags below map directly onto the statutory verbs:
+     *   own     — the site trains or fine-tunes models on personal data
+     *   vendors — a vendor may use the data for model improvement
+     *   sell    — personal data is sold or licensed into training datasets
+     *
+     * With none of them set, this produces an affirmative negative statement,
+     * which is the answer most small sites will give and is worth stating
+     * explicitly rather than staying silent.
+     *
+     * The generated text is a starting point, not legal advice. It can only be
+     * accurate if the site owner has actually checked their vendor agreements —
+     * an inaccurate statement in a public privacy notice is not just a CTDPA
+     * problem but potential deception-theory material.
+     *
+     * @return string Section HTML.
+     */
+    private function section_ai_training() {
+        $own     = get_option('mbr_cc_ai_training_own', false);
+        $vendors = get_option('mbr_cc_ai_training_vendors', false);
+        $sell    = get_option('mbr_cc_ai_training_sell', false);
+        $detail  = trim((string) get_option('mbr_cc_ai_training_detail', ''));
+        
+        $content = '<h2>15. Artificial Intelligence and Model Training</h2>
+
+<p>Some privacy laws require us to tell you whether your personal data is used to train artificial intelligence systems, including large language models. This section sets out our position.</p>
+
+';
+        
+        if (!$own && !$vendors && !$sell) {
+            $content .= '<p>We <strong>do not</strong> collect, use, or sell your personal data for the purpose of training large language models or other artificial intelligence systems.</p>
+
+';
+        } else {
+            $content .= '<p>Your personal data may be used in connection with training artificial intelligence systems in the following ways:</p>
+
+<ul>
+';
+            
+            if ($own) {
+                $content .= '<li><strong>Our own systems:</strong> We may use personal data to train or fine-tune artificial intelligence models that we develop or operate, including models used for features such as personalisation, search, and automated assistance.</li>
+';
+            }
+            
+            if ($vendors) {
+                $content .= '<li><strong>Service providers:</strong> Some of the third-party services we use may process personal data to improve or train their own models, as permitted by our agreements with them. We review these arrangements, and you can ask us which providers this applies to.</li>
+';
+            }
+            
+            if ($sell) {
+                $content .= '<li><strong>Sale or licensing:</strong> We may sell or license personal data to third parties who use it to build or train artificial intelligence models. Where the law gives you a right to opt out of the sale or sharing of your personal data, you can exercise it using the methods described in this policy.</li>
+';
+            }
+            
+            $content .= '</ul>
+
+';
+        }
+        
+        if ($detail !== '') {
+            $content .= '<p>' . esc_html($detail) . '</p>
+
+';
+        }
+        
+        $content .= '<p>If you would like more information about how your personal data is used in relation to artificial intelligence, or wish to exercise any rights you have in this area, please contact us using the details at the end of this policy.</p>
+
+';
+        
+        return $content;
+    }
+    
+    /**
      * Section: Changes to Policy
      */
     private function section_changes_to_policy() {
-        return '<h2>15. Changes to This Privacy Policy</h2>
+        return '<h2>16. Changes to This Privacy Policy</h2>
 
 <p>We may update this privacy policy from time to time to reflect changes in our practices or for legal, regulatory, or operational reasons.</p>
 
@@ -781,7 +871,7 @@ class MBR_CC_Privacy_Policy_Generator {
      * Section: Contact
      */
     private function section_contact($site_name, $admin_email) {
-        return '<h2>16. Contact Us</h2>
+        return '<h2>17. Contact Us</h2>
 
 <p>If you have questions about this privacy policy or our privacy practices, please contact us:</p>
 

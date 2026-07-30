@@ -169,21 +169,71 @@ class MBR_CC_AB_Testing {
         update_option( self::STATS_OPTION, $stats, false );
     }
 
+    /**
+     * Deduplicate a tracking event per visitor.
+     *
+     * These endpoints are unauthenticated and fired via sendBeacon, so a nonce
+     * baked into cached HTML would go stale and silently break tracking. The
+     * dedupe window is the real control: it bounds how much an attacker can
+     * skew a test or drive option writes, and it also fixes the accuracy bug
+     * where one visitor reloading a page logged an impression every time.
+     *
+     * @param string $event   Event name, e.g. 'impression'.
+     * @param string $variant Variant key.
+     * @param int    $window  Dedupe window in seconds.
+     * @return bool True if the event should be counted.
+     */
+    private static function should_count( $event, $variant, $window ) {
+        $ip = function_exists( 'mbr_cc_get_client_ip' ) ? mbr_cc_get_client_ip() : '';
+
+        if ( '' === $ip ) {
+            return true;
+        }
+
+        $key = 'mbr_cc_ab_' . hash( 'sha256', $event . '|' . $variant . '|' . $ip . wp_salt( 'auth' ) );
+
+        if ( get_transient( $key ) ) {
+            return false;
+        }
+
+        set_transient( $key, 1, $window );
+
+        return true;
+    }
+
     /** AJAX: record a banner impression. */
     public function ajax_track_impression() {
-        $variant = isset( $_POST['variant'] ) ? sanitize_key( $_POST['variant'] ) : '';
-        if ( array_key_exists( $variant, self::VARIANTS ) ) {
+        $variant = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( $_POST['variant'] ) ) : '';
+
+        if ( ! array_key_exists( $variant, self::VARIANTS ) ) {
+            wp_send_json_success();
+        }
+
+        /** Filter the impression dedupe window. @since 2.3.1 */
+        $window = (int) apply_filters( 'mbr_cc_ab_impression_window', HOUR_IN_SECONDS );
+
+        if ( self::should_count( 'impression', $variant, $window ) ) {
             self::increment( $variant, 'impressions' );
         }
+
         wp_send_json_success();
     }
 
     /** AJAX: record an accept-all conversion. */
     public function ajax_track_conversion() {
-        $variant = isset( $_POST['variant'] ) ? sanitize_key( $_POST['variant'] ) : '';
-        if ( array_key_exists( $variant, self::VARIANTS ) ) {
+        $variant = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( $_POST['variant'] ) ) : '';
+
+        if ( ! array_key_exists( $variant, self::VARIANTS ) ) {
+            wp_send_json_success();
+        }
+
+        /** Filter the conversion dedupe window. @since 2.3.1 */
+        $window = (int) apply_filters( 'mbr_cc_ab_conversion_window', DAY_IN_SECONDS );
+
+        if ( self::should_count( 'conversion', $variant, $window ) ) {
             self::increment( $variant, 'conversions' );
         }
+
         wp_send_json_success();
     }
 

@@ -157,56 +157,87 @@ class MBR_CC_Network_Admin {
             wp_die(esc_html__('You do not have permission to perform this action.', 'mbr-cookie-consent'));
         }
         
-        // Network-wide settings
+        // Explicit type per setting. The previous substring matching tested for
+        // 'button' before reaching the text branch, so network_accept_button_text,
+        // network_reject_button_text and network_customize_button_text — which
+        // are button *labels* — were each cast to a boolean and stored as 1.
         $network_settings = array(
-            'network_banner_position',
-            'network_banner_layout',
-            'network_primary_color',
-            'network_accept_button_color',
-            'network_reject_button_color',
-            'network_text_color',
-            'network_revisit_button_text_color',
-            'network_show_reject_button',
-            'network_show_customize_button',
-            'network_show_close_button',
-            'network_reload_on_consent',
-            'network_cookie_expiry_days',
-            'network_enable_ccpa',
-            'network_ccpa_link_text',
-            'network_banner_heading',
-            'network_banner_description',
-            'network_accept_button_text',
-            'network_reject_button_text',
-            'network_customize_button_text',
-            'network_revisit_consent_enabled',
-            'network_revisit_consent_text',
-            'network_show_privacy_policy_link',
-            'network_privacy_policy_url',
-            'network_privacy_policy_text',
-            'network_show_cookie_policy_link',
-            'network_cookie_policy_url',
-            'network_cookie_policy_text',
-            'network_banner_logo_url',
-            'network_allow_site_override',
+            'network_banner_position'           => 'text',
+            'network_banner_layout'             => 'text',
+            'network_primary_color'             => 'color',
+            'network_accept_button_color'       => 'color',
+            'network_reject_button_color'       => 'color',
+            'network_text_color'                => 'color',
+            'network_revisit_button_text_color' => 'color',
+            'network_show_reject_button'        => 'bool',
+            'network_show_customize_button'     => 'bool',
+            'network_show_close_button'         => 'bool',
+            'network_reload_on_consent'         => 'bool',
+            'network_cookie_expiry_days'        => 'int',
+            'network_enable_ccpa'               => 'bool',
+            'network_ccpa_link_text'            => 'text',
+            'network_banner_heading'            => 'text',
+            'network_banner_description'        => 'textarea',
+            'network_accept_button_text'        => 'text',
+            'network_reject_button_text'        => 'text',
+            'network_customize_button_text'     => 'text',
+            'network_revisit_consent_enabled'   => 'bool',
+            'network_revisit_consent_text'      => 'text',
+            'network_show_privacy_policy_link'  => 'bool',
+            'network_privacy_policy_url'        => 'url',
+            'network_privacy_policy_text'       => 'text',
+            'network_show_cookie_policy_link'   => 'bool',
+            'network_cookie_policy_url'         => 'url',
+            'network_cookie_policy_text'        => 'text',
+            'network_banner_logo_url'           => 'url',
+            'network_allow_site_override'       => 'bool',
         );
         
-        foreach ($network_settings as $setting) {
-            if (isset($_POST['mbr_cc_' . $setting])) {
-                $value = $_POST['mbr_cc_' . $setting];
-                
-                // Sanitize based on type
-                if (strpos($setting, '_color') !== false || strpos($setting, '_url') !== false) {
-                    $value = sanitize_text_field($value);
-                } elseif (strpos($setting, 'button') !== false || strpos($setting, 'enable') !== false || strpos($setting, 'allow') !== false) {
-                    $value = (bool) $value;
-                } elseif ($setting === 'network_cookie_expiry_days') {
-                    $value = absint($value);
-                } else {
-                    $value = sanitize_text_field($value);
-                }
-                
-                update_site_option('mbr_cc_' . $setting, $value);
+        foreach ($network_settings as $setting => $type) {
+            $key = 'mbr_cc_' . $setting;
+            
+            // Unchecked checkboxes are absent from the POST body, so a boolean
+            // has to be written as false rather than skipped — otherwise a
+            // toggle could be switched on but never off.
+            if ($type === 'bool') {
+                update_site_option($key, isset($_POST[$key]) && (bool) wp_unslash($_POST[$key]));
+                continue;
             }
+            
+            if (!isset($_POST[$key])) {
+                continue;
+            }
+            
+            $raw = wp_unslash($_POST[$key]);
+            $raw = is_scalar($raw) ? (string) $raw : '';
+            
+            switch ($type) {
+                case 'int':
+                    $value = absint($raw);
+                    break;
+                
+                case 'color':
+                    $color = sanitize_hex_color($raw);
+                    $value = $color ? $color : '';
+                    break;
+                
+                case 'url':
+                    // esc_url_raw strips javascript: and other unsafe schemes,
+                    // which sanitize_text_field did not.
+                    $value = esc_url_raw($raw);
+                    break;
+                
+                case 'textarea':
+                    $value = sanitize_textarea_field($raw);
+                    break;
+                
+                case 'text':
+                default:
+                    $value = sanitize_text_field($raw);
+                    break;
+            }
+            
+            update_site_option($key, $value);
         }
         
         wp_redirect(add_query_arg(array(

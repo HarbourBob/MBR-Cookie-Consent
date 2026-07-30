@@ -2,8 +2,8 @@
 /**
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
- * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.1.1
+ * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, Indonesia UU PDP, Nigeria NDPA, China PIPL, South Korea PIPA, Saudi PDPL, South Africa POPIA, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
+ * Version: 2.3.1
  * Author: Robert Palmer
  * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
@@ -46,7 +46,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.1.1');
+define('MBR_CC_VERSION', '2.3.1');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -102,6 +102,9 @@ class MBR_Cookie_Consent {
      * Load required files.
      */
     private function load_dependencies() {
+        // Shared client-IP resolution. Must load before the database and
+        // geolocation classes, both of which depend on it.
+        require_once MBR_CC_PLUGIN_DIR . 'includes/mbr-cc-ip.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-database.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-geolocation.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-region-config.php';
@@ -121,6 +124,7 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-privacy-policy-generator.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-form-integration.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-ab-testing.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-import-export.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-admin.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-settings.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/geolocation-ajax.php';
@@ -153,6 +157,11 @@ class MBR_Cookie_Consent {
      * Initialize plugin components.
      */
     public function init() {
+        // Run any pending version upgrades before anything reads options.
+        // This must happen here rather than in the activation hook, because
+        // WordPress does NOT fire register_activation_hook() on plugin update.
+        $this->maybe_upgrade();
+        
         // Initialize database handler.
         MBR_CC_Database::get_instance();
         
@@ -199,6 +208,7 @@ class MBR_Cookie_Consent {
         if (is_admin()) {
             MBR_CC_Admin::get_instance();
             MBR_CC_Settings::get_instance();
+            MBR_CC_Import_Export::get_instance();
         }
         
         // Initialize cookie scanner.
@@ -255,11 +265,13 @@ class MBR_Cookie_Consent {
         // Create database tables (network-wide tables)
         MBR_CC_Database::create_tables();
         
+        // Run version-gated migrations for existing installations FIRST, while
+        // the stored version marker still reflects the old release. On a fresh
+        // install these are no-ops.
+        $this->maybe_upgrade();
+        
         // Set default options for this site
         $this->set_default_options();
-        
-        // Update existing installations
-        $this->maybe_update_options();
         
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -294,22 +306,135 @@ class MBR_Cookie_Consent {
     }
     
     /**
-     * Maybe update options for existing installations.
+     * Run version-gated upgrade routines.
+     *
+     * Fires on every load via init(), but does nothing once the stored version
+     * matches the running version. Kept deliberately cheap: a single option
+     * read in the common case.
+     *
+     * Why not the activation hook? Because register_activation_hook() does not
+     * fire when a plugin is updated in place (which is how every existing site
+     * receives this release via PUC). Migrations that must run on upgrade have
+     * to be triggered from a normal request.
+     *
+     * Multisite note: this runs per-site, and get_option()/update_option() are
+     * per-site, so each site in a network migrates independently on first load.
      */
-    private function maybe_update_options() {
-        $current_version = get_option('mbr_cc_version', '0.0.0');
+    private function maybe_upgrade() {
+        $stored_version = get_option('mbr_cc_version', '');
         
-        // Version 1.0.3 updates
-        if (version_compare($current_version, '1.0.3', '<')) {
-            // Update revisit button text color to black if it's still white
-            $revisit_color = get_option('mbr_cc_revisit_button_text_color', '#ffffff');
-            if ($revisit_color === '#ffffff') {
+        if ($stored_version === MBR_CC_VERSION) {
+            return;
+        }
+        
+        // 1.0.3 — revisit button text colour correction. Retained here so a
+        // very old site that never reactivated still gets the fix.
+        if (version_compare($stored_version, '1.0.3', '<')) {
+            if (get_option('mbr_cc_revisit_button_text_color', '#ffffff') === '#ffffff') {
                 update_option('mbr_cc_revisit_button_text_color', '#000000');
             }
-            
-            // Update version
-            update_option('mbr_cc_version', MBR_CC_VERSION);
         }
+        
+        // 2.3.0 — default (Rest of World) region became opt-in.
+        if (version_compare($stored_version, '2.3.0', '<')) {
+            $this->upgrade_to_230($stored_version);
+        }
+        
+        // 2.3.1 — geolocation lookups moved off plaintext HTTP.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.1', '<')) {
+            $this->upgrade_to_231();
+        }
+        
+        update_option('mbr_cc_version', MBR_CC_VERSION);
+    }
+    
+    /**
+     * Upgrade routine for 2.3.0.
+     *
+     * 2.3.0 flipped the shipped defaults for the "Rest of World" region from
+     * implied consent to opt-in. Those defaults live in the third argument of
+     * get_option() inside MBR_CC_Region_Config::get_default_config(), which
+     * means they only apply where no option row exists — and no option row has
+     * ever existed for them, because they were never written by
+     * set_default_options().
+     *
+     * So changing the code default would silently change banner behaviour on
+     * every existing site that had never touched those settings. A point
+     * release should not do that.
+     *
+     * This routine therefore pins the OLD behaviour explicitly for any site
+     * upgrading from below 2.3.0, writing the previous values as real option
+     * rows. New installations get the option rows written with the new strict
+     * values by set_default_options() instead. Either way the behaviour is
+     * explicit rather than inherited from a code default that can move again.
+     *
+     * Site owners can still change any of these afterwards; this only decides
+     * the starting position.
+     *
+     * @param string $stored_version Version the site is upgrading from.
+     */
+    private function upgrade_to_230($stored_version) {
+        // Nothing to preserve on a site that has never stored settings — that
+        // is a fresh install, and set_default_options() will write the new
+        // strict values instead. mbr_cc_banner_heading is the marker: it has
+        // been written on activation since the earliest releases.
+        if (false === get_option('mbr_cc_banner_heading')) {
+            return;
+        }
+        
+        $legacy_defaults = array(
+            'mbr_cc_geolocation_default_require' => false,
+            'mbr_cc_default_auto_accept'         => true,
+            'mbr_cc_default_show_reject'         => false,
+            'mbr_cc_default_show_customize'      => true,
+        );
+        
+        // add_option() is a no-op when the row already exists, so this both
+        // pins the old behaviour on upgrading sites and leaves a fresh
+        // install's strict values untouched. It is also race-safe.
+        foreach ($legacy_defaults as $option_key => $legacy_value) {
+            add_option($option_key, $legacy_value);
+        }
+        
+        // Flag it so the admin can surface a one-time notice explaining that
+        // the shipped default changed but this site was left as it was.
+        if ($stored_version !== '') {
+            update_option('mbr_cc_230_default_region_preserved', true);
+        }
+    }
+    
+    /**
+     * Upgrade routine for 2.3.1.
+     *
+     * The ip-api.com provider was queried over plain HTTP, which means an
+     * on-path attacker could rewrite the country code and choose which privacy
+     * regime a visitor was served — and visitor IP addresses travelled to a
+     * third party in cleartext, which is difficult to defend under GDPR Art. 44
+     * in a plugin whose whole job is privacy compliance.
+     *
+     * ip-api.com only offers HTTPS on its paid tier, so sites still using it
+     * without a key are moved to ipapi.co, which is free over HTTPS. Anyone who
+     * prefers ip-api's higher free rate limit can opt back in explicitly on the
+     * geolocation settings screen, or add a pro key.
+     *
+     * Only sites with geolocation actually switched on are touched, and a flag
+     * is left behind so the change can be explained in a notice rather than
+     * happening silently.
+     */
+    private function upgrade_to_231() {
+        if (!get_option('mbr_cc_geolocation_enabled', false)) {
+            return;
+        }
+        
+        $provider = get_option('mbr_cc_geolocation_provider', 'ip-api');
+        $api_key  = trim((string) get_option('mbr_cc_ipapi_key', ''));
+        
+        if ($provider !== 'ip-api' || $api_key !== '') {
+            return;
+        }
+        
+        update_option('mbr_cc_geolocation_provider', 'ipapi');
+        update_option('mbr_cc_231_geo_provider_switched', true);
     }
     
     /**
@@ -324,6 +449,14 @@ class MBR_Cookie_Consent {
      * Set default plugin options.
      */
     private function set_default_options() {
+        // Detect a genuinely fresh install BEFORE any option is written.
+        // This decides the starting posture for the "Rest of World" region:
+        // new sites get the 2.3.0 opt-in defaults, existing sites keep the
+        // lenient pre-2.3.0 behaviour. Checking here also closes the
+        // deactivate-then-reactivate path, which runs this method but not
+        // the update flow that maybe_upgrade() covers.
+        $is_fresh_install = (false === get_option('mbr_cc_banner_heading'));
+        
         $defaults = array(
             'banner_position' => 'bottom',
             'banner_layout' => 'bar',
@@ -388,6 +521,39 @@ class MBR_Cookie_Consent {
                 add_option('mbr_cc_' . $key, $value);
             }
         }
+        
+        // "Rest of World" region posture. Written as explicit option rows so
+        // behaviour never silently shifts when a shipped code default changes.
+        // Fresh installs get the 2.3.0 opt-in posture; anything else keeps the
+        // pre-2.3.0 lenient values. See MBR_CC_Region_Config::get_default_config().
+        $region_defaults = $is_fresh_install
+            ? array(
+                'mbr_cc_geolocation_default_require' => true,
+                'mbr_cc_default_auto_accept'         => false,
+                'mbr_cc_default_show_reject'         => true,
+                'mbr_cc_default_show_customize'      => true,
+            )
+            : array(
+                'mbr_cc_geolocation_default_require' => false,
+                'mbr_cc_default_auto_accept'         => true,
+                'mbr_cc_default_show_reject'         => false,
+                'mbr_cc_default_show_customize'      => true,
+            );
+        
+        foreach ($region_defaults as $option_key => $option_value) {
+            add_option($option_key, $option_value);
+        }
+        
+        // AI / LLM training disclosure (Connecticut SB 1295). Off by default —
+        // the site owner must actively state their position.
+        add_option('mbr_cc_ai_training_enabled', false);
+        add_option('mbr_cc_ai_training_own', false);
+        add_option('mbr_cc_ai_training_vendors', false);
+        add_option('mbr_cc_ai_training_sell', false);
+        add_option('mbr_cc_ai_training_detail', '');
+        
+        // Record the version so maybe_upgrade() knows this site is current.
+        update_option('mbr_cc_version', MBR_CC_VERSION);
         
         // Create default cookie categories if they don't exist.
         $this->create_default_categories();

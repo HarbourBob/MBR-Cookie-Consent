@@ -260,7 +260,15 @@ class MBR_CC_Script_Blocker {
         if ( ! isset( $_COOKIE['mbr_cc_consent'] ) ) {
             return array();
         }
-        $data = json_decode( stripslashes( $_COOKIE['mbr_cc_consent'] ), true );
+        $raw = wp_unslash( $_COOKIE['mbr_cc_consent'] );
+
+        // Client-controlled value read on every page load; reject oversized
+        // input before decoding.
+        if ( ! is_string( $raw ) || '' === $raw || strlen( $raw ) > 2048 ) {
+            return array();
+        }
+
+        $data = json_decode( $raw, true );
         return is_array( $data ) ? $data : array();
     }
 
@@ -337,8 +345,8 @@ class MBR_CC_Script_Blocker {
                . preg_quote( $pattern, '/' )
                . '[^"\']*)(\2)/i';
 
-        return preg_replace_callback( $regex, function ( $m ) {
-            $attrs = $m[1];
+        return preg_replace_callback( $regex, function ( $m ) use ( $category ) {
+            $attrs = isset( $m[1] ) ? $m[1] : '';
             $src   = $m[3];
             return '<script' . $attrs
                  . ' type="text/plain"'

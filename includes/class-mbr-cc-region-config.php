@@ -4,7 +4,7 @@
  * Adjusts banner behavior based on detected region
  *
  * @package MBR_Cookie_Consent
- * @version 2.1.0
+ * @version 2.3.0
  */
 
 // Exit if accessed directly.
@@ -90,9 +90,30 @@ class MBR_CC_Region_Config {
      *
      * Strict opt-in — no change from the original ePrivacy rules. The EU's
      * proposed ePrivacy Regulation that would have replaced the Directive was
-     * formally withdrawn by the European Commission on 11 February 2026, so the
-     * 2002/58/EC Directive (as amended) remains the controlling instrument for
-     * the foreseeable future, supplemented by limited Digital Omnibus amendments.
+     * withdrawn by the European Commission: the intention was announced in the
+     * 2025 Commission Work Programme on 11 February 2025, the withdrawal was
+     * formally approved at the Commission's 2533rd meeting on 16 July 2025, and
+     * it was published in the Official Journal on 6 October 2025. The 2002/58/EC
+     * Directive (as amended) therefore remains the controlling instrument.
+     *
+     * Digital Omnibus status (July 2026): the package split in two. The AI
+     * Omnibus was adopted by the Council on 29 June 2026; the Data Omnibus
+     * (GDPR/ePrivacy) remains in negotiation, and the Council's compromise
+     * text of 21 May 2026 (doc 9547/26) DELETED the relocation of cookie
+     * consent into GDPR Arts 88a/88b. Negotiations are currently paused and
+     * continue under the Irish Presidency; commentators expect final text no
+     * earlier than late 2026 / early 2027. The Directive regime stays operative
+     * and single-click refusal, the six-month cooldown and the proposed
+     * low-risk exemptions remain proposals only — no action required yet.
+     *
+     * Enforcement note: on 14 July 2026 the EDPB issued Binding Decision 1/2026
+     * in a dispute between the Austrian and Belgian supervisory authorities over
+     * a noyb cookie-banner complaint against VRT. The Belgian DPA had dismissed
+     * the complaint as an abuse of Arts 77/80(1) GDPR; the EDPB overturned that
+     * and instructed it to decide the complaint on its merits. The practical
+     * effect is that representative ("activist-driven") cookie-banner complaints
+     * are much harder to dispose of on procedural grounds, so banner defects are
+     * more likely to be examined substantively.
      */
     private function get_eu_gdpr_config() {
         return array(
@@ -191,9 +212,16 @@ class MBR_CC_Region_Config {
     /**
      * US Multi-State Configuration
      *
-     * As of January 2026, 20 US states have comprehensive privacy laws —
-     * Indiana, Kentucky, and Rhode Island took effect on 1 January 2026,
-     * joining Maryland (effective 1 October 2025) and 16 earlier laws.
+     * As of July 2026, 20 US states have comprehensive privacy laws in
+     * effect — Indiana, Kentucky, and Rhode Island took effect on
+     * 1 January 2026, joining Maryland (effective 1 October 2025) and 16
+     * earlier laws. The 2026 session added four more enacted-but-not-yet-
+     * effective laws (24 enacted total): Oklahoma SB 546 and the Louisiana
+     * Data Privacy Act (both effective 1 Jan 2027), the Alabama Personal
+     * Data Protection Act (2027 — effective date reported variously as
+     * 1 Jan or 1 May), and the Vermont Data Privacy and Online Surveillance
+     * Act (1 Jan 2028). All four follow the Virginia opt-out model, so no
+     * banner behaviour change is required — opt-out link + GPC covers them.
      *
      * Key requirements across the landscape:
      *
@@ -211,6 +239,48 @@ class MBR_CC_Region_Config {
      *     - Updated dark-pattern examples explicitly prohibit creating a
      *       false sense of urgency in consent UX.
      * - Sensitive data processing requires opt-in consent in 16+ states.
+     *
+     * CONNECTICUT — SB 1295 (Public Act 25-113), effective 1 July 2026.
+     * The most significant expansion of the CTDPA since it took effect, and
+     * materially broader than a routine amendment:
+     *   - Applicability threshold cut from 100,000 to 35,000 consumers, and
+     *     made volume-independent entirely for any business that processes
+     *     sensitive data or that sells personal data — scope keyed to conduct
+     *     rather than scale, following the Texas model.
+     *   - Sensitive data expanded to include government-issued identifiers,
+     *     financial account information, Social Security numbers and neural
+     *     data (joining California and Colorado on neural data). Sensitive
+     *     data cannot be sold without consent and requires opt-in to process.
+     *   - FIRST-IN-NATION: controllers must disclose in their privacy notice
+     *     whether they collect, use or sell personal data for the purpose of
+     *     training large language models. See the AI/LLM training disclosure
+     *     settings and class-mbr-cc-privacy-policy-generator.php.
+     *   - Profiling opt-out broadened beyond decisions made "solely" by
+     *     automated processing, plus new automated decision-making
+     *     transparency duties and minors' protections.
+     *   - Profiling impact assessments required for activities created or
+     *     generated on or after 1 August 2026.
+     *   - The statutory cure period is gone — no guaranteed chance to fix.
+     *
+     * CONNECTICUT SB 4 follows on 1 October 2026, adding a geolocation sales
+     * ban, data broker registration, surveillance pricing restrictions, facial
+     * recognition rules and genetic data protections.
+     *
+     * Also effective 1 July 2026:
+     *   - Utah HB 418 — right to correct (closing the UCPA's last major
+     *     carve-out) plus social media data portability and interoperability.
+     *   - Arkansas HB 1717, the Children and Teens' Online Privacy Protection
+     *     Act. NOT a comprehensive privacy law, so it does not change the
+     *     "20 in effect" count. Verifiable parental consent for under-13s,
+     *     teen-or-parent consent for 13-16s, a flat ban on targeted
+     *     advertising to minors, and data minimisation. AG enforcement only,
+     *     no private right of action. This plugin has no age-assurance layer —
+     *     site owners serving minors must handle that separately.
+     *
+     * Enforcement climate: the CPPA is running joint Global Privacy Control
+     * investigations with Colorado and Connecticut, and opt-out confirmation
+     * visibility is a stated priority. GPC handling is therefore not optional
+     * in practice.
      *
      * GPC signal handling is managed by class-mbr-cc-gpc-handler.php.
      */
@@ -454,6 +524,268 @@ class MBR_CC_Region_Config {
     }
     
     /**
+     * Indonesia (UU PDP) Configuration
+     *
+     * Law No. 27 of 2022 on Personal Data Protection (UU PDP) has been fully
+     * effective since 17 October 2024, after the two-year transition period.
+     * In January 2026 the Constitutional Court upheld the law, dismissing a
+     * challenge to its cross-border transfer provisions — it is settled law.
+     *
+     * GDPR-style and consent-centric: consent must be explicit, informed,
+     * given for specific purposes, and withdrawable. Applies to any entity
+     * processing Indonesian residents' data, including from abroad, so
+     * visitors detected in Indonesia get an opt-in banner. Implementing
+     * regulations and the independent supervisory authority are still being
+     * stood up, so enforcement detail continues to develop.
+     */
+    private function get_id_pdp_config() {
+        return array(
+            // UU PDP requires explicit, prior, opt-in consent for
+            // non-essential processing
+            'require_consent' => true,
+            
+            // Withdrawal must be available; keep reject equally prominent
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            // Purpose-specific consent — show categories
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            // Explicit consent only — never auto-accept
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            // Indonesia-specific text. Indonesian heading is a safe default;
+            // the auto-translate layer / admin can localise the description.
+            'banner_heading' => get_option('mbr_cc_geolocation_indonesia_heading', 'Kami menghormati privasi Anda'),
+            'banner_description' => get_option('mbr_cc_geolocation_indonesia_description',
+                'We use cookies and similar technologies. Under Indonesia\'s Personal Data Protection Law (Law No. 27 of 2022), we ask for your explicit consent before processing personal data through non-essential cookies, for each specific purpose. You can withdraw your consent at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
+     * Nigeria (NDPA 2023 + GAID 2025) Configuration
+     *
+     * The Nigeria Data Protection Act took effect in June 2023, and the NDPC's
+     * General Application and Implementation Directive (GAID), issued March
+     * 2025 and effective 19 September 2025, operationalises it. The GAID is
+     * unusually explicit about websites — it is one of the few instruments
+     * anywhere that prescribes banner placement:
+     *   - The cookie notice must appear prominently on the homepage, visibly
+     *     occupying part of the page. A footer link is not sufficient.
+     *   - Users must be given a genuine option to accept or decline.
+     *   - Consent must be affirmative — no pre-ticked boxes, and continued
+     *     browsing does not constitute consent.
+     *   - Only strictly necessary cookies (security, stability, accessibility)
+     *     are exempt.
+     *
+     * With Africa's largest internet population and clear extraterritorial
+     * reach, visitors detected in Nigeria get a full opt-in banner.
+     */
+    private function get_ng_ndpa_config() {
+        return array(
+            // GAID requires affirmative opt-in for all non-essential cookies
+            'require_consent' => true,
+            
+            // A genuine decline option is mandatory, not a sub-layer link
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            // Continued browsing is explicitly not consent
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            'banner_heading' => get_option('mbr_cc_geolocation_nigeria_heading', 'Your privacy choices'),
+            'banner_description' => get_option('mbr_cc_geolocation_nigeria_description',
+                'We use cookies and similar technologies. Under the Nigeria Data Protection Act and the NDPC\'s General Application and Implementation Directive, we ask for your consent before setting any non-essential cookies. Only strictly necessary cookies are used without your agreement. You can accept, decline, or manage your choices at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
+     * China (PIPL) Configuration
+     *
+     * The Personal Information Protection Law has been in force since
+     * 1 November 2021. It does not name cookies, but its consent standard
+     * covers them: consent must be given under the precondition of full
+     * knowledge, voluntarily and by explicit statement. Cookie identifiers
+     * capable of singling out a visitor are personal information, so
+     * analytics, tracking and advertising cookies require prior opt-in — a
+     * privacy policy mention alone is not enough.
+     *
+     * Two features regularly catch out non-Chinese operators:
+     *   1. SEPARATE CONSENT. Sensitive personal information and cross-border
+     *      transfers each require their own standalone consent, not a bundled
+     *      "accept" click. Sending Chinese visitors' data outside the mainland
+     *      also needs a transfer mechanism (CAC security assessment, standard
+     *      contract, or certification).
+     *   2. EXTRATERRITORIAL REACH. PIPL applies to foreign companies serving
+     *      users in China, and courts have begun applying it that way.
+     *
+     * IMPORTANT LIMITATION: this plugin provides granular per-category opt-in,
+     * which addresses the base consent requirement. It does NOT implement
+     * PIPL's separate cross-border transfer consent, and it cannot supply a
+     * transfer mechanism. Sites with meaningful mainland China traffic need to
+     * handle that outside the banner — do not treat this region as full PIPL
+     * compliance.
+     */
+    private function get_cn_pipl_config() {
+        return array(
+            // Explicit, prior opt-in for anything non-essential
+            'require_consent' => true,
+            
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            // Bundled consent is not acceptable — force granular categories
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            'banner_heading' => get_option('mbr_cc_geolocation_china_heading', '我们重视您的隐私'),
+            'banner_description' => get_option('mbr_cc_geolocation_china_description',
+                'We use cookies and similar technologies. Under the Personal Information Protection Law (PIPL), we ask for your explicit consent before processing personal information through non-essential cookies, separately for each purpose. You can withdraw your consent at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
+     * South Korea (PIPA) Configuration
+     *
+     * PIPA is among Asia's strictest privacy laws and the PIPC one of its most
+     * active regulators. Cookies collecting identifiable or combinable
+     * behavioural data are personal information and require specific,
+     * informed, prior consent — notice-then-opt-out is not sufficient where
+     * identification is possible.
+     *
+     * In April 2025 the PIPC updated its privacy policy drafting guidelines to
+     * require concrete descriptions of how users can block or refuse cookies
+     * and targeted advertising. Behavioural advertising remains a stated
+     * supervision priority. Penalties scale to 3% of relevant turnover.
+     *
+     * Treat Korea as an opt-in market with strong documentation expectations —
+     * the consent logging in this plugin matters as much as the banner.
+     */
+    private function get_kr_pipa_config() {
+        return array(
+            'require_consent' => true,
+            
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            'banner_heading' => get_option('mbr_cc_geolocation_korea_heading', '개인정보 보호를 존중합니다'),
+            'banner_description' => get_option('mbr_cc_geolocation_korea_description',
+                'We use cookies and similar technologies. Under the Personal Information Protection Act (PIPA), we ask for your specific, informed consent before setting cookies that can identify you. You can refuse or withdraw consent at any time, including for targeted advertising.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
+     * Saudi Arabia (PDPL) Configuration
+     *
+     * The Personal Data Protection Law became enforceable in September 2023,
+     * with the grace period ending September 2024. Consent is the default
+     * lawful basis for processing personal data unless a statutory alternative
+     * applies — which, for advertising and analytics cookies, means opt-in.
+     *
+     * Enforcement is no longer theoretical: SDAIA's specialised committees
+     * issued 48 violation decisions in their first year of substantive
+     * adjudication (reported February 2026), with marketing without prior
+     * consent among the most common findings. Fines reach SAR 5 million per
+     * breach, doubling for repeat violations.
+     *
+     * Arabic-language notices are expected where you target Saudi residents.
+     * The heading default below is Arabic; the auto-translate layer or the
+     * mbr_cc_geolocation_saudi_description option should be used to provide an
+     * Arabic description for sites with meaningful Saudi traffic.
+     */
+    private function get_sa_pdpl_config() {
+        return array(
+            'require_consent' => true,
+            
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            'banner_heading' => get_option('mbr_cc_geolocation_saudi_heading', 'نحن نحترم خصوصيتك'),
+            'banner_description' => get_option('mbr_cc_geolocation_saudi_description',
+                'We use cookies and similar technologies. Under the Personal Data Protection Law (PDPL), consent is our lawful basis for non-essential cookies, so we ask before setting them. You can accept, reject, or manage your choices at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
+     * South Africa (POPIA) Configuration
+     *
+     * POPIA has been fully in force since July 2021. It has no cookie-specific
+     * clause, but cookies processing identifiable information need a lawful
+     * basis like any other processing. The practical pressure point is
+     * section 69: electronic direct marketing requires prior opt-in consent
+     * unless a narrow existing-customer exception applies. The Information
+     * Regulator's Guidance Note on Direct Marketing (December 2024) confirmed
+     * the strict reading — informed, voluntary, specific consent, with the
+     * burden of proof on the responsible party.
+     *
+     * So: cookies feeding remarketing or email targeting are firmly in opt-in
+     * territory, while purely functional and measurement cookies sit in a
+     * softer notice-plus-lawful-basis zone. Because this plugin cannot know
+     * which category a given site's marketing tags fall into, and because the
+     * burden of proof sits with the site owner, the safe configuration is
+     * opt-in with granular categories and consent logging.
+     */
+    private function get_za_popia_config() {
+        return array(
+            'require_consent' => true,
+            
+            'show_reject_button' => true,
+            'reject_button_prominence' => 'equal',
+            
+            // Granular categories let functional/measurement be separated from
+            // the marketing cookies that carry the section 69 risk.
+            'show_customize_button' => true,
+            'show_categories' => true,
+            
+            'auto_accept_on_scroll' => false,
+            'auto_accept_on_click' => false,
+            
+            'banner_heading' => get_option('mbr_cc_geolocation_southafrica_heading', 'Your privacy choices'),
+            'banner_description' => get_option('mbr_cc_geolocation_southafrica_description',
+                'We use cookies and similar technologies. Under the Protection of Personal Information Act (POPIA), we ask for your consent before using cookies for direct marketing, and we tell you what else we collect. You can accept, reject, or manage your choices at any time.'
+            ),
+            
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
      * Switzerland (revFADP / nFADP) Configuration
      *
      * The revised Federal Act on Data Protection (revFADP, also known as the
@@ -550,27 +882,88 @@ class MBR_CC_Region_Config {
     
     /**
      * Default (Rest of World) Configuration
+     *
+     * CHANGED IN 2.3.0 — this now defaults to an opt-in posture.
+     *
+     * Previously this shipped with require_consent = false and
+     * auto_accept_on_scroll = true, i.e. implied consent. That was a poor
+     * default: determine_region() routes every unmapped country here, and
+     * several of them require genuine opt-in consent. Nigeria is the clearest
+     * example — the NDPC's General Application and Implementation Directive
+     * (GAID), effective 19 September 2025, requires a prominent homepage
+     * cookie notice with a real accept/decline choice and no implied consent
+     * from continued browsing. An implied-consent banner fails that on its
+     * face. China (PIPL), South Korea (PIPA), Saudi Arabia (PDPL) and South
+     * Africa (POPIA, for marketing) are in similar territory.
+     *
+     * Those five now have dedicated regions with accurate messaging, but the
+     * long tail (UAE, Thailand, Mexico, Argentina, Colombia and others) still
+     * lands here, so the safe default is opt-in.
+     *
+     * This is deliberately over-compliant in a few places. Japan is the main
+     * one: under the APPI and the Telecommunications Business Act's external
+     * transmission rules, notice or an opt-out is generally sufficient and a
+     * consent banner is not required. Serving an opt-in banner there costs
+     * conversion but breaks nothing. Watch the APPI amendment bill approved by
+     * Cabinet in April 2026 and now before the Diet, which would bring cookie
+     * and device identifiers into scope (expected to apply around 2028).
+     *
+     * Site owners who want the old lenient behaviour can set the four options
+     * below. EXISTING INSTALLS ARE NOT CHANGED: the 2.3.0 upgrade routine in
+     * mbr-cookie-consent.php writes the previous values explicitly for any
+     * site upgrading from below 2.3.0, so this stricter posture applies to
+     * new installations only.
      */
     private function get_default_config() {
         return array(
-            // Lenient for other regions
-            'require_consent' => get_option('mbr_cc_geolocation_default_require', false),
+            // Opt-in by default — see docblock. Override per site if needed.
+            'require_consent' => get_option('mbr_cc_geolocation_default_require', true),
             
-            // Can use implied consent
-            'auto_accept_on_scroll' => get_option('mbr_cc_default_auto_accept', true),
+            // Never imply consent from scrolling.
+            'auto_accept_on_scroll' => get_option('mbr_cc_default_auto_accept', false),
             
-            // Simpler banner
-            'show_reject_button' => get_option('mbr_cc_default_show_reject', false),
+            // A reject route must exist wherever consent is being relied on.
+            'show_reject_button' => get_option('mbr_cc_default_show_reject', true),
             'show_customize_button' => get_option('mbr_cc_default_show_customize', true),
             
-            // Default text
-            'banner_heading' => get_option('mbr_cc_banner_heading', 'We use cookies'),
+            // Default text. The fallbacks here are affirmative-action wording —
+            // the old "by continuing to use this site" phrasing contradicted an
+            // opt-in posture.
+            'banner_heading' => get_option('mbr_cc_banner_heading', 'We value your privacy'),
             'banner_description' => get_option('mbr_cc_banner_description',
-                'We use cookies to enhance your browsing experience. By continuing to use this site, you accept our use of cookies.'
+                'We use cookies and similar technologies to improve your experience. Non-essential cookies are only set if you accept them. You can accept, reject, or manage your choices at any time.'
             ),
             
             'enable_ccpa' => false,
         );
+    }
+    
+    /**
+     * Get the banner configuration for an arbitrary region key.
+     *
+     * Exists so admin tooling (notably the geolocation test tool) can report
+     * exactly what a region does without keeping its own copy of the region
+     * table. Duplicated region metadata is how the test tool silently fell out
+     * of step with the real regions once new ones were added.
+     *
+     * @param string $region Region key, e.g. 'ng_ndpa'. Legacy keys accepted.
+     * @return array Banner configuration, falling back to the default region.
+     */
+    public function get_config_for_region($region) {
+        $legacy_map = array(
+            'eu_uk' => 'eu_gdpr',
+            'ccpa'  => 'us_multi',
+        );
+        if (isset($legacy_map[$region])) {
+            $region = $legacy_map[$region];
+        }
+        
+        $method = "get_{$region}_config";
+        if (method_exists($this, $method)) {
+            return $this->$method();
+        }
+        
+        return $this->get_default_config();
     }
     
     /**
@@ -620,8 +1013,8 @@ class MBR_CC_Region_Config {
                     'Withdrawal of consent must be as easy as giving it',
                     'Applies in all 27 EU Member States plus Iceland, Liechtenstein and Norway (EEA)',
                     'Proposed ePrivacy Regulation withdrawn 11 February 2026 — Directive remains in force',
-                    'Digital Omnibus (proposal, in trilogue 2026): would move cookie rules into GDPR Arts 88a/88b',
-                    'If adopted: single-click refusal, 6-month cooldown after refusal, new low-risk exemptions (audience measurement, security)',
+                    'Digital Omnibus: Council compromise text (21 May 2026) dropped the move of cookie rules into GDPR Arts 88a/88b — outcome uncertain, adoption not before late 2026',
+                    'Single-click refusal, 6-month cooldown and low-risk exemptions remain proposals only — no action required',
                     'Browser-level consent signals not expected to be mandatory before ~2028 — monitor, no action required yet',
                 ),
                 'penalties' => 'Up to €20 million or 4% of annual global turnover',
@@ -637,13 +1030,13 @@ class MBR_CC_Region_Config {
                     'Advertising/marketing cookies still require explicit consent',
                     'Clear information and a "simple means of objecting" required for exempt categories',
                     'PECR fines now match UK GDPR: up to £17.5M or 4% of turnover',
-                    'Formal complaints procedure required by June 2026',
+                    'Formal complaints procedure in force since 19 June 2026',
                 ),
                 'penalties' => 'Up to £17.5 million or 4% of annual global turnover',
             ),
             'us_multi' => array(
-                'name' => 'US Multi-State (CCPA + 20 States)',
-                'law' => 'California Consumer Privacy Act/CPRA + 19 additional state privacy laws',
+                'name' => 'US Multi-State (CCPA + 20 in effect, 24 enacted)',
+                'law' => 'California Consumer Privacy Act/CPRA + 23 additional state privacy laws',
                 'requires_consent' => false,
                 'key_requirements' => array(
                     'Must provide "Do Not Sell or Share My Personal Information" link (CCPA)',
@@ -652,12 +1045,20 @@ class MBR_CC_Region_Config {
                     'California (effective 1 Jan 2026): visible confirmation when GPC opt-out is processed',
                     'California: sensitive personal information now includes neural data and data of under-16s',
                     'California: dark patterns including false-urgency consent UX explicitly prohibited',
+                    'California ADMT opt-out rights (automated decision-making) effective 1 January 2027',
                     'Sensitive data requires opt-in consent in 16+ states',
+                    'California: CPPA running joint GPC investigations with Colorado and Connecticut',
                     'Indiana, Kentucky and Rhode Island laws took effect 1 January 2026',
                     'Maryland MODPA effective 1 October 2025 with strict data-minimisation rules',
-                    '20 laws now in effect; enacted total grew past 20 during the 2026 session (~24 states)',
-                    'Connecticut amendments (enhanced sensitive-data + youth protections) effective 1 July 2026',
-                    'Utah correction right + social-media portability effective July 2026',
+                    '2026 session: Oklahoma SB 546 and Louisiana DPA effective 1 Jan 2027, Alabama PDPA 2027, Vermont DPOSA 1 Jan 2028 — all Virginia-model opt-out (24 enacted total)',
+                    'Virginia amendment restricting sale of precise geolocation data effective 1 July 2026',
+                    'Connecticut SB 1295 (live 1 July 2026): threshold cut to 35,000 consumers, and no threshold at all if you process sensitive data or sell personal data',
+                    'Connecticut: sensitive data now includes neural data, government IDs, financial account details and SSNs — opt-in to process, consent to sell',
+                    'Connecticut: privacy notice must state whether personal data is collected, used or sold to train large language models (first US state to require this)',
+                    'Connecticut: profiling opt-out widened beyond "solely" automated decisions; profiling impact assessments from 1 August 2026; cure period removed',
+                    'Connecticut SB 4 (1 October 2026): geolocation sales ban, data broker registration, surveillance pricing and facial recognition rules',
+                    'Utah HB 418: correction right + social-media portability effective 1 July 2026',
+                    'Arkansas HB 1717 (1 July 2026): minors-focused, not comprehensive — parental consent under 13, teen-or-parent 13-16, targeted ads to minors banned outright',
                     'California Delete Act DROP platform: brokers must process deletions from 1 August 2026',
                 ),
                 'penalties' => 'Up to $7,988 per intentional violation (CA); varies by state',
@@ -686,7 +1087,9 @@ class MBR_CC_Region_Config {
                     'Implied consent allowed in some low-risk cases',
                     'CASL classifies cookies as "computer programs" requiring consent',
                     'Quebec has separate Law 25 regime — handled as a distinct region',
-                    'Bill C-27 (CPPA) may introduce stricter rules — monitor progress',
+                    'OPC guidelines allow opt-out for non-sensitive behavioural advertising if transparent and easy to decline',
+                    'Opt-in required for sensitive data; avoid tracking children entirely',
+                    'Bill C-27 (the proposed CPPA) died in January 2025 — PIPEDA still governs, no successor in force',
                 ),
                 'penalties' => 'Up to $10 million CAD (PIPEDA); $10M per violation (CASL)',
             ),
@@ -764,15 +1167,101 @@ class MBR_CC_Region_Config {
                 ),
                 'penalties' => 'Up to 5% of prior-year revenue (cross-border); up to 10x unlawful data-trading gains; up to VND 3 billion for other violations',
             ),
-            'default' => array(
-                'name' => 'General Best Practices',
-                'law' => 'No specific regulation',
-                'requires_consent' => false,
+            'id_pdp' => array(
+                'name' => 'Indonesia UU PDP (Law 27/2022)',
+                'law' => 'Personal Data Protection Law No. 27 of 2022 (UU PDP)',
+                'requires_consent' => true,
                 'key_requirements' => array(
+                    'Fully effective since 17 October 2024 (two-year transition ended)',
+                    'Upheld by the Constitutional Court in January 2026 — settled law',
+                    'Explicit, informed consent for specific purposes required',
+                    'Consent must be withdrawable; withdrawal must be honoured',
+                    'Applies extraterritorially to processors of Indonesian residents\' data',
+                    'Cross-border transfers require adequate protection or safeguards',
+                    'Implementing regulations and supervisory authority still developing — monitor',
+                ),
+                'penalties' => 'Administrative fines up to 2% of annual revenue; criminal penalties up to IDR 6 billion and imprisonment for serious offences',
+            ),
+            'ng_ndpa' => array(
+                'name' => 'Nigeria NDPA + GAID',
+                'law' => 'Nigeria Data Protection Act 2023 + General Application and Implementation Directive 2025',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'GAID issued March 2025, effective 19 September 2025',
+                    'Cookie notice must appear prominently on the homepage — a footer link is not sufficient',
+                    'Genuine accept/decline option required',
+                    'Affirmative consent only — no pre-ticked boxes, no implied consent from browsing',
+                    'Only strictly necessary cookies (security, stability, accessibility) are exempt',
+                    'Applies extraterritorially to organisations serving Nigerian residents',
+                ),
+                'penalties' => 'Up to the higher of ₦10 million or 2% of annual gross revenue for data controllers of major importance',
+            ),
+            'cn_pipl' => array(
+                'name' => 'China PIPL',
+                'law' => 'Personal Information Protection Law (in force 1 November 2021)',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'Explicit, voluntary, fully informed consent required before non-essential cookies',
+                    'Cookie identifiers that single out a visitor are personal information',
+                    'Separate standalone consent for sensitive personal information',
+                    'Separate standalone consent for cross-border transfers — NOT covered by this plugin',
+                    'Cross-border transfers also need a mechanism: CAC assessment, standard contract or certification',
+                    'Applies extraterritorially to foreign sites serving users in mainland China',
+                ),
+                'penalties' => 'Up to RMB 50 million or 5% of prior-year turnover; suspension of business and personal liability for responsible staff',
+            ),
+            'kr_pipa' => array(
+                'name' => 'South Korea PIPA',
+                'law' => 'Personal Information Protection Act + PIPC guidance',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'Specific, informed, prior consent where cookie data can identify a person',
+                    'Notice-then-opt-out is not sufficient where identification is possible',
+                    'PIPC guidelines (updated April 2025) require concrete instructions on how to block or refuse cookies',
+                    'Behavioural advertising is a stated PIPC supervision priority',
+                    'Strong documentation expectations — keep consent records',
+                ),
+                'penalties' => 'Administrative fines up to 3% of relevant turnover, plus criminal liability for serious breaches',
+            ),
+            'sa_pdpl' => array(
+                'name' => 'Saudi Arabia PDPL',
+                'law' => 'Personal Data Protection Law (enforceable September 2023; grace period ended September 2024)',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'Consent is the default lawful basis unless a statutory alternative applies',
+                    'Opt-in consent for advertising and analytics cookies',
+                    'Arabic-language notices expected where you target Saudi residents',
+                    'SDAIA committees issued 48 violation decisions in their first year (reported February 2026)',
+                    'Marketing without prior consent is among the most common findings',
+                ),
+                'penalties' => 'Up to SAR 5 million per breach, doubling for repeat violations',
+            ),
+            'za_popia' => array(
+                'name' => 'South Africa POPIA',
+                'law' => 'Protection of Personal Information Act (fully in force July 2021)',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'No cookie-specific clause — cookies processing identifiable data need a lawful basis',
+                    'Section 69: electronic direct marketing requires prior opt-in consent',
+                    'Narrow existing-customer exception only',
+                    'Information Regulator Guidance Note on Direct Marketing (December 2024) confirms the strict reading',
+                    'Burden of proof for consent sits with the responsible party — keep records',
+                    'Functional and measurement cookies sit in a softer notice-plus-lawful-basis zone',
+                ),
+                'penalties' => 'Administrative fines up to ZAR 10 million, plus criminal penalties including imprisonment',
+            ),
+            'default' => array(
+                'name' => 'Rest of World — Safe Default (opt-in)',
+                'law' => 'No single regulation — conservative baseline',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'Opt-in by default since 2.3.0 — unmapped countries include genuine opt-in jurisdictions',
                     'Transparent about cookie usage',
                     'Provide privacy policy',
                     'Allow users to manage preferences',
                     'Respect user choices',
+                    'Deliberately over-compliant in notice-based markets such as Japan',
+                    'Existing installs keep their previous lenient settings — new installs get opt-in',
                 ),
                 'penalties' => 'Varies by jurisdiction',
             ),

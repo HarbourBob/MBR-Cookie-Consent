@@ -41,12 +41,82 @@ class MBR_CC_Admin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_notices', array($this, 'render_upgrade_notices'));
+        add_action('admin_post_mbr_cc_dismiss_notice', array($this, 'handle_dismiss_notice'));
         
         // AJAX handlers.
         add_action('wp_ajax_mbr_cc_export_logs', array($this, 'ajax_export_logs'));
         add_action('wp_ajax_mbr_cc_delete_logs', array($this, 'ajax_delete_logs'));
         add_action('wp_ajax_mbr_cc_save_form_settings', array($this, 'ajax_save_form_settings'));
         add_action('wp_ajax_mbr_cc_save_ab_enabled', array($this, 'ajax_save_ab_enabled'));
+    }
+    
+    /**
+     * Surface one-time notices left behind by upgrade routines.
+     *
+     * Migrations that change behaviour should say so rather than happening
+     * silently, so each sets an option flag which is cleared when dismissed.
+     */
+    public function render_upgrade_notices() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        $notices = array();
+        
+        if (get_option('mbr_cc_231_geo_provider_switched')) {
+            $notices['mbr_cc_231_geo_provider_switched'] = sprintf(
+                /* translators: %s: settings screen URL. */
+                __('MBR Cookie Consent has switched your IP lookup provider from ip-api.com to ipapi.co. ip-api.com does not offer HTTPS on its free tier, and lookups over plain HTTP can be altered in transit to change which privacy regime your visitors are shown. You can review this on the %s screen.', 'mbr-cookie-consent'),
+                '<a href="' . esc_url(admin_url('admin.php?page=mbr-cookie-consent-settings#tab-geolocation')) . '">' . esc_html__('Geolocation settings', 'mbr-cookie-consent') . '</a>'
+            );
+        }
+        
+        if (get_option('mbr_cc_230_default_region_preserved')) {
+            $notices['mbr_cc_230_default_region_preserved'] = __('MBR Cookie Consent changed its shipped defaults for the "Rest of World" region to opt-in. Your existing settings have been preserved exactly as they were, so nothing on your site has changed.', 'mbr-cookie-consent');
+        }
+        
+        foreach ($notices as $flag => $message) {
+            $dismiss_url = wp_nonce_url(
+                admin_url('admin-post.php?action=mbr_cc_dismiss_notice&notice=' . rawurlencode($flag)),
+                'mbr_cc_dismiss_' . $flag
+            );
+            
+            printf(
+                '<div class="notice notice-info"><p>%s</p><p><a href="%s">%s</a></p></div>',
+                wp_kses($message, array('a' => array('href' => array()))),
+                esc_url($dismiss_url),
+                esc_html__('Dismiss', 'mbr-cookie-consent')
+            );
+        }
+    }
+    
+    /**
+     * Clear a dismissed upgrade notice.
+     */
+    public function handle_dismiss_notice() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to perform this action.', 'mbr-cookie-consent'));
+        }
+        
+        $notice = isset($_GET['notice']) ? sanitize_key(wp_unslash($_GET['notice'])) : '';
+        
+        $allowed = array(
+            'mbr_cc_231_geo_provider_switched',
+            'mbr_cc_230_default_region_preserved',
+        );
+        
+        if (!in_array($notice, $allowed, true)) {
+            wp_safe_redirect(admin_url());
+            exit;
+        }
+        
+        check_admin_referer('mbr_cc_dismiss_' . $notice);
+        
+        delete_option($notice);
+        
+        wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url());
+        exit;
     }
     
     /**
@@ -124,6 +194,15 @@ class MBR_CC_Admin {
             'manage_options',
             'mbr-cookie-consent-ab-testing',
             array($this, 'render_ab_testing_page')
+        );
+
+        add_submenu_page(
+            'mbr-cookie-consent',
+            __('Import / Export', 'mbr-cookie-consent'),
+            __('Import / Export', 'mbr-cookie-consent'),
+            'manage_options',
+            'mbr-cookie-consent-import-export',
+            array($this, 'render_import_export_page')
         );
     }
     
@@ -231,6 +310,13 @@ class MBR_CC_Admin {
     public function render_ab_testing_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/ab-testing.php';
     }
+
+    /**
+     * Render import/export page.
+     */
+    public function render_import_export_page() {
+        require_once MBR_CC_PLUGIN_DIR . 'admin/views/import-export.php';
+    }
     
     /**
      * AJAX: Export consent logs to CSV.
@@ -281,6 +367,12 @@ class MBR_CC_Admin {
         }
         
         $days = isset($_POST['days']) ? absint($_POST['days']) : 365;
+        
+        // Refuse days < 1: strtotime("-0 days") resolves to "now", which
+        // would delete every consent log in the table.
+        if ($days < 1) {
+            wp_send_json_error(array('message' => __('Days must be 1 or more.', 'mbr-cookie-consent')));
+        }
         
         $db = MBR_CC_Database::get_instance();
         $deleted = $db->delete_old_logs($days);

@@ -56,17 +56,19 @@ $region_name = $geo->get_region_name();
         <div class="mbr-cc-form-field">
             <label for="geolocation_provider"><?php esc_html_e('IP Lookup Provider', 'mbr-cookie-consent'); ?></label>
             <select name="mbr_cc_geolocation_provider" id="geolocation_provider">
-                <option value="ip-api" <?php selected(get_option('mbr_cc_geolocation_provider', 'ip-api'), 'ip-api'); ?>>
-                    ip-api.com (Free, 45 req/min)
+                <option value="ipapi" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'ipapi'); ?>>
+                    <?php esc_html_e('ipapi.co — HTTPS, free, 1000 req/day', 'mbr-cookie-consent'); ?>
                 </option>
-                <option value="ipapi" <?php selected(get_option('mbr_cc_geolocation_provider', 'ip-api'), 'ipapi'); ?>>
-                    ipapi.co (Free, 1000 req/day)
+                <option value="cloudflare" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'cloudflare'); ?>>
+                    <?php esc_html_e('Cloudflare headers — no outbound request', 'mbr-cookie-consent'); ?>
                 </option>
-                <option value="cloudflare" <?php selected(get_option('mbr_cc_geolocation_provider', 'ip-api'), 'cloudflare'); ?>>
-                    Cloudflare Headers (If using Cloudflare)
+                <option value="ip-api" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'ip-api'); ?>>
+                    <?php esc_html_e('ip-api.com — 45 req/min (HTTPS requires a pro key)', 'mbr-cookie-consent'); ?>
                 </option>
             </select>
-            <p class="description"><?php esc_html_e('Choose which service to use for IP geolocation. Cloudflare is fastest if you use Cloudflare CDN.', 'mbr-cookie-consent'); ?></p>
+            <p class="description">
+                <?php esc_html_e('Cloudflare is fastest as it needs no outbound request. ip-api.com offers a higher free rate limit but only serves HTTPS on its paid tier — see the transport note below.', 'mbr-cookie-consent'); ?>
+            </p>
         </div>
         
         <div class="mbr-cc-form-field">
@@ -79,6 +81,62 @@ $region_name = $geo->get_region_name();
                 <option value="2592000" <?php selected(get_option('mbr_cc_geolocation_cache', 86400), 2592000); ?>>30 Days</option>
             </select>
             <p class="description"><?php esc_html_e('How long to cache geolocation results per IP address.', 'mbr-cookie-consent'); ?></p>
+        </div>
+    </div>
+    
+    <!-- ip-api.com transport -->
+    <div class="mbr-cc-form-row" id="mbr-cc-ipapi-transport">
+        <div class="mbr-cc-form-field">
+            <label for="ipapi_key"><?php esc_html_e('ip-api.com Pro Key (optional)', 'mbr-cookie-consent'); ?></label>
+            <input type="text" name="mbr_cc_ipapi_key" id="ipapi_key"
+                   value="<?php echo esc_attr(get_option('mbr_cc_ipapi_key', '')); ?>"
+                   style="width: 100%;" autocomplete="off">
+            <p class="description">
+                <?php esc_html_e('With a key, lookups use the HTTPS endpoint. Without one, ip-api.com can only be queried over plain HTTP.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <div class="mbr-cc-form-field">
+            <label>
+                <input type="checkbox" name="mbr_cc_allow_insecure_geo_lookup" value="1"
+                       <?php checked(get_option('mbr_cc_allow_insecure_geo_lookup', false)); ?>>
+                <?php esc_html_e('Allow ip-api.com lookups over plain HTTP', 'mbr-cookie-consent'); ?>
+            </label>
+            <p class="description">
+                <strong><?php esc_html_e('Not recommended.', 'mbr-cookie-consent'); ?></strong>
+                <?php esc_html_e('Over plain HTTP, anyone able to observe the connection can rewrite the country returned and change which privacy regime your visitors are shown — and visitor IP addresses travel to a third party unencrypted. Leave this off unless you understand and accept that.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Proxy trust -->
+    <div class="mbr-cc-form-row">
+        <div class="mbr-cc-form-field">
+            <label for="proxy_mode"><?php esc_html_e('Visitor IP Detection', 'mbr-cookie-consent'); ?></label>
+            <?php $mbr_cc_proxy_mode = function_exists('mbr_cc_get_proxy_mode') ? mbr_cc_get_proxy_mode() : 'auto'; ?>
+            <select name="mbr_cc_proxy_mode" id="proxy_mode">
+                <option value="auto" <?php selected($mbr_cc_proxy_mode, 'auto'); ?>>
+                    <?php esc_html_e('Automatic (recommended) — detects Cloudflare safely', 'mbr-cookie-consent'); ?>
+                </option>
+                <option value="proxy" <?php selected($mbr_cc_proxy_mode, 'proxy'); ?>>
+                    <?php esc_html_e('Behind another reverse proxy or load balancer', 'mbr-cookie-consent'); ?>
+                </option>
+                <option value="none" <?php selected($mbr_cc_proxy_mode, 'none'); ?>>
+                    <?php esc_html_e('Direct connection — never trust forwarding headers', 'mbr-cookie-consent'); ?>
+                </option>
+            </select>
+            <p class="description">
+                <?php esc_html_e('Forwarding headers such as X-Forwarded-For can be set by any visitor, so they are only honoured when the request demonstrably arrived through a proxy. On Automatic, Cloudflare\'s header is accepted only when the request genuinely came from a Cloudflare address, so no configuration is needed.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <div class="mbr-cc-form-field">
+            <label for="trusted_proxies"><?php esc_html_e('Trusted Proxy Addresses', 'mbr-cookie-consent'); ?></label>
+            <textarea name="mbr_cc_trusted_proxies" id="trusted_proxies" rows="3" style="width: 100%;"
+                      placeholder="10.0.0.0/8&#10;192.168.0.0/16"><?php echo esc_textarea(get_option('mbr_cc_trusted_proxies', '')); ?></textarea>
+            <p class="description">
+                <?php esc_html_e('One IP address or CIDR range per line. Only used when the mode above is set to reverse proxy. Leave blank to trust the private and loopback ranges, which covers most setups.', 'mbr-cookie-consent'); ?>
+            </p>
         </div>
     </div>
     
@@ -197,7 +255,7 @@ $region_name = $geo->get_region_name();
                 <li>✓ <?php esc_html_e('Purpose before collection', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Implied consent only in low-risk cases', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('CASL treats cookies as programs', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Bill C-27 (CPPA) may tighten rules', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Bill C-27 died Jan 2025 — PIPEDA still governs', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -244,6 +302,27 @@ $region_name = $geo->get_region_name();
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
                 <?php esc_html_e('Up to 5% of prior-year revenue; up to 10x unlawful data-trading gains', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- Indonesia UU PDP -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #ce1126;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇮🇩 <?php esc_html_e('Indonesia - UU PDP (Law 27/2022)', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('Fully effective 17 Oct 2024, upheld by Constitutional Court Jan 2026 — GDPR-style, extraterritorial', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Explicit, informed opt-in consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Purpose-specific consent required', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Withdrawal must be honoured', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Cross-border transfers need safeguards', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Supervisory authority still developing — monitor', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Admin fines up to 2% of annual revenue; criminal penalties up to IDR 6 billion', 'mbr-cookie-consent'); ?>
             </p>
         </div>
         
@@ -310,24 +389,129 @@ $region_name = $geo->get_region_name();
             </p>
         </div>
         
+        <!-- Nigeria NDPA + GAID -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #008751;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇳🇬 <?php esc_html_e('Nigeria - NDPA + GAID', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('GAID effective 19 Sep 2025 — prescribes banner placement explicitly', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Prominent homepage notice — footer link insufficient', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Genuine accept/decline choice required', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('No pre-ticked boxes, no implied consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Only strictly necessary cookies exempt', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Applies extraterritorially', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to ₦10M or 2% of annual gross revenue (controllers of major importance)', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- China PIPL -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #de2910;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇨🇳 <?php esc_html_e('China - PIPL', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('In force since 1 Nov 2021 — explicit consent, extraterritorial', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Explicit, voluntary, fully informed opt-in', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Identifying cookie IDs are personal information', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Separate consent for sensitive data', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Applies to foreign sites serving mainland users', 'mbr-cookie-consent'); ?></li>
+                <li>⚠ <?php esc_html_e('Cross-border transfer consent NOT handled by this plugin', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #f8d7da; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Important:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Cross-border transfers also need a CAC assessment, standard contract or certification. Handle outside the banner.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- South Korea PIPA -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #003478;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇰🇷 <?php esc_html_e('South Korea - PIPA', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('One of Asia\'s strictest regimes with a highly active regulator', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Specific, informed, prior consent where cookies identify', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Notice-then-opt-out is not sufficient', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Must explain how to block or refuse cookies (PIPC, Apr 2025)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Behavioural advertising is a supervision priority', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Keep consent records — documentation expectations are high', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to 3% of relevant turnover, plus criminal liability', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- Saudi Arabia PDPL -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #165d31;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇸🇦 <?php esc_html_e('Saudi Arabia - PDPL', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('Grace period ended Sep 2024 — SDAIA enforcement now active', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Consent is the default lawful basis', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Opt-in for advertising and analytics cookies', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Arabic-language notices expected', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('48 violation decisions in first year of adjudication', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Marketing without prior consent a common finding', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to SAR 5M per breach, doubling for repeat violations', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
+        <!-- South Africa POPIA -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #007749;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇿🇦 <?php esc_html_e('South Africa - POPIA', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('No cookie clause — the pressure point is direct marketing', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Section 69: opt-in for electronic direct marketing', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Narrow existing-customer exception only', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Guidance Note on Direct Marketing (Dec 2024) confirms strict reading', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Burden of proof for consent sits with you', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Functional/measurement cookies sit in a softer zone', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Administrative fines up to ZAR 10M, plus criminal penalties', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
         <!-- Rest of World -->
         <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #999;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
                 🌍 <?php esc_html_e('Rest of World', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('Other countries and regions', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('Countries without a dedicated region — safe opt-in default since 2.3.0', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
-                <li>✓ <?php esc_html_e('Best practice transparency', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Opt-in by default (new installs)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('No implied consent from scrolling', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Reject option always available', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Provide privacy policy', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Allow preference management', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Respect user choices', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('May use implied consent', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #f0f6fc; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Note:', 'mbr-cookie-consent'); ?></strong> 
-                <?php esc_html_e('Requirements vary by jurisdiction', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('Deliberately over-compliant in notice-based markets such as Japan. Sites upgrading from an earlier version keep their previous settings.', 'mbr-cookie-consent'); ?>
             </p>
         </div>
         
@@ -339,7 +523,7 @@ $region_name = $geo->get_region_name();
     <div class="mbr-cc-form-row">
         <div class="mbr-cc-form-field">
             <label for="test_country"><?php esc_html_e('Test with Country Code', 'mbr-cookie-consent'); ?></label>
-            <input type="text" id="test_country" placeholder="e.g., GB, FR, US, CA, CH, AU" style="width: 200px;" maxlength="2">
+            <input type="text" id="test_country" placeholder="e.g., GB, FR, US, CA, NG, CN, KR" style="width: 200px;" maxlength="2">
             <input type="text" id="test_region" placeholder="<?php esc_attr_e('Region (optional, e.g. QC)', 'mbr-cookie-consent'); ?>" style="width: 220px;" maxlength="3">
             <button type="button" class="button" id="test-geolocation">
                 <?php esc_html_e('Test Detection', 'mbr-cookie-consent'); ?>

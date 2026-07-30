@@ -95,6 +95,30 @@
                 }
             });
 
+            // Import / Export — the export button is a plain link (see
+            // import-export.php); it needs no JS handler.
+
+            // Import / Export — enable import button only when a file is chosen and confirmed
+            $('#mbr-cc-import-file, #mbr-cc-import-confirm').on('change', function() {
+                var hasFile = $('#mbr-cc-import-file').val() !== '';
+                var confirmed = $('#mbr-cc-import-confirm').is(':checked');
+                $('#mbr-cc-import-settings').prop('disabled', !(hasFile && confirmed));
+            });
+
+            // Import / Export — import settings
+            $('#mbr-cc-import-settings').on('click', function(e) {
+                e.preventDefault();
+                self.importSettings();
+            });
+
+            // Import / Export — revert last import
+            $('#mbr-cc-revert-import').on('click', function(e) {
+                e.preventDefault();
+                if (confirm('Revert the most recent import and restore the previous settings?')) {
+                    self.revertImport();
+                }
+            });
+
             // Form integration — save settings
             $('#mbr-cc-form-save').on('click', function(e) {
                 e.preventDefault();
@@ -598,7 +622,18 @@
         
         deleteOldLogs: function() {
             var self = this;
-            var days = $('#mbr-cc-delete-logs-days').val() || 365;
+            var days = parseInt($('#mbr-cc-delete-logs-days').val(), 10);
+            
+            // Guard: '0' is a truthy string, so a plain `val() || 365`
+            // would let 0 through and delete EVERY log. Require >= 1.
+            if (isNaN(days) || days < 1) {
+                self.showNotice('Please enter a number of days (1 or more).', 'error');
+                return;
+            }
+            
+            if (!window.confirm('Permanently delete all consent logs older than ' + days + ' days? This cannot be undone.')) {
+                return;
+            }
             
             $.ajax({
                 url: mbrCcAdmin.ajaxUrl,
@@ -790,6 +825,93 @@
             });
         },
         
+        importSettings: function() {
+            var self = this;
+            var input = document.getElementById('mbr-cc-import-file');
+
+            if (!input || !input.files || input.files.length === 0) {
+                self.showNotice('Please choose a settings file to import.', 'error');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('action', 'mbr_cc_import_settings');
+            formData.append('nonce', mbrCcAdmin.nonce);
+            formData.append('mbr_cc_import_file', input.files[0]);
+
+            var $btn = $('#mbr-cc-import-settings');
+            $btn.prop('disabled', true);
+
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        self.renderImportReport(response.data);
+                        self.showNotice(response.data.message, 'success');
+                        // Reveal the revert section without a full reload.
+                        if (response.data.can_revert) {
+                            $('#mbr-cc-revert-section').show();
+                        }
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                        $btn.prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    self.showNotice('The import request failed. Please try again.', 'error');
+                    $btn.prop('disabled', false);
+                }
+            });
+        },
+
+        renderImportReport: function(data) {
+            var lines = [];
+            lines.push('<strong>' + data.message + '</strong>');
+
+            if (data.checksum_ok === false) {
+                lines.push('<span style="color:#b32d2e;">Note: the file\'s integrity checksum did not match. It may have been edited by hand. The settings were still imported.</span>');
+            }
+
+            if (data.skipped_count && data.skipped_count > 0) {
+                lines.push(data.skipped_count + ' unrecognised field(s) were ignored: <code>' + data.skipped.join('</code>, <code>') + '</code>');
+            }
+
+            if (data.source_url) {
+                lines.push('Source: ' + data.source_url);
+            }
+
+            var $report = $('#mbr-cc-import-report');
+            $report.html('<div class="notice notice-info inline" style="padding:8px 12px;"><p style="margin:0;">' + lines.join('<br>') + '</p></div>').show();
+        },
+
+        revertImport: function() {
+            var self = this;
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_revert_import',
+                    nonce: mbrCcAdmin.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.showNotice(response.data.message, 'success');
+                        $('#mbr-cc-revert-section').hide();
+                        $('#mbr-cc-import-report').hide();
+                    } else {
+                        self.showNotice(response.data.message, 'error');
+                    }
+                },
+                error: function() {
+                    self.showNotice('The revert request failed. Please try again.', 'error');
+                }
+            });
+        },
+
         showNotice: function(message, type) {
             var $notice = $('<div class="notice notice-' + type + ' is-dismissible"><p>' + message + '</p></div>');
             $('.wrap > h1').after($notice);

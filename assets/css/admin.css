@@ -557,3 +557,19 @@ div.mbr-cc-tab-content.active {
         height: 80px;
     }
 }
+
+/* Buttons with a leading dashicon (Import / Export screen).
+   inline-flex + explicit glyph sizing avoids the line-height mismatch that
+   otherwise clips or misaligns a dashicon inside a WP .button. */
+.mbr-cc-icon-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mbr-cc-icon-button .dashicons {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+    line-height: 1;
+}

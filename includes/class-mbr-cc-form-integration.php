@@ -95,7 +95,14 @@ class MBR_CC_Form_Integration {
             return false;
         }
 
-        $consent = json_decode( stripslashes( $_COOKIE['mbr_cc_consent'] ), true );
+        $raw = wp_unslash( $_COOKIE['mbr_cc_consent'] );
+
+        // Client-controlled value; reject oversized input before decoding.
+        if ( ! is_string( $raw ) || '' === $raw || strlen( $raw ) > 2048 ) {
+            return false;
+        }
+
+        $consent = json_decode( $raw, true );
 
         if ( ! is_array( $consent ) ) {
             return false;

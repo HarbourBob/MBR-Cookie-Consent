@@ -69,6 +69,45 @@ class MBR_CC_Cookie_Scanner {
     }
     
     /**
+     * Check that a URL belongs to this site.
+     *
+     * On multisite the whole network is allowed, since a network admin
+     * legitimately scans sibling sites.
+     *
+     * @param string $url URL to test.
+     * @return bool
+     */
+    private function is_local_url($url) {
+        if (!is_string($url) || $url === '') {
+            return false;
+        }
+        
+        $parts = wp_parse_url($url);
+        
+        if (empty($parts['host']) || empty($parts['scheme'])) {
+            return false;
+        }
+        
+        if (!in_array(strtolower($parts['scheme']), array('http', 'https'), true)) {
+            return false;
+        }
+        
+        $allowed = array(strtolower((string) wp_parse_url(home_url(), PHP_URL_HOST)));
+        
+        if (is_multisite()) {
+            $allowed[] = strtolower((string) wp_parse_url(network_home_url(), PHP_URL_HOST));
+            
+            foreach (get_sites(array('number' => 200, 'fields' => 'ids')) as $site_id) {
+                $allowed[] = strtolower((string) wp_parse_url(get_home_url($site_id), PHP_URL_HOST));
+            }
+        }
+        
+        $allowed = array_filter(array_unique($allowed));
+        
+        return in_array(strtolower($parts['host']), $allowed, true);
+    }
+    
+    /**
      * Scan entire site (all published pages and posts).
      *
      * @return array Scan results organized by category.
@@ -209,10 +248,19 @@ class MBR_CC_Cookie_Scanner {
      * @return array|WP_Error Scan results or error.
      */
     public function scan_page($url) {
+        // The scanner exists to inspect this site's own pages. Fetching an
+        // arbitrary URL would turn it into a request proxy able to reach hosts
+        // the web server can see but the outside world cannot.
+        if (!$this->is_local_url($url)) {
+            return new WP_Error(
+                'mbr_cc_external_url',
+                __('The scanner can only scan pages on this site.', 'mbr-cookie-consent')
+            );
+        }
+        
         // Fetch page content.
         $response = wp_remote_get($url, array(
             'timeout' => 30,
-            'sslverify' => false,
         ));
         
         if (is_wp_error($response)) {

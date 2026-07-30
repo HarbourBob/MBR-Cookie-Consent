@@ -137,6 +137,13 @@ class MBR_CC_Settings {
         // Google ACM.
         register_setting('mbr_cc_settings', 'mbr_cc_google_acm_enabled', $bool);
         
+        // AI / LLM training disclosure (Connecticut SB 1295, effective 1 July 2026).
+        register_setting('mbr_cc_settings', 'mbr_cc_ai_training_enabled', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_ai_training_own', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_ai_training_vendors', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_ai_training_sell', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_ai_training_detail', $text);
+        
         // Blocked Content Overlay (v1.7.0).
         register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_enabled', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_heading', $text);
@@ -173,11 +180,36 @@ class MBR_CC_Settings {
             wp_send_json_error(array('message' => 'No settings provided.'));
         }
         
+        // Only keys the plugin recognises may be written. Previously any key
+        // was accepted and concatenated straight onto the mbr_cc_ prefix, so a
+        // typo — or a compromised admin session — could create arbitrary
+        // option rows. The import/export class already maintains the canonical
+        // list of settings and their types, so it is reused here rather than
+        // duplicated.
+        $importer = class_exists('MBR_CC_Import_Export') ? MBR_CC_Import_Export::get_instance() : null;
+        
+        $applied = 0;
+        $skipped = array();
+        
         foreach ($settings as $key => $value) {
-            $option_key = 'mbr_cc_' . $key;
+            $short = sanitize_key($key);
             
-            // Sanitize based on type.
-            if (is_bool($value) || $value === 'true' || $value === 'false') {
+            if ($short === '') {
+                continue;
+            }
+            
+            $type = $importer ? $importer->resolve_sanitiser($short) : null;
+            
+            if ($type === null) {
+                $skipped[] = $short;
+                continue;
+            }
+            
+            $option_key = 'mbr_cc_' . $short;
+            
+            if ($importer) {
+                $value = $importer->sanitize_value($value, $type);
+            } elseif (is_bool($value) || $value === 'true' || $value === 'false') {
                 $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             } elseif (is_numeric($value)) {
                 $value = intval($value);
@@ -186,9 +218,21 @@ class MBR_CC_Settings {
             }
             
             update_option($option_key, $value);
+            $applied++;
         }
         
-        wp_send_json_success(array('message' => 'Settings saved successfully.'));
+        if ($applied === 0 && !empty($skipped)) {
+            wp_send_json_error(array(
+                'message' => __('No recognised settings were supplied.', 'mbr-cookie-consent'),
+                'skipped' => $skipped,
+            ));
+        }
+        
+        wp_send_json_success(array(
+            'message' => 'Settings saved successfully.',
+            'applied' => $applied,
+            'skipped' => $skipped,
+        ));
     }
     
     /**

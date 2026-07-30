@@ -367,7 +367,8 @@
                 expDate.setTime(expDate.getTime() + (mbrCcConsent.cookieExpiry * 24 * 60 * 60 * 1000));
                 document.cookie = 'mbr_cc_consent=' + consentJson +
                     '; expires=' + expDate.toUTCString() +
-                    '; path=/; SameSite=Lax';
+                    '; path=/; SameSite=Lax' +
+                    (window.location.protocol === 'https:' ? '; Secure' : '');
             }
 
             // Update consent modes (Google Consent Mode v2 & Microsoft UET).
@@ -457,13 +458,22 @@
                 
                 $script[0].parentNode.replaceChild(newScript, $script[0]);
             } else {
-                // Inline script - change type back to text/javascript
-                $script.attr('type', 'text/javascript');
-                $script.removeAttr('data-mbr-cc-blocked');
-                
-                // Re-execute inline script
-                var code = $script.html();
-                eval(code);
+                // Inline script. Replacing the element (rather than eval-ing
+                // its contents) keeps execution in normal script scope and
+                // works under a Content-Security-Policy without 'unsafe-eval',
+                // matching how the external branch above restores scripts.
+                var inlineScript = document.createElement('script');
+                inlineScript.type = 'text/javascript';
+
+                $.each($script[0].attributes, function() {
+                    if (this.name !== 'type' && this.name !== 'data-mbr-cc-blocked' && this.name !== 'data-mbr-cc-src') {
+                        inlineScript.setAttribute(this.name, this.value);
+                    }
+                });
+
+                inlineScript.text = $script[0].textContent || $script[0].text || '';
+
+                $script[0].parentNode.replaceChild(inlineScript, $script[0]);
             }
         },
         
@@ -498,7 +508,12 @@
                 }
             }
             
-            document.cookie = name + '=' + (value || '') + expires + domain + path + '; SameSite=Lax';
+            // Mark the cookie Secure on HTTPS so it is never transmitted in
+            // cleartext, where a network attacker could read or rewrite the
+            // visitor's recorded consent state.
+            var secure = (window.location.protocol === 'https:') ? '; Secure' : '';
+
+            document.cookie = name + '=' + (value || '') + expires + domain + path + '; SameSite=Lax' + secure;
         },
         
         getCookie: function(name) {

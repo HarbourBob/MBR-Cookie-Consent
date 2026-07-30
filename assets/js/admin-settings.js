@@ -6,16 +6,13 @@
 (function($) {
     'use strict';
     
-    console.log('MBR Cookie Consent Settings JS Loaded');
     
     $(document).ready(function() {
         
-        console.log('Settings page ready');
         
         // Tab switching
         $('.mbr-cc-tab-button').on('click', function(e) {
             e.preventDefault();
-            console.log('Tab clicked:', $(this).data('tab')); console.log('Active tabs:', $('.mbr-cc-tab-content.active').length);
             var tab = $(this).data('tab');
             
             // Update buttons
@@ -25,7 +22,33 @@
             // Update content
             $('.mbr-cc-tab-content').removeClass('active');
             $('#tab-' + tab).addClass('active');
+            
+            // Remember the active tab so a settings save (which reloads the
+            // page) returns the user to the tab they were on, not tab 1.
+            try {
+                sessionStorage.setItem('mbrCcActiveTab', tab);
+            } catch (err) {
+                // sessionStorage unavailable (private mode etc.) — degrade
+                // gracefully; the page will simply reopen on the first tab.
+            }
         });
+        
+        // Restore the last active tab after a save/reload. Falls back to the
+        // default (first) tab if the stored tab no longer exists.
+        try {
+            var storedTab = sessionStorage.getItem('mbrCcActiveTab');
+            if (storedTab) {
+                var $btn = $('.mbr-cc-tab-button[data-tab="' + storedTab + '"]');
+                if ($btn.length && $('#tab-' + storedTab).length) {
+                    $('.mbr-cc-tab-button').removeClass('active');
+                    $btn.addClass('active');
+                    $('.mbr-cc-tab-content').removeClass('active');
+                    $('#tab-' + storedTab).addClass('active');
+                }
+            }
+        } catch (err) {
+            // Ignore — default tab remains active.
+        }
         
         // Layout selection
         $('input[name="mbr_cc_layout_option"]').on('change', function() {

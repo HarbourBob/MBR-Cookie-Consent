@@ -271,6 +271,13 @@ class MBR_CC_Database {
     public function delete_old_logs($days = 365) {
         global $wpdb;
         
+        // Defence in depth: never allow a cutoff of "now or later", which
+        // would wipe the entire table. Callers should validate too.
+        $days = (int) $days;
+        if ($days < 1) {
+            return false;
+        }
+        
         $date = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         
         return $wpdb->query(
@@ -334,7 +341,7 @@ class MBR_CC_Database {
         // Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
         $output = fopen('php://temp', 'r+'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         foreach ($csv as $row) {
-            fputcsv($output, $row);
+            fputcsv($output, array_map(array($this, 'escape_csv_field'), $row));
         }
         rewind($output);
         $csv_content = stream_get_contents($output);
@@ -344,31 +351,44 @@ class MBR_CC_Database {
     }
     
     /**
+     * Neutralise spreadsheet formula injection in an exported CSV field.
+     *
+     * Consent logs contain values supplied by unauthenticated visitors. Excel,
+     * LibreOffice and Sheets all evaluate a cell beginning with =, +, - or @
+     * as a formula, so a category name of =HYPERLINK("https://evil.tld","Hi")
+     * would execute in the admin's spreadsheet on open. Prefixing with a
+     * single quote forces the cell to be read as text.
+     *
+     * @param mixed $value Field value.
+     * @return mixed Escaped field value.
+     */
+    private function escape_csv_field($value) {
+        if (!is_string($value) || $value === '') {
+            return $value;
+        }
+
+        // Leading whitespace and control characters are stripped by
+        // spreadsheet parsers before the formula test, so test past them.
+        $trimmed = ltrim($value, " \t\r\n");
+
+        if ($trimmed !== '' && strpos("=+-@\t\r", $trimmed[0]) !== false) {
+            return "'" . $value;
+        }
+
+        return $value;
+    }
+
+    /**
      * Get client IP address.
      *
      * @return string IP address.
      */
     private function get_client_ip() {
-        $ip_keys = array(
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_X_CLUSTER_CLIENT_IP',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
-            'REMOTE_ADDR',
-        );
-        
-        foreach ($ip_keys as $key) {
-            if (array_key_exists($key, $_SERVER)) {
-                $ip = $_SERVER[$key];
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-        
-        return '0.0.0.0';
+        // Proxy headers are only honoured when the request demonstrably came
+        // through a proxy we trust. See includes/mbr-cc-ip.php.
+        $ip = function_exists('mbr_cc_get_client_ip') ? mbr_cc_get_client_ip() : '';
+
+        return $ip !== '' ? $ip : '0.0.0.0';
     }
     
     /**
@@ -378,20 +398,16 @@ class MBR_CC_Database {
      * @return string Anonymized IP.
      */
     private function anonymize_ip($ip) {
-        // IPv4.
+        if (function_exists('mbr_cc_anonymize_ip')) {
+            return mbr_cc_anonymize_ip($ip);
+        }
+
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $parts = explode('.', $ip);
             $parts[3] = '0';
             return implode('.', $parts);
         }
-        
-        // IPv6.
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $parts = explode(':', $ip);
-            $parts[count($parts) - 1] = '0';
-            return implode(':', $parts);
-        }
-        
+
         return $ip;
     }
 }

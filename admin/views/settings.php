@@ -604,6 +604,53 @@ if (!defined('ABSPATH')) {
                         </ol>
                     </div>
                     
+            <!-- AI / LLM Training Disclosure -->
+            <div class="mbr-cc-form-row" style="margin-top: 30px;">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <h3><?php esc_html_e('AI / LLM Training Disclosure', 'mbr-cookie-consent'); ?></h3>
+                    <p class="description"><?php esc_html_e('Connecticut SB 1295, effective 1 July 2026, requires your privacy notice to state whether you collect, use, or sell personal data to train large language models. It is the first US state law to ask this directly. Other states are expected to follow.', 'mbr-cookie-consent'); ?></p>
+
+                    <label style="margin-top: 15px; display: block;">
+                        <input type="checkbox" name="mbr_cc_ai_training_enabled" value="1" <?php checked(get_option('mbr_cc_ai_training_enabled', false)); ?>>
+                        <?php esc_html_e('Include an AI / model training section in the generated privacy policy', 'mbr-cookie-consent'); ?>
+                    </label>
+                    <p class="description"><?php esc_html_e('Leave the three boxes below unticked to publish a clear "we do not" statement — that is the correct answer for most sites, and worth saying explicitly rather than staying silent.', 'mbr-cookie-consent'); ?></p>
+
+                    <div style="margin-top: 15px; padding-left: 20px; border-left: 3px solid #ddd;">
+                        <label style="display: block; margin-top: 10px;">
+                            <input type="checkbox" name="mbr_cc_ai_training_own" value="1" <?php checked(get_option('mbr_cc_ai_training_own', false)); ?>>
+                            <?php esc_html_e('We train or fine-tune our own models on personal data', 'mbr-cookie-consent'); ?>
+                        </label>
+
+                        <label style="display: block; margin-top: 10px;">
+                            <input type="checkbox" name="mbr_cc_ai_training_vendors" value="1" <?php checked(get_option('mbr_cc_ai_training_vendors', false)); ?>>
+                            <?php esc_html_e('Our vendors may use the data for model improvement', 'mbr-cookie-consent'); ?>
+                        </label>
+
+                        <label style="display: block; margin-top: 10px;">
+                            <input type="checkbox" name="mbr_cc_ai_training_sell" value="1" <?php checked(get_option('mbr_cc_ai_training_sell', false)); ?>>
+                            <?php esc_html_e('We sell or license personal data into training datasets', 'mbr-cookie-consent'); ?>
+                        </label>
+
+                        <label for="ai_training_detail" style="display: block; margin-top: 15px;"><?php esc_html_e('Additional detail (optional):', 'mbr-cookie-consent'); ?></label>
+                        <input type="text"
+                               name="mbr_cc_ai_training_detail"
+                               id="ai_training_detail"
+                               value="<?php echo esc_attr(get_option('mbr_cc_ai_training_detail', '')); ?>"
+                               placeholder="<?php esc_attr_e('e.g. Training data excludes customer support transcripts.', 'mbr-cookie-consent'); ?>"
+                               style="width: 100%;">
+                        <p class="description"><?php esc_html_e('A single plain sentence appended to the section. Keep it factual.', 'mbr-cookie-consent'); ?></p>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                        <strong><?php esc_html_e('Check before you tick:', 'mbr-cookie-consent'); ?></strong>
+                        <p style="margin: 5px 0 0 0;"><?php esc_html_e('Answering this honestly means knowing whether your own products train on user data, whether any vendor agreement permits model improvement, and whether you license data to AI developers. An inaccurate statement in a public privacy notice is not only a state privacy law problem — it can also be treated as a deceptive practice.', 'mbr-cookie-consent'); ?></p>
+                    </div>
+
+                    <p class="description" style="margin-top: 15px;"><?php esc_html_e('Regenerate your privacy policy page after changing these settings for the text to update.', 'mbr-cookie-consent'); ?></p>
+                </div>
+            </div>
+            
         
         </div>
         

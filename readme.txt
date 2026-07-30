@@ -4,7 +4,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -445,6 +445,73 @@ Yes! Under GPL license you can:
 No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
+
+= 2.3.1 =
+Security and hardening release following a full audit of the plugin's own code. No exploitation of any of the issues below has been reported; they were found by review.
+
+* Security: Forwarding headers such as X-Forwarded-For, X-Real-IP and CF-Connecting-IP are no longer trusted unconditionally. Any visitor can set these, which meant a visitor could nominate their own IP address and therefore choose which privacy regime they were shown, and an attacker could mint unlimited distinct "IPs" — each creating its own geolocation cache entry and its own outbound provider lookup. A new Visitor IP Detection setting under Geolocation controls this. The default, Automatic, accepts Cloudflare's header only when the request genuinely arrived from a Cloudflare address, so Cloudflare sites keep working with no configuration.
+* Security: Geolocation lookups no longer run over plain HTTP by default. ip-api.com serves HTTPS only on its paid tier, and over plain HTTP anyone able to observe the connection can rewrite the country returned and silently change which privacy regime your visitors receive — while visitor IP addresses travel to a third party unencrypted. Sites using ip-api.com without a pro key are moved to ipapi.co, which is free over HTTPS, and a dismissible notice explains the change. ip-api.com remains available with a pro key, or via an explicit opt-in for anyone who wants its higher free rate limit and accepts the trade-off.
+* Security: The consent logging endpoint accepts unauthenticated requests by design, because a nonce baked into cached HTML goes stale and would block genuine consent records. It is now throttled per visitor, so the consent log cannot be flooded with junk rows — which matters because that log is the record you would rely on to demonstrate compliance. Category names are validated against the categories your site has actually registered rather than stored as supplied.
+* Security: Consent log CSV exports are protected against spreadsheet formula injection. Category values originate from unauthenticated visitors, and a value beginning with =, +, - or @ is executed as a formula by Excel, LibreOffice and Sheets when the export is opened.
+* Security: The cookie scanner can no longer be pointed at arbitrary URLs. It now scans only your own site (or, on multisite, the network), and verifies TLS certificates.
+* Security: TLS certificate verification is no longer disabled on any outbound request.
+* Security: The settings save handler now writes only recognised settings, instead of accepting any key and prefixing it. As a side effect the junk mbr_cc_layout_option row, which was written on every save despite never being a real setting, is no longer created.
+* Security: The consent cookie is marked Secure on HTTPS sites, so it is never transmitted in cleartext.
+* Security: Restoring blocked inline scripts no longer uses eval(), so script blocking works under a Content-Security-Policy without 'unsafe-eval'.
+* Security: A/B test tracking endpoints are throttled per visitor.
+* Security: The subdomain cookie domain is derived from your configured site address rather than the client-supplied Host header.
+* Security: The stale-nonce message is limited to one entry per hour and only written when WP_DEBUG is on. Previously every occurrence was logged, so a traffic spike could fill the PHP error log.
+* Security: IPv6 addresses in the consent log are now truncated by 80 bits rather than by a single group. The previous truncation left enough of the address to identify a household.
+* Fix: Scripts blocked by src were tagged with an empty consent category because of a missing variable binding, so after a visitor accepted cookies those scripts could silently fail to be restored. Iframe blocking was unaffected.
+* Fix: A/B test impressions were counted on every page load rather than once per visitor, so a single visitor reloading a page inflated the count each time. Existing statistics are therefore overstated and are worth resetting before drawing conclusions. Conversions are now deduplicated per visitor over 24 hours.
+* Fix: Subdomain consent sharing failed across the entire .co.uk space, and other multi-part suffixes such as .com.au and .co.nz. The root domain was taken as the last two labels, so shop.example.co.uk produced a cookie scoped to "co.uk", which every browser rejects.
+* Fix: Network settings whose names contained "button" were cast to booleans, so the accept, reject and customise button labels were each stored as 1 instead of their text. Network URL settings are now validated as URLs, which also rejects unsafe schemes.
+* Fix: The AI training disclosure settings and the geolocation cache duration were missing from the import/export map, so they were silently dropped from settings exports.
+* Fix: Upgrade notices are now displayed. The 2.3.0 routine set a flag to explain that your regional defaults had been preserved, but nothing ever rendered it.
+* Fix: Private and reserved IP ranges are detected properly rather than by string prefix, which previously missed all of 172.16.0.0/12 and every IPv6 private range and caused pointless outbound lookups for local visitors.
+* Update: Outbound geolocation lookups are capped per minute, so a traffic burst with cold caches cannot trip the provider's rate limit and leave every visitor on the fallback region.
+* Update: The consent cookie is size-checked before parsing wherever it is read.
+* Dev: New includes/mbr-cc-ip.php provides shared client IP resolution, with mbr_cc_proxy_mode, mbr_cc_trusted_proxies and mbr_cc_cloudflare_ranges filters.
+* Dev: New filters mbr_cc_consent_log_limit, mbr_cc_consent_log_window, mbr_cc_geolocation_lookups_per_minute, mbr_cc_ab_impression_window, mbr_cc_ab_conversion_window and mbr_cc_is_multi_part_suffix.
+
+= 2.3.0 =
+* New: "Rest of World" region now defaults to opt-in. Previously it shipped with implied consent and auto-accept-on-scroll, which was wrong for the several genuine opt-in jurisdictions that fall through to it. EXISTING SITES ARE NOT CHANGED — an upgrade routine writes your previous values as explicit settings, so only new installations get the stricter posture. You can change it either way under Geolocation.
+* New: Nigeria (NDPA 2023 + GAID) added as a dedicated privacy region. The NDPC's General Application and Implementation Directive, effective 19 September 2025, is one of the few instruments anywhere that prescribes banner placement — a prominent homepage notice with a genuine accept/decline choice, no pre-ticked boxes, and no implied consent from continued browsing.
+* New: China (PIPL) added as a dedicated privacy region with granular per-purpose opt-in. Note the documented limitation: PIPL's separate cross-border transfer consent and transfer mechanism are NOT provided by this plugin and must be handled separately.
+* New: South Korea (PIPA) added as a dedicated privacy region — specific, informed, prior consent wherever cookie data can identify a person.
+* New: Saudi Arabia (PDPL) added as a dedicated privacy region, with an Arabic banner heading default. Consent is the default lawful basis and SDAIA enforcement has been active since 2025.
+* New: South Africa (POPIA) added as a dedicated privacy region, reflecting the section 69 opt-in requirement for electronic direct marketing.
+* New: AI / LLM training disclosure. Connecticut SB 1295, effective 1 July 2026, is the first US state law requiring your privacy notice to state whether you collect, use, or sell personal data to train large language models. A new section under Advanced Consent controls this, and the privacy policy generator produces matching text — including a clear "we do not" statement when none of the options apply, which is the correct answer for most sites.
+* Update: Connecticut compliance notes substantially expanded. SB 1295 went live 1 July 2026 and is far bigger than the previous one-line summary suggested: applicability threshold cut from 100,000 to 35,000 consumers, no threshold at all if you process sensitive data or sell personal data, sensitive data widened to include neural data, government identifiers, financial account information and SSNs, profiling opt-out broadened beyond "solely" automated decisions, profiling impact assessments from 1 August 2026, and the statutory cure period removed. Connecticut SB 4 follows on 1 October 2026.
+* Update: Arkansas HB 1717 (Children and Teens' Online Privacy Protection Act) and Utah HB 418 noted, both effective 1 July 2026. Arkansas is a minors-focused law, not a comprehensive one, so the "20 states in effect" count is unchanged. This plugin has no age-assurance layer — sites serving minors must handle that separately.
+* Update: EU/EEA notes record EDPB Binding Decision 1/2026 (14 July 2026), which overturned the Belgian DPA's dismissal of a noyb cookie-banner complaint against VRT and required it to be decided on the merits. Representative complaints are now much harder to dispose of on procedural grounds.
+* Update: Digital Omnibus status refreshed — negotiations are paused and continue under the Irish Presidency, with final text not expected before late 2026 or early 2027. The ePrivacy Directive regime remains operative and no banner change is required.
+* Fix: Corrected the ePrivacy Regulation withdrawal dates. The withdrawal was announced in the Commission's 2025 Work Programme on 11 February 2025, formally approved on 16 July 2025, and published in the Official Journal on 6 October 2025. The previous note gave 11 February 2026, a year out.
+* Fix: Canada PIPEDA notes no longer describe Bill C-27 as pending. It died in January 2025; PIPEDA still governs and there is no successor in force.
+* Fix: The Geolocation testing tool reported "Rest of World" for any region added after version 2.1.0. The tool kept its own copy of the region name and behaviour tables, which was never updated when Vietnam, Indonesia and the 2.3.0 regions were added, so Nigeria, China, South Korea, Saudi Arabia, South Africa, Vietnam and Indonesia all appeared unrecognised. Live visitor detection was unaffected throughout — real visitors always received the correct regional banner; only the admin test readout was wrong. The tool now reads the real region configuration rather than a parallel list, so it cannot drift again, and it also reports auto-accept and category visibility.
+* Dev: New MBR_CC_Region_Config::get_config_for_region() accessor, and MBR_CC_Geolocation::get_region_name() now takes an optional region argument, so admin tooling can describe any region without duplicating the tables.
+* Dev: Version-gated upgrade routines consolidated into a single maybe_upgrade() method that runs on load rather than on activation, because WordPress does not fire the activation hook when a plugin is updated in place.
+
+= 2.2.1 =
+* Fix: Failed geolocation lookups were cached for the full cache duration (24 hours by default) as though they were genuine answers. If the geolocation provider was unreachable, rate-limited, or blocked, the fallback default region was pinned to the visitor's IP for a full day — and if a page cache primed during that window, the wrong regional banner could be served to every visitor of that page. Fallback results are now cached for only 5 minutes (filterable via `mbr_cc_geolocation_failure_cache`), so provider hiccups self-heal within minutes. Genuine lookups are cached for the configured duration as before.
+* Dev: Cached geolocation entries now record whether they came from a genuine provider answer (`detected` flag) to aid diagnostics.
+
+= 2.2.0 =
+* New: Import / Export settings. A new "Import / Export" screen downloads this site's configuration as a portable JSON file and imports it on another install — built for multi-site rollouts. The export covers banner appearance and text, behaviour, cookie categories, blocked scripts, Google/Microsoft Consent Mode, GPC, IAB TCF, form integration, and all geolocation regional headings and descriptions.
+* New: One-step "Revert last import" — a backup of the changed settings is taken automatically before an import is applied, so the most recent import can be undone.
+* Security: Import is allowlist-driven. Any field in the file that is not a recognised setting is ignored, and every value is re-validated through the plugin's own sanitisers before it is stored. Uploads are size-capped and validated.
+* Note: Consent logs are never included in a settings export (they are visitor personal data — use the CSV export on the Consent Logs screen). Site-local values (policy page IDs, the geolocation IP cache) and version markers are also excluded, as they are not valid on another site.
+
+= 2.1.2 =
+* New: Indonesia UU PDP (Personal Data Protection Law No. 27 of 2022) added as a dedicated privacy region. Fully effective since 17 October 2024 and upheld by the Constitutional Court in January 2026, it is GDPR-style and extraterritorial — visitors detected in Indonesia now receive an opt-in banner with purpose-specific consent and easy withdrawal, plus an Indonesian-language banner heading default.
+* New: Indonesia compliance card added to Geolocation settings.
+* Update: EU/EEA Digital Omnibus notes corrected to reflect the current state of play — the Council's compromise text of 21 May 2026 dropped the relocation of cookie rules into GDPR Articles 88a/88b, the AI and Data Omnibus files have split, and adoption of the data half is not expected before late 2026. The ePrivacy Directive regime remains operative; single-click refusal and low-risk exemptions remain proposals only.
+* Update: US multi-state notes now name the four laws enacted in the 2026 session — Oklahoma SB 546 and the Louisiana Data Privacy Act (effective 1 January 2027), the Alabama Personal Data Protection Act (2027), and the Vermont Data Privacy and Online Surveillance Act (1 January 2028) — bringing the enacted total to 24 (20 in effect). All follow the Virginia opt-out model, so no banner behaviour changes. Also added: Virginia's precise-geolocation restriction (effective 1 July 2026) and California's ADMT opt-out rights (effective 1 January 2027).
+* Update: UK DUAA note corrected — the formal complaints procedure requirement has been in force since 19 June 2026.
+* Fix: Settings page now stays on the current tab after saving instead of returning to the first tab.
+* Fix: Removed leftover debug console logging from the admin settings script.
+* Fix: "Delete Old Logs" now asks for confirmation before deleting, and refuses a value below 1 day. Previously, entering 0 would silently delete every consent log (client-side, '0' bypassed the fallback; server-side, a zero-day cutoff resolved to "now"). Guarded in the JS, the AJAX handler, and the database layer.
+* Note: Plugin updates, deactivation, and even full deletion never remove the consent logs table or its data — there is no uninstall routine that drops tables.
 
 = 2.1.1 =
 * New: Vietnam PDPL (Personal Data Protection Law 91/2025/QH15, in force 1 January 2026) added as a dedicated privacy region. Visitors detected in Vietnam now receive a GDPR-style opt-in banner with granular, per-purpose consent, reflecting the PDPL's consent-centric requirements (silence is not consent, bundled consent prohibited, easy withdrawal).

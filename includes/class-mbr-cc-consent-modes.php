@@ -144,7 +144,15 @@ class MBR_CC_Consent_Modes {
             return null;
         }
         
-        $consent = json_decode(stripslashes($_COOKIE['mbr_cc_consent']), true);
+        $raw = wp_unslash($_COOKIE['mbr_cc_consent']);
+        
+        // Client-controlled value read on every page load; reject oversized
+        // input before decoding it.
+        if (!is_string($raw) || $raw === '' || strlen($raw) > 2048) {
+            return null;
+        }
+        
+        $consent = json_decode($raw, true);
         return is_array($consent) ? $consent : null;
     }
     
