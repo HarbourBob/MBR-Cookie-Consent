@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "pt",
+        "name": "Português",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Valorizamos sua privacidade",
+        "banner_description": "Usamos cookies para melhorar sua experiência de navegação, fornecer conteúdo personalizado e analisar nosso tráfego. Ao clicar em \"Aceitar tudo\", você consente com o uso de cookies.",
+        "accept_all": "Aceitar tudo",
+        "reject_all": "Rejeitar tudo",
+        "customize": "Personalizar",
+        "cookie_settings": "Configurações de cookies",
+        "manage_preferences": "Gerenciar preferências de cookies",
+        "preferences_intro": "Utilizamos cookies para melhorar a sua experiência. Pode escolher que tipos de cookies permitir.",
+        "save_preferences": "Salvar preferências",
+        "close": "Fechar",
+        "necessary": "Necessários",
+        "necessary_description": "Os cookies necessários são essenciais para o funcionamento correto do site. Garantem as funcionalidades básicas e os recursos de segurança do site.",
+        "analytics": "Analíticos",
+        "analytics_description": "Os cookies analíticos ajudam-nos a compreender como os visitantes interagem com o nosso site, recolhendo e comunicando informações de forma anónima.",
+        "marketing": "Marketing",
+        "marketing_description": "Os cookies de marketing são utilizados para acompanhar os visitantes em vários sites, a fim de apresentar anúncios relevantes e incentivar o envolvimento dos utilizadores.",
+        "preferences": "Preferências",
+        "preferences_description": "Os cookies de preferências permitem que um site memorize informações que alteram o seu comportamento ou o seu aspeto.",
+        "always_active": "Sempre ativos",
+        "privacy_policy_text": "Política de Privacidade",
+        "cookie_policy_text": "Política de Cookies",
+        "ccpa_link_text": "Não vender nem partilhar as minhas informações pessoais",
+        "blocked_heading": "Conteúdo bloqueado",
+        "blocked_message": "Este vídeo está bloqueado porque os cookies de marketing não foram aceites.",
+        "blocked_button": "Aceitar cookies e reproduzir vídeo",
+        "blocked_region_label": "Conteúdo bloqueado",
+        "form_blocked_message": "Aceite os cookies antes de enviar este formulário."
+    }
+}

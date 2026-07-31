@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "nl",
+        "name": "Nederlands",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Wij waarderen uw privacy",
+        "banner_description": "We gebruiken cookies om uw browse-ervaring te verbeteren, gepersonaliseerde inhoud te bieden en ons verkeer te analyseren. Door op \"Alles accepteren\" te klikken, stemt u in met het gebruik van cookies.",
+        "accept_all": "Alles accepteren",
+        "reject_all": "Alles weigeren",
+        "customize": "Aanpassen",
+        "cookie_settings": "Cookie-instellingen",
+        "manage_preferences": "Cookievoorkeuren beheren",
+        "preferences_intro": "We gebruiken cookies om uw ervaring te verbeteren. U kunt kiezen welke soorten cookies u toestaat.",
+        "save_preferences": "Voorkeuren opslaan",
+        "close": "Sluiten",
+        "necessary": "Noodzakelijk",
+        "necessary_description": "Noodzakelijke cookies zijn essentieel voor de goede werking van de website. Ze zorgen voor basisfunctionaliteiten en beveiligingsfuncties van de website.",
+        "analytics": "Analytisch",
+        "analytics_description": "Analytische cookies helpen ons te begrijpen hoe bezoekers omgaan met onze website door anoniem informatie te verzamelen en te rapporteren.",
+        "marketing": "Marketing",
+        "marketing_description": "Marketingcookies worden gebruikt om bezoekers over websites heen te volgen, relevante advertenties te tonen en betrokkenheid te stimuleren.",
+        "preferences": "Voorkeuren",
+        "preferences_description": "Voorkeurscookies stellen een website in staat informatie te onthouden die het gedrag of uiterlijk van de website verandert.",
+        "always_active": "Altijd actief",
+        "privacy_policy_text": "Privacybeleid",
+        "cookie_policy_text": "Cookiebeleid",
+        "ccpa_link_text": "Mijn persoonlijke gegevens niet verkopen of delen",
+        "blocked_heading": "Inhoud geblokkeerd",
+        "blocked_message": "Deze video is geblokkeerd omdat marketingcookies niet zijn geaccepteerd.",
+        "blocked_button": "Cookies accepteren en video afspelen",
+        "blocked_region_label": "Geblokkeerde inhoud",
+        "form_blocked_message": "Accepteer cookies voordat u dit formulier verzendt."
+    }
+}

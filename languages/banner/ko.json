@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "ko",
+        "name": "한국어",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "귀하의 개인정보를 소중히 여깁니다",
+        "banner_description": "쿠키를 사용하여 브라우징 경험을 향상시키고 맞춤형 콘텐츠를 제공하며 트래픽을 분석합니다. \"모두 수락\"을 클릭하면 쿠키 사용에 동의하는 것입니다.",
+        "accept_all": "모두 수락",
+        "reject_all": "모두 거부",
+        "customize": "맞춤 설정",
+        "cookie_settings": "쿠키 설정",
+        "manage_preferences": "쿠키 기본 설정 관리",
+        "preferences_intro": "더 나은 경험을 위해 쿠키를 사용합니다. 허용할 쿠키 유형을 선택할 수 있습니다.",
+        "save_preferences": "기본 설정 저장",
+        "close": "닫기",
+        "necessary": "필수",
+        "necessary_description": "필수 쿠키는 웹사이트가 올바르게 작동하는 데 반드시 필요하며, 사이트의 기본 기능과 보안 기능을 보장합니다.",
+        "analytics": "분석",
+        "analytics_description": "분석 쿠키는 방문자가 웹사이트를 어떻게 이용하는지 익명으로 수집하고 보고하여 이해하는 데 도움이 됩니다.",
+        "marketing": "마케팅",
+        "marketing_description": "마케팅 쿠키는 관련 광고를 표시하고 사용자 참여를 높이기 위해 여러 웹사이트에서 방문자를 추적하는 데 사용됩니다.",
+        "preferences": "기본 설정",
+        "preferences_description": "환경설정 쿠키는 웹사이트의 동작이나 모양을 바꾸는 정보를 기억할 수 있게 합니다.",
+        "always_active": "항상 활성화",
+        "privacy_policy_text": "개인정보 처리방침",
+        "cookie_policy_text": "쿠키 정책",
+        "ccpa_link_text": "내 개인정보를 판매하거나 공유하지 마십시오",
+        "blocked_heading": "콘텐츠가 차단됨",
+        "blocked_message": "마케팅 쿠키가 수락되지 않아 이 동영상이 차단되었습니다.",
+        "blocked_button": "쿠키 수락 후 동영상 재생",
+        "blocked_region_label": "차단된 콘텐츠",
+        "form_blocked_message": "이 양식을 제출하기 전에 쿠키를 수락해 주세요."
+    }
+}

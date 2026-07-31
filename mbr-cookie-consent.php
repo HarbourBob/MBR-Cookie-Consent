@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
  * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, Indonesia UU PDP, Nigeria NDPA, China PIPL, South Korea PIPA, Saudi PDPL, South Africa POPIA, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.3.1
+ * Version: 2.3.3
  * Author: Robert Palmer
  * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
@@ -46,7 +46,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.3.1');
+define('MBR_CC_VERSION', '2.3.3');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -105,6 +105,8 @@ class MBR_Cookie_Consent {
         // Shared client-IP resolution. Must load before the database and
         // geolocation classes, both of which depend on it.
         require_once MBR_CC_PLUGIN_DIR . 'includes/mbr-cc-ip.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-cache.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-translations.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-database.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-geolocation.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-region-config.php';
@@ -117,7 +119,6 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-i18n-accessibility.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-enhanced-customization.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-subdomain-consent.php';
-        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-iab-tcf.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-google-acm.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-cookie-scanner.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-policy-generator.php';
@@ -165,6 +166,10 @@ class MBR_Cookie_Consent {
         // Initialize database handler.
         MBR_CC_Database::get_instance();
         
+        // Watch for settings changes so page caches are purged on save.
+        MBR_CC_Cache::init();
+        MBR_CC_Translations::get_instance();
+        
         // Initialize script blocker (must run early).
         MBR_CC_Script_Blocker::get_instance();
         
@@ -183,8 +188,6 @@ class MBR_Cookie_Consent {
         // Initialize subdomain consent sharing.
         MBR_CC_Subdomain_Consent::get_instance();
         
-        // Initialize IAB TCF v2.3.
-        MBR_CC_IAB_TCF::get_instance();
         
         // Initialize Google ACM.
         MBR_CC_Google_ACM::get_instance();
@@ -345,6 +348,16 @@ class MBR_Cookie_Consent {
             $this->upgrade_to_231();
         }
         
+        // 2.3.2 — plugin settings now win over WPML/Polylang in the default language.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.2', '<')) {
+            $this->upgrade_to_232();
+        }
+        
+        // 2.3.3 — unwind slashes accumulated by the unslashed AJAX save.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.3', '<')) {
+            $this->upgrade_to_233();
+        }
+        
         update_option('mbr_cc_version', MBR_CC_VERSION);
     }
     
@@ -438,6 +451,128 @@ class MBR_Cookie_Consent {
     }
     
     /**
+     * Upgrade routine for 2.3.2.
+     *
+     * Banner text set in this plugin now takes precedence over WPML and
+     * Polylang in the site's default language. That fixes a real defect —
+     * icl_t() returned whatever was registered when a string was first seen and
+     * ignored the updated value, so editing the wording here appeared to do
+     * nothing — but it is a behaviour change, and anyone who worked around the
+     * old behaviour by editing the default-language string in WPML's String
+     * Translation screen will now see this plugin's setting win instead.
+     *
+     * Only flagged on sites actually running a multilingual plugin, so the
+     * notice never appears where it would mean nothing.
+     */
+    private function upgrade_to_232() {
+        $multilingual = defined('ICL_SITEPRESS_VERSION')
+            || function_exists('icl_t')
+            || function_exists('pll__');
+        
+        if ($multilingual) {
+            update_option('mbr_cc_232_multilingual_precedence', true);
+        }
+    }
+    
+    /**
+     * Upgrade routine for 2.3.3.
+     *
+     * The AJAX settings handler wrote $_POST without wp_unslash(), so the
+     * slashing WordPress applies in wp_magic_quotes() was stored verbatim. The
+     * stored value was then rendered back into the field by esc_textarea(), and
+     * slashed again on the next save — so the run of backslashes in front of
+     * every quote followed 2n + 1: " then \" then \\\" then seven, then fifteen.
+     *
+     * The handler is fixed, but stored values still carry the damage. Text and
+     * textarea options are unwound here.
+     *
+     * mbr_cc_custom_css is deliberately excluded. CSS uses backslashes as real
+     * escapes — content: "\201C" and the like — and there is no reliable way to
+     * tell an escape the user typed from one this bug manufactured. Anyone
+     * affected there has to correct it by hand, which is why the changelog says
+     * so plainly.
+     */
+    private function upgrade_to_233() {
+        global $wpdb;
+        
+        if (!class_exists('MBR_CC_Import_Export')) {
+            return;
+        }
+        
+        $importer = MBR_CC_Import_Export::get_instance();
+        
+        $names = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $wpdb->esc_like('mbr_cc_') . '%'
+            )
+        );
+        
+        $repaired = 0;
+        
+        foreach ((array) $names as $name) {
+            if ('mbr_cc_custom_css' === $name) {
+                continue;
+            }
+            
+            // resolve_sanitiser() already knows every settable key and its
+            // type, including the geolocation regional headings and
+            // descriptions it matches by pattern. Reusing it means this cannot
+            // drift out of step with what the save handler accepts.
+            $type = $importer->resolve_sanitiser(substr($name, 7));
+            
+            if ('text' !== $type && 'textarea' !== $type) {
+                continue;
+            }
+            
+            $value = get_option($name);
+            
+            if (!is_string($value) || false === strpos($value, '\\')) {
+                continue;
+            }
+            
+            $fixed = self::strip_accumulated_slashes($value);
+            
+            if ($fixed !== $value) {
+                update_option($name, $fixed);
+                $repaired++;
+            }
+        }
+        
+        if ($repaired > 0) {
+            MBR_CC_Cache::flush('slash_repair');
+        }
+
+        // IAB TCF has been withdrawn — it never worked. Anyone who had it
+        // switched on was feeding vendors a fixed, meaningless consent string
+        // and, if they had generated a privacy policy, publishing a claim of
+        // TCF participation that was not true. Retire the option and tell them.
+        if (get_option('mbr_cc_iab_tcf_enabled')) {
+            update_option('mbr_cc_233_tcf_withdrawn', true);
+        }
+
+        delete_option('mbr_cc_iab_tcf_enabled');
+    }
+    
+    /**
+     * Collapse backslash runs produced by repeated re-slashing.
+     *
+     * @param string $value Stored value.
+     * @return string Corrected value.
+     */
+    private static function strip_accumulated_slashes($value) {
+        // A quote re-slashed n times arrives behind a run of backslashes, none
+        // of which were typed. Drop the run and keep the quote.
+        $value = preg_replace('/\\\\+(["\'])/', '$1', $value);
+        
+        // Backslashes elsewhere in the string doubled on each save too, so a
+        // run of two or more collapses back to the single character. A lone
+        // backslash is left alone: it is far more likely to be deliberate than
+        // to be damage.
+        return preg_replace('/\\\\{2,}/', '\\\\', $value);
+    }
+    
+    /**
      * Plugin deactivation.
      */
     public function deactivate() {
@@ -465,6 +600,11 @@ class MBR_Cookie_Consent {
             'reject_button_color' => '#d63638',
             'text_color' => '#ffffff',
             'revisit_button_text_color' => '#000000',
+            'banner_glassmorphism' => false,
+            'glass_opacity' => 82,
+            'glass_blur' => 14,
+            'banner_dark_mode' => 'off',
+            'banner_logo_id' => 0,
             'show_reject_button' => true,
             'show_customize_button' => true,
             'show_close_button' => false,
@@ -503,7 +643,6 @@ class MBR_Cookie_Consent {
             'custom_css' => '',
             'subdomain_sharing' => false,
             'subdomain_root_domain' => '',
-            'iab_tcf_enabled' => false,
             'publisher_country_code' => '',
             'purpose_one_treatment' => false,
             'gdpr_applies' => 'auto',

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "tr",
+        "name": "Türkçe",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Gizliliğinize değer veriyoruz",
+        "banner_description": "Tarayıcı deneyiminizi geliştirmek, kişiselleştirilmiş içerik sunmak ve trafiğimizi analiz etmek için çerezler kullanıyoruz. \"Tümünü kabul et\"e tıklayarak çerez kullanımını kabul etmiş olursunuz.",
+        "accept_all": "Tümünü kabul et",
+        "reject_all": "Tümünü reddet",
+        "customize": "Özelleştir",
+        "cookie_settings": "Çerez ayarları",
+        "manage_preferences": "Çerez tercihlerini yönet",
+        "preferences_intro": "Deneyiminizi geliştirmek için çerezler kullanıyoruz. Hangi çerez türlerine izin vereceğinizi seçebilirsiniz.",
+        "save_preferences": "Tercihleri kaydet",
+        "close": "Kapat",
+        "necessary": "Gerekli",
+        "necessary_description": "Gerekli çerezler, web sitesinin düzgün çalışması için zorunludur. Sitenin temel işlevlerini ve güvenlik özelliklerini sağlar.",
+        "analytics": "Analitik",
+        "analytics_description": "Analitik çerezler, bilgileri anonim olarak toplayıp raporlayarak ziyaretçilerin sitemizle nasıl etkileşime girdiğini anlamamıza yardımcı olur.",
+        "marketing": "Pazarlama",
+        "marketing_description": "Pazarlama çerezleri, ilgili reklamları göstermek ve kullanıcı etkileşimini artırmak için ziyaretçileri siteler arasında izlemek amacıyla kullanılır.",
+        "preferences": "Tercihler",
+        "preferences_description": "Tercih çerezleri, bir web sitesinin davranışını veya görünümünü değiştiren bilgileri hatırlamasını sağlar.",
+        "always_active": "Her zaman aktif",
+        "privacy_policy_text": "Gizlilik Politikası",
+        "cookie_policy_text": "Çerez Politikası",
+        "ccpa_link_text": "Kişisel bilgilerimi satmayın veya paylaşmayın",
+        "blocked_heading": "İçerik engellendi",
+        "blocked_message": "Pazarlama çerezleri kabul edilmediği için bu video engellendi.",
+        "blocked_button": "Çerezleri kabul et ve videoyu oynat",
+        "blocked_region_label": "Engellenen içerik",
+        "form_blocked_message": "Bu formu göndermeden önce lütfen çerezleri kabul edin."
+    }
+}

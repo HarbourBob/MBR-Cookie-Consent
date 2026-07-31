@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "vi",
+        "name": "Tiếng Việt",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Chúng tôi coi trọng quyền riêng tư của bạn",
+        "banner_description": "Chúng tôi sử dụng cookie để cải thiện trải nghiệm duyệt web của bạn, cung cấp nội dung được cá nhân hóa và phân tích lưu lượng truy cập của chúng tôi. Bằng cách nhấp vào \"Chấp nhận tất cả\", bạn đồng ý với việc sử dụng cookie.",
+        "accept_all": "Chấp nhận tất cả",
+        "reject_all": "Từ chối tất cả",
+        "customize": "Tùy chỉnh",
+        "cookie_settings": "Cài đặt cookie",
+        "manage_preferences": "Quản lý tùy chọn cookie",
+        "preferences_intro": "Chúng tôi sử dụng cookie để cải thiện trải nghiệm của bạn. Bạn có thể chọn loại cookie muốn cho phép.",
+        "save_preferences": "Lưu tùy chọn",
+        "close": "Đóng",
+        "necessary": "Cần thiết",
+        "necessary_description": "Cookie cần thiết là bắt buộc để trang web hoạt động đúng cách. Chúng bảo đảm các chức năng cơ bản và tính năng bảo mật của trang web.",
+        "analytics": "Phân tích",
+        "analytics_description": "Cookie phân tích giúp chúng tôi hiểu cách khách truy cập sử dụng trang web bằng cách thu thập và báo cáo thông tin ẩn danh.",
+        "marketing": "Tiếp thị",
+        "marketing_description": "Cookie tiếp thị được dùng để theo dõi khách truy cập trên nhiều trang web nhằm hiển thị quảng cáo phù hợp và tăng mức độ tương tác của người dùng.",
+        "preferences": "Tùy chọn",
+        "preferences_description": "Cookie tùy chọn cho phép trang web ghi nhớ thông tin làm thay đổi cách trang web hoạt động hoặc hiển thị.",
+        "always_active": "Luôn hoạt động",
+        "privacy_policy_text": "Chính sách quyền riêng tư",
+        "cookie_policy_text": "Chính sách cookie",
+        "ccpa_link_text": "Không bán hoặc chia sẻ thông tin cá nhân của tôi",
+        "blocked_heading": "Nội dung đã bị chặn",
+        "blocked_message": "Video này bị chặn vì cookie tiếp thị chưa được chấp nhận.",
+        "blocked_button": "Chấp nhận cookie và phát video",
+        "blocked_region_label": "Nội dung bị chặn",
+        "form_blocked_message": "Vui lòng chấp nhận cookie trước khi gửi biểu mẫu này."
+    }
+}

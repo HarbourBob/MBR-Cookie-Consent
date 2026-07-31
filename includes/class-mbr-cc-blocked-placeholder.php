@@ -100,7 +100,13 @@ class MBR_CC_Blocked_Placeholder {
             . '</svg>';
 
         // ── Build HTML via string concatenation (no ob_start!) ────────────
-        $html  = '<div class="mbr-cc-blocked-wrapper"';
+        // Rendered hidden. Because blocking is now unconditional, this markup
+        // is in the page for every visitor including those who consented — and
+        // without this they would watch a "content blocked" box appear and then
+        // disappear on every page as the script released the embed. banner.js
+        // removes the wrapper outright when consent allows the iframe, and
+        // clears this attribute to reveal it when it does not.
+        $html  = '<div class="mbr-cc-blocked-wrapper" data-mbr-cc-pending="true"';
         $html .= ' role="region"';
         $html .= ' aria-label="' . esc_attr__( 'Blocked content', 'mbr-cookie-consent' ) . '"';
         $html .= ' style="--mbr-cc-accent:' . esc_attr( $accent ) . ';--mbr-cc-accent-dark:' . esc_attr( $accent_dark ) . '">';

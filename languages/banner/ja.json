@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "ja",
+        "name": "日本語",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "プライバシーを尊重します",
+        "banner_description": "Cookie を使用して、ブラウジング体験を向上させ、パーソナライズされたコンテンツを提供し、トラフィックを分析しています。「すべて受け入れる」をクリックすると、Cookie の使用に同意したことになります。",
+        "accept_all": "すべて受け入れる",
+        "reject_all": "すべて拒否する",
+        "customize": "カスタマイズ",
+        "cookie_settings": "Cookie 設定",
+        "manage_preferences": "Cookie 設定を管理",
+        "preferences_intro": "より良い体験のためにCookieを使用しています。許可するCookieの種類を選択できます。",
+        "save_preferences": "設定を保存",
+        "close": "閉じる",
+        "necessary": "必須",
+        "necessary_description": "必要なCookieは、ウェブサイトが正しく機能するために不可欠です。サイトの基本機能とセキュリティ機能を確保します。",
+        "analytics": "分析",
+        "analytics_description": "分析Cookieは、訪問者がウェブサイトをどのように利用しているかを匿名で収集・報告し、理解するのに役立ちます。",
+        "marketing": "マーケティング",
+        "marketing_description": "マーケティングCookieは、関連性の高い広告を表示し、利用者の関心を高めるために、複数のサイトにわたって訪問者を追跡します。",
+        "preferences": "設定",
+        "preferences_description": "設定Cookieは、ウェブサイトの動作や表示を変更する情報を記憶できるようにします。",
+        "always_active": "常に有効",
+        "privacy_policy_text": "プライバシーポリシー",
+        "cookie_policy_text": "Cookieポリシー",
+        "ccpa_link_text": "個人情報を販売または共有しない",
+        "blocked_heading": "コンテンツがブロックされています",
+        "blocked_message": "マーケティングCookieが承認されていないため、この動画はブロックされています。",
+        "blocked_button": "Cookieを承認して動画を再生",
+        "blocked_region_label": "ブロックされたコンテンツ",
+        "form_blocked_message": "このフォームを送信する前にCookieを承認してください。"
+    }
+}

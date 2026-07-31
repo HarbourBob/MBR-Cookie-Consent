@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "cs",
+        "name": "Čeština",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Vážíme si vašeho soukromí",
+        "banner_description": "Používáme soubory cookie ke zlepšení vašeho prohlížení, poskytování personalizovaného obsahu a analýze našeho provozu. Kliknutím na \"Přijmout vše\" souhlasíte s používáním souborů cookie.",
+        "accept_all": "Přijmout vše",
+        "reject_all": "Odmítnout vše",
+        "customize": "Přizpůsobit",
+        "cookie_settings": "Nastavení souborů cookie",
+        "manage_preferences": "Spravovat předvolby souborů cookie",
+        "preferences_intro": "Používáme soubory cookie ke zlepšení vašeho zážitku. Můžete si vybrat, které typy souborů cookie povolíte.",
+        "save_preferences": "Uložit předvolby",
+        "close": "Zavřít",
+        "necessary": "Nutné",
+        "necessary_description": "Nezbytné soubory cookie jsou klíčové pro správné fungování webu. Zajišťují základní funkce a bezpečnostní prvky webu.",
+        "analytics": "Analytické",
+        "analytics_description": "Analytické soubory cookie nám pomáhají pochopit, jak návštěvníci web používají, tím, že anonymně shromažďují a vykazují informace.",
+        "marketing": "Marketing",
+        "marketing_description": "Marketingové soubory cookie se používají ke sledování návštěvníků napříč weby s cílem zobrazovat relevantní reklamy a zvyšovat zapojení uživatelů.",
+        "preferences": "Předvolby",
+        "preferences_description": "Soubory cookie předvoleb umožňují webu zapamatovat si informace, které mění jeho chování nebo vzhled.",
+        "always_active": "Vždy aktivní",
+        "privacy_policy_text": "Zásady ochrany osobních údajů",
+        "cookie_policy_text": "Zásady používání souborů cookie",
+        "ccpa_link_text": "Neprodávejte ani nesdílejte mé osobní údaje",
+        "blocked_heading": "Obsah je zablokován",
+        "blocked_message": "Toto video je zablokováno, protože marketingové soubory cookie nebyly přijaty.",
+        "blocked_button": "Přijmout soubory cookie a přehrát video",
+        "blocked_region_label": "Zablokovaný obsah",
+        "form_blocked_message": "Před odesláním tohoto formuláře prosím přijměte soubory cookie."
+    }
+}

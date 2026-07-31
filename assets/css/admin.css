@@ -573,3 +573,233 @@ div.mbr-cc-tab-content.active {
     height: 17px;
     line-height: 1;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Toggle switch (2.3.2)
+   ───────────────────────────────────────────────────────────── */
+.mbr-cc-switch-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 4px;
+}
+
+.mbr-cc-switch {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 24px;
+}
+
+.mbr-cc-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 42px;
+    height: 24px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.mbr-cc-switch__track {
+    position: absolute;
+    inset: 0;
+    background: #c3c4c7;
+    border-radius: 999px;
+    transition: background-color .18s ease;
+    pointer-events: none;
+}
+
+.mbr-cc-switch__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+    transition: transform .18s ease;
+}
+
+.mbr-cc-switch input:checked + .mbr-cc-switch__track {
+    background: #2271b1;
+}
+
+.mbr-cc-switch input:checked + .mbr-cc-switch__track .mbr-cc-switch__thumb {
+    transform: translateX(18px);
+}
+
+/* Keyboard focus must stay visible — this is a real control. */
+.mbr-cc-switch input:focus-visible + .mbr-cc-switch__track {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+.mbr-cc-switch__text {
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mbr-cc-switch__track,
+    .mbr-cc-switch__thumb {
+        transition: none;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Banner preview modal (2.3.2)
+   ───────────────────────────────────────────────────────────── */
+.mbr-cc-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 160000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mbr-cc-preview-modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .6);
+}
+
+.mbr-cc-preview-modal__panel {
+    position: relative;
+    width: min(1100px, 94vw);
+    height: min(760px, 88vh);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mbr-cc-preview-modal__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #dcdcde;
+    background: #f6f7f7;
+    flex: 0 0 auto;
+}
+
+.mbr-cc-preview-modal__note {
+    color: #646970;
+    font-size: 12px;
+}
+
+.mbr-cc-preview-modal__devices {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.mbr-cc-preview-modal__devices .is-active {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+}
+
+.mbr-cc-preview-modal__close {
+    background: none;
+    border: 0;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: #50575e;
+    padding: 0 4px;
+}
+
+.mbr-cc-preview-modal__close:hover,
+.mbr-cc-preview-modal__close:focus {
+    color: #d63638;
+}
+
+.mbr-cc-preview-modal__stage {
+    flex: 1 1 auto;
+    background: #8c8f94;
+    display: flex;
+    justify-content: center;
+    overflow: auto;
+    padding: 0;
+}
+
+.mbr-cc-preview-modal__frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+    transition: width .2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mbr-cc-preview-modal__frame {
+        transition: none;
+    }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Glassmorphism sliders + contrast readout (2.3.2)
+   ───────────────────────────────────────────────────────────── */
+.mbr-cc-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.mbr-cc-slider-row label {
+    flex: 0 0 62px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.mbr-cc-slider-row input[type="range"] {
+    flex: 1 1 auto;
+    max-width: 260px;
+    accent-color: #2271b1;
+}
+
+.mbr-cc-slider-row output {
+    flex: 0 0 48px;
+    font-variant-numeric: tabular-nums;
+    color: #50575e;
+    font-size: 13px;
+}
+
+.mbr-cc-contrast {
+    margin-top: 12px;
+    padding: 9px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.45;
+    border-left: 4px solid transparent;
+}
+
+.mbr-cc-contrast:empty {
+    display: none;
+}
+
+.mbr-cc-contrast.is-pass {
+    background: #edfaef;
+    border-left-color: #00a32a;
+    color: #14562a;
+}
+
+.mbr-cc-contrast.is-warn {
+    background: #fcf6e5;
+    border-left-color: #dba617;
+    color: #6b5310;
+}
+
+.mbr-cc-contrast.is-fail {
+    background: #fcf0f1;
+    border-left-color: #d63638;
+    color: #8a2424;
+}

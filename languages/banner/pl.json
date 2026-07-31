@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "pl",
+        "name": "Polski",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Cenimy Twoją prywatność",
+        "banner_description": "Używamy plików cookie, aby poprawić Twoje doświadczenia podczas przeglądania, dostarczyć spersonalizowane treści i analizować nasz ruch. Klikając \"Zaakceptuj wszystko\", wyrażasz zgodę na używanie plików cookie.",
+        "accept_all": "Zaakceptuj wszystko",
+        "reject_all": "Odrzuć wszystko",
+        "customize": "Dostosuj",
+        "cookie_settings": "Ustawienia plików cookie",
+        "manage_preferences": "Zarządzaj preferencjami plików cookie",
+        "preferences_intro": "Używamy plików cookie, aby poprawić Twoje wrażenia. Możesz wybrać, które rodzaje plików cookie chcesz dopuścić.",
+        "save_preferences": "Zapisz preferencje",
+        "close": "Zamknij",
+        "necessary": "Niezbędne",
+        "necessary_description": "Niezbędne pliki cookie są konieczne do prawidłowego działania witryny. Zapewniają podstawowe funkcje i zabezpieczenia strony.",
+        "analytics": "Analityczne",
+        "analytics_description": "Analityczne pliki cookie pomagają nam zrozumieć, w jaki sposób odwiedzający korzystają z naszej witryny, zbierając i raportując informacje anonimowo.",
+        "marketing": "Marketing",
+        "marketing_description": "Marketingowe pliki cookie służą do śledzenia odwiedzających w różnych witrynach w celu wyświetlania odpowiednich reklam i zwiększania zaangażowania użytkowników.",
+        "preferences": "Preferencje",
+        "preferences_description": "Pliki cookie preferencji umożliwiają witrynie zapamiętanie informacji, które zmieniają jej zachowanie lub wygląd.",
+        "always_active": "Zawsze aktywne",
+        "privacy_policy_text": "Polityka prywatności",
+        "cookie_policy_text": "Polityka plików cookie",
+        "ccpa_link_text": "Nie sprzedawaj ani nie udostępniaj moich danych osobowych",
+        "blocked_heading": "Treść zablokowana",
+        "blocked_message": "Ten film jest zablokowany, ponieważ marketingowe pliki cookie nie zostały zaakceptowane.",
+        "blocked_button": "Zaakceptuj pliki cookie i odtwórz film",
+        "blocked_region_label": "Zablokowana treść",
+        "form_blocked_message": "Zaakceptuj pliki cookie przed wysłaniem tego formularza."
+    }
+}

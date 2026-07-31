@@ -40,6 +40,90 @@ class MBR_CC_Privacy_Policy_Generator {
     private function __construct() {
         // AJAX handler for generating privacy policy.
         add_action('wp_ajax_mbr_cc_generate_privacy_policy', array($this, 'ajax_generate_privacy_policy'));
+        add_action('wp_ajax_mbr_cc_regenerate_privacy_policy', array($this, 'ajax_regenerate_privacy_policy'));
+    }
+    
+    /**
+     * AJAX: Regenerate the existing privacy policy page.
+     */
+    public function ajax_regenerate_privacy_policy() {
+        check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Unauthorized.'));
+        }
+        
+        $page_id = $this->regenerate_privacy_policy_page();
+        
+        if (is_wp_error($page_id)) {
+            wp_send_json_error(array('message' => $page_id->get_error_message()));
+        }
+        
+        wp_send_json_success(array(
+            'page_id'   => $page_id,
+            'edit_link' => get_edit_post_link($page_id, 'raw'),
+            'view_link' => get_permalink($page_id),
+            'message'   => __('Privacy policy content regenerated. Your previous version was saved as a revision.', 'mbr-cookie-consent'),
+        ));
+    }
+    
+    /**
+     * Rewrite the existing privacy policy page from current settings.
+     *
+     * Only the content is replaced. The page's title, slug, status, author and
+     * any page-builder assignment are left alone, so a published policy stays
+     * published at the same URL and existing links do not break.
+     *
+     * A revision is saved first. Regenerating discards any wording the site
+     * owner has added by hand, which is a destructive act on a legal document,
+     * so there has to be a way back — the previous version is recoverable from
+     * the page's revision history.
+     *
+     * @return int|WP_Error Page ID or error.
+     */
+    public function regenerate_privacy_policy_page() {
+        $page_id = (int) get_option('mbr_cc_privacy_policy_page_id');
+        
+        if (!$page_id || get_post_status($page_id) === false) {
+            return new WP_Error(
+                'no_page',
+                __('No privacy policy page was found. Generate one first.', 'mbr-cookie-consent')
+            );
+        }
+        
+        $post = get_post($page_id);
+        
+        if (!$post || $post->post_type !== 'page') {
+            return new WP_Error(
+                'not_a_page',
+                __('The stored privacy policy page no longer exists.', 'mbr-cookie-consent')
+            );
+        }
+        
+        if (!current_user_can('edit_post', $page_id)) {
+            return new WP_Error(
+                'cannot_edit',
+                __('You do not have permission to edit that page.', 'mbr-cookie-consent')
+            );
+        }
+        
+        // Snapshot the current content before replacing it.
+        if (function_exists('wp_save_post_revision')) {
+            wp_save_post_revision($page_id);
+        }
+        
+        $result = wp_update_post(array(
+            'ID'           => $page_id,
+            'post_content' => $this->generate_privacy_policy_content(),
+        ), true);
+        
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        
+        update_option('mbr_cc_privacy_policy_regenerated', current_time('mysql'));
+        
+        return $page_id;
     }
     
     /**
@@ -169,11 +253,6 @@ class MBR_CC_Privacy_Policy_Generator {
             $content .= $this->section_gdpr();
         }
         
-        // IAB TCF
-        if ($features['iab_tcf']) {
-            $content .= $this->section_iab_tcf();
-        }
-        
         // AI / LLM training disclosure
         if ($features['ai_training']) {
             $content .= $this->section_ai_training();
@@ -207,7 +286,6 @@ class MBR_CC_Privacy_Policy_Generator {
             'membership' => false,
             'gdpr' => false,
             'ccpa' => false,
-            'iab_tcf' => false,
             'google_consent_mode' => false,
             'ai_training' => false,
             'international' => false,
@@ -243,9 +321,6 @@ class MBR_CC_Privacy_Policy_Generator {
         
         // CCPA
         $features['ccpa'] = get_option('mbr_cc_enable_ccpa', false);
-        
-        // IAB TCF
-        $features['iab_tcf'] = get_option('mbr_cc_iab_tcf_enabled', false);
         
         // Google Consent Mode
         $features['google_consent_mode'] = get_option('mbr_cc_google_consent_mode', false);
@@ -293,7 +368,7 @@ class MBR_CC_Privacy_Policy_Generator {
                 return true;
             }
         }
-        return get_option('mbr_cc_google_acm_enabled', false) || get_option('mbr_cc_iab_tcf_enabled', false);
+        return (bool) get_option('mbr_cc_google_acm_enabled', false);
     }
     
     /**
@@ -738,35 +813,6 @@ class MBR_CC_Privacy_Policy_Generator {
 <p>We retain your personal data only for as long as necessary for the purposes outlined in this policy or as required by law. When data is no longer needed, we securely delete or anonymize it.</p>
 
 <p>To exercise your GDPR rights, contact us at <a href="mailto:' . $admin_email . '">' . $admin_email . '</a>.</p>
-
-';
-    }
-    
-    /**
-     * Section: IAB TCF
-     */
-    private function section_iab_tcf() {
-        return '<h2>14. IAB Transparency & Consent Framework</h2>
-
-<p>We participate in the IAB Europe Transparency & Consent Framework (TCF) to manage consent for digital advertising.</p>
-
-<h3>What This Means:</h3>
-<ul>
-<li>We use the TCF to collect and communicate your consent choices to advertising vendors.</li>
-<li>Vendors registered with the IAB receive standardized consent signals.</li>
-<li>You can manage your consent preferences through our cookie banner.</li>
-<li>Consent information is stored in a standard format (TC String) in your browser.</li>
-</ul>
-
-<h3>Your TCF Rights:</h3>
-<ul>
-<li>View the list of vendors we work with</li>
-<li>Give or withdraw consent for specific purposes</li>
-<li>Object to processing based on legitimate interest</li>
-<li>Manage special features like geolocation use</li>
-</ul>
-
-<p>For more information about the TCF, visit <a href="https://iabeurope.eu/transparency-consent-framework/" target="_blank">IAB Europe\'s website</a>.</p>
 
 ';
     }

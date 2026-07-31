@@ -14,6 +14,33 @@ if (!defined('ABSPATH')) {
  * Enhanced Customization class.
  */
 class MBR_CC_Enhanced_Customization {
+
+    /**
+     * Coerce the page exclusion setting into a list.
+     *
+     * The option defaults to an array but every path that writes it sanitises
+     * it as a textarea, so a string lands there as soon as anyone saves the
+     * field or imports a settings file. in_array() with a string haystack is a
+     * TypeError on PHP 8, and this runs on every front-end page load — so the
+     * mismatch took the whole site down rather than merely misbehaving.
+     *
+     * One entry per line, which is how the field presents itself.
+     *
+     * @param mixed $value Stored option value.
+     * @return array
+     */
+    private static function normalise_exclusions( $value ) {
+        if ( is_array( $value ) ) {
+            return array_values( array_filter( array_map( 'trim', $value ), 'strlen' ) );
+        }
+
+        if ( is_string( $value ) && '' !== trim( $value ) ) {
+            return array_values( array_filter( array_map( 'trim', preg_split( '/[\r\n,]+/', $value ) ), 'strlen' ) );
+        }
+
+        return array();
+    }
+
     
     /**
      * Single instance.
@@ -57,7 +84,7 @@ class MBR_CC_Enhanced_Customization {
         }
         
         // Check page-specific exclusions.
-        $excluded_pages = get_option('mbr_cc_excluded_pages', array());
+        $excluded_pages = self::normalise_exclusions(get_option('mbr_cc_excluded_pages', array()));
         
         if (!empty($excluded_pages)) {
             global $post;
@@ -84,8 +111,11 @@ class MBR_CC_Enhanced_Customization {
                     continue;
                 }
                 
-                // Convert wildcards to regex.
-                $regex = '/' . str_replace(array('*', '/'), array('.*', '\/'), $pattern) . '/';
+                // Convert wildcards to a regex. Everything is quoted first and
+                // only the wildcard is put back, so a pattern containing (, [
+                // or + is matched literally instead of producing an invalid
+                // expression and a warning on every page load.
+                $regex = '/' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '/';
                 
                 if (preg_match($regex, $current_url)) {
                     return false;
@@ -220,12 +250,16 @@ class MBR_CC_Enhanced_Customization {
             wp_send_json_error(array('message' => 'Unauthorized.'));
         }
         
-        $custom_css = isset($_POST['custom_css']) ? $_POST['custom_css'] : '';
+        $custom_css = isset($_POST['custom_css']) ? wp_unslash($_POST['custom_css']) : '';
         
         // Sanitize CSS.
         $custom_css = wp_strip_all_tags($custom_css);
         
         update_option('mbr_cc_custom_css', $custom_css);
+        
+        if (class_exists('MBR_CC_Cache')) {
+            MBR_CC_Cache::flush('custom_css');
+        }
         
         wp_send_json_success(array('message' => 'Custom CSS saved successfully.'));
     }

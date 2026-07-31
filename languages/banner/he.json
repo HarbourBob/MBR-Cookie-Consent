@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "he",
+        "name": "עברית",
+        "direction": "rtl",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "אנו מעריכים את פרטיותך",
+        "banner_description": "אנו משתמשים בעוגיות כדי לשפר את חוויית הגלישה שלך, לספק תוכן מותאם אישית ולנתח את התנועה שלנו. על ידי לחיצה על \"קבל הכל\", אתה מסכים לשימוש בעוגיות.",
+        "accept_all": "קבל הכל",
+        "reject_all": "דחה הכל",
+        "customize": "התאם אישית",
+        "cookie_settings": "הגדרות עוגיות",
+        "manage_preferences": "נהל העדפות עוגיות",
+        "preferences_intro": "אנו משתמשים בקובצי Cookie כדי לשפר את החוויה שלך. באפשרותך לבחור אילו סוגי קובצי Cookie לאפשר.",
+        "save_preferences": "שמור העדפות",
+        "close": "סגור",
+        "necessary": "נחוצות",
+        "necessary_description": "קובצי Cookie הכרחיים חיוניים לתפקוד התקין של האתר. הם מבטיחים את הפונקציות הבסיסיות ואת מאפייני האבטחה של האתר.",
+        "analytics": "אנליטיות",
+        "analytics_description": "קובצי Cookie אנליטיים מסייעים לנו להבין כיצד מבקרים משתמשים באתר, באמצעות איסוף ודיווח מידע באופן אנונימי.",
+        "marketing": "שיווק",
+        "marketing_description": "קובצי Cookie שיווקיים משמשים למעקב אחר מבקרים באתרים שונים כדי להציג פרסומות רלוונטיות ולעודד מעורבות משתמשים.",
+        "preferences": "העדפות",
+        "preferences_description": "קובצי Cookie של העדפות מאפשרים לאתר לזכור מידע שמשנה את אופן הפעולה או המראה שלו.",
+        "always_active": "תמיד פעילות",
+        "privacy_policy_text": "מדיניות פרטיות",
+        "cookie_policy_text": "מדיניות קובצי Cookie",
+        "ccpa_link_text": "אין למכור או לשתף את המידע האישי שלי",
+        "blocked_heading": "התוכן חסום",
+        "blocked_message": "סרטון זה חסום מכיוון שקובצי Cookie שיווקיים לא אושרו.",
+        "blocked_button": "אישור קובצי Cookie והפעלת הסרטון",
+        "blocked_region_label": "תוכן חסום",
+        "form_blocked_message": "יש לאשר קובצי Cookie לפני שליחת טופס זה."
+    }
+}

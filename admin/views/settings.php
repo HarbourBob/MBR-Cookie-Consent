@@ -124,6 +124,68 @@ if (!defined('ABSPATH')) {
                     <input type="text" name="mbr_cc_reject_button_color" id="reject_button_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_reject_button_color', '#d63638')); ?>">
                 </div>
             </div>
+            
+            <h3 style="margin-top: 26px;"><?php esc_html_e('Banner Style', 'mbr-cookie-consent'); ?></h3>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label class="mbr-cc-switch-label" for="banner_glassmorphism">
+                        <span class="mbr-cc-switch">
+                            <input type="checkbox" name="mbr_cc_banner_glassmorphism" id="banner_glassmorphism" value="1" <?php checked(get_option('mbr_cc_banner_glassmorphism', false)); ?>>
+                            <span class="mbr-cc-switch__track"><span class="mbr-cc-switch__thumb"></span></span>
+                        </span>
+                        <span class="mbr-cc-switch__text"><?php esc_html_e('Glassmorphism', 'mbr-cookie-consent'); ?></span>
+                    </label>
+                    <p class="description">
+                        <?php esc_html_e('Frosted, translucent banner surface with a background blur. Browsers without backdrop-filter support fall back to the solid colour automatically, as do visitors who have asked their system for reduced transparency.', 'mbr-cookie-consent'); ?>
+                    </p>
+                    
+                    <div id="mbr-cc-glass-controls" style="margin-top: 16px;<?php echo get_option('mbr_cc_banner_glassmorphism', false) ? '' : ' display: none;'; ?>">
+                        <div class="mbr-cc-slider-row">
+                            <label for="glass_opacity"><?php esc_html_e('Opacity', 'mbr-cookie-consent'); ?></label>
+                            <input type="range" name="mbr_cc_glass_opacity" id="glass_opacity"
+                                   min="10" max="100" step="1"
+                                   value="<?php echo esc_attr((int) get_option('mbr_cc_glass_opacity', 82)); ?>">
+                            <output for="glass_opacity" id="glass_opacity_out"><?php echo (int) get_option('mbr_cc_glass_opacity', 82); ?>%</output>
+                        </div>
+                        
+                        <div class="mbr-cc-slider-row">
+                            <label for="glass_blur"><?php esc_html_e('Blur', 'mbr-cookie-consent'); ?></label>
+                            <input type="range" name="mbr_cc_glass_blur" id="glass_blur"
+                                   min="0" max="40" step="1"
+                                   value="<?php echo esc_attr((int) get_option('mbr_cc_glass_blur', 14)); ?>">
+                            <output for="glass_blur" id="glass_blur_out"><?php echo (int) get_option('mbr_cc_glass_blur', 14); ?>px</output>
+                        </div>
+                        
+                        <div id="mbr-cc-contrast" class="mbr-cc-contrast" aria-live="polite"></div>
+                    </div>
+                </div>
+                
+                <div class="mbr-cc-form-field">
+                    <label for="banner_dark_mode"><?php esc_html_e('Dark Mode', 'mbr-cookie-consent'); ?></label>
+                    <?php $mbr_cc_dark = get_option('mbr_cc_banner_dark_mode', 'off'); ?>
+                    <select name="mbr_cc_banner_dark_mode" id="banner_dark_mode">
+                        <option value="off" <?php selected($mbr_cc_dark, 'off'); ?>><?php esc_html_e('Off — use the colours above', 'mbr-cookie-consent'); ?></option>
+                        <option value="auto" <?php selected($mbr_cc_dark, 'auto'); ?>><?php esc_html_e('Follow the visitor\'s system setting', 'mbr-cookie-consent'); ?></option>
+                        <option value="on" <?php selected($mbr_cc_dark, 'on'); ?>><?php esc_html_e('Always on', 'mbr-cookie-consent'); ?></option>
+                    </select>
+                    <p class="description">
+                        <?php esc_html_e('Replaces the banner surface and text with a dark palette. Your Accept and Reject button colours are kept, so your branding survives the switch.', 'mbr-cookie-consent'); ?>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field" style="width: 100%;">
+                    <button type="button" class="button button-secondary" id="mbr-cc-preview-banner">
+                        <span class="dashicons dashicons-visibility" style="vertical-align: text-bottom;"></span>
+                        <?php esc_html_e('Preview banner', 'mbr-cookie-consent'); ?>
+                    </button>
+                    <p class="description">
+                        <?php esc_html_e('Opens a preview using the settings currently on screen, including changes you have not saved yet.', 'mbr-cookie-consent'); ?>
+                    </p>
+                </div>
+            </div>
         </div>
         <!-- Banner Content -->
         <div class="mbr-cc-settings-section">
@@ -229,15 +291,27 @@ if (!defined('ABSPATH')) {
             
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field" style="width: 100%;">
-                    <label for="banner_logo_url"><?php esc_html_e('Logo URL', 'mbr-cookie-consent'); ?></label>
+                    <label for="banner_logo_url"><?php esc_html_e('Logo', 'mbr-cookie-consent'); ?></label>
+                    
+                    <p class="mbr-cc-logo-actions" style="margin: 0 0 10px;">
+                        <button type="button" class="button button-secondary" id="mbr-cc-choose-logo">
+                            <span class="dashicons dashicons-format-image" style="vertical-align: text-bottom;"></span>
+                            <?php esc_html_e('Choose from Media Library', 'mbr-cookie-consent'); ?>
+                        </button>
+                        <button type="button" class="button button-link-delete" id="mbr-cc-remove-logo" <?php echo get_option('mbr_cc_banner_logo_url') ? '' : 'style="display: none;"'; ?>>
+                            <?php esc_html_e('Remove logo', 'mbr-cookie-consent'); ?>
+                        </button>
+                    </p>
+                    
                     <input type="url" name="mbr_cc_banner_logo_url" id="banner_logo_url" value="<?php echo esc_url(get_option('mbr_cc_banner_logo_url', '')); ?>" placeholder="https://example.com/logo.png" style="width: 100%;">
-                    <p class="description"><?php esc_html_e('Enter the URL of your logo image. The logo will be displayed to the left of the banner heading (150x150px recommended).', 'mbr-cookie-consent'); ?></p>
-                    <?php if (get_option('mbr_cc_banner_logo_url')) : ?>
-                        <div style="margin-top: 15px;">
-                            <strong><?php esc_html_e('Preview:', 'mbr-cookie-consent'); ?></strong><br>
-                            <img src="<?php echo esc_url(get_option('mbr_cc_banner_logo_url')); ?>" style="max-width: 150px; max-height: 150px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; background: #fff;">
-                        </div>
-                    <?php endif; ?>
+                    <input type="hidden" name="mbr_cc_banner_logo_id" id="banner_logo_id" value="<?php echo esc_attr((int) get_option('mbr_cc_banner_logo_id', 0)); ?>">
+                    
+                    <p class="description"><?php esc_html_e('Pick an image from your Media Library, or paste a URL directly if the logo is hosted elsewhere. It appears to the left of the banner heading (150x150px recommended).', 'mbr-cookie-consent'); ?></p>
+                    
+                    <div id="mbr-cc-logo-preview-wrap" style="margin-top: 15px;<?php echo get_option('mbr_cc_banner_logo_url') ? '' : ' display: none;'; ?>">
+                        <strong><?php esc_html_e('Preview:', 'mbr-cookie-consent'); ?></strong><br>
+                        <img id="mbr-cc-logo-preview" src="<?php echo esc_url(get_option('mbr_cc_banner_logo_url', '')); ?>" alt="" style="max-width: 150px; max-height: 150px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; background: #fff;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -422,14 +496,28 @@ if (!defined('ABSPATH')) {
             
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('Auto-Translation (40+ Languages)', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('Automatically translate banner text based on visitor browser language. Supports 40+ languages including English, Spanish, French, German, Japanese, Chinese, and many more.', 'mbr-cookie-consent'); ?></p>
+                    <h3><?php esc_html_e('Auto-Translation', 'mbr-cookie-consent'); ?></h3>
+                    <p class="description"><?php esc_html_e('Show the banner in the visitor\'s own language, chosen from their browser settings. Translations are contributed by the community rather than produced by professional translators, so each language must be read and approved by you before it is shown to anyone.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_auto_translate" value="1" <?php checked(get_option('mbr_cc_auto_translate', true)); ?>>
+                        <input type="checkbox" name="mbr_cc_auto_translate" value="1" <?php checked(get_option('mbr_cc_auto_translate', false)); ?>>
                         <?php esc_html_e('Enable Auto-Translation', 'mbr-cookie-consent'); ?>
                     </label>
-                    <p class="description"><?php esc_html_e('Automatically detects visitor language from browser settings and displays the banner in their native language.', 'mbr-cookie-consent'); ?></p>
+                    <p class="description">
+                        <?php
+                        $mbr_cc_approved_count = count(MBR_CC_Translations::approved_languages());
+                        if ($mbr_cc_approved_count > 0) {
+                            printf(
+                                /* translators: %d: number of approved languages. */
+                                esc_html(_n('%d language is approved and will be served.', '%d languages are approved and will be served.', $mbr_cc_approved_count, 'mbr-cookie-consent')),
+                                (int) $mbr_cc_approved_count
+                            );
+                        } else {
+                            esc_html_e('No language has been approved yet, so every visitor sees your own wording. This setting has no effect until you approve at least one.', 'mbr-cookie-consent');
+                        }
+                        ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=mbr-cookie-consent-translations')); ?>"><?php esc_html_e('Review languages', 'mbr-cookie-consent'); ?></a>
+                    </p>
                     
                     <?php 
                     $multilingual_plugin = MBR_CC_I18n_Accessibility::get_active_multilingual_plugin();
@@ -507,73 +595,13 @@ if (!defined('ABSPATH')) {
         <!-- Advanced Consent Management -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Advanced Consent Management', 'mbr-cookie-consent'); ?></h2>
-            <p><?php esc_html_e('Enterprise-grade consent frameworks for publishers and advertisers including IAB TCF v2.3 and Google Additional Consent Mode.', 'mbr-cookie-consent'); ?></p>
-            
-            <!-- IAB TCF v2.3 -->
-            <div class="mbr-cc-form-row">
-                <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('IAB Transparency & Consent Framework (TCF) v2.3', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('The IAB Europe Transparency & Consent Framework (TCF) is the industry standard for managing consent for digital advertising. Required for publishers and advertisers operating in Europe.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_iab_tcf_enabled" value="1" <?php checked(get_option('mbr_cc_iab_tcf_enabled', false)); ?>>
-                        <?php esc_html_e('Enable IAB TCF v2.3', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Implements the __tcfapi JavaScript API and generates TCF-compliant consent strings.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
-                        <strong><?php esc_html_e('What is IAB TCF?', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('The TCF enables publishers and advertisers to communicate user consent to ad tech vendors in a standardized way. It includes:', 'mbr-cookie-consent'); ?></p>
-                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('11 standardized consent purposes', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('2 special features (geolocation, device scanning)', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Global Vendor List (GVL) of registered vendors', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('TC String format for consent storage', 'mbr-cookie-consent'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <h4><?php esc_html_e('TCF Configuration', 'mbr-cookie-consent'); ?></h4>
-                        
-                        <label for="publisher_country_code" style="display: block; margin-top: 10px;"><?php esc_html_e('Publisher Country Code:', 'mbr-cookie-consent'); ?></label>
-                        <input type="text" 
-                               name="mbr_cc_publisher_country_code" 
-                               id="publisher_country_code" 
-                               value="<?php echo esc_attr(get_option('mbr_cc_publisher_country_code', '')); ?>"
-                               placeholder="GB"
-                               maxlength="2"
-                               style="width: 100px; text-transform: uppercase;">
-                        <p class="description"><?php esc_html_e('2-letter ISO country code (e.g., GB, DE, FR). Required for TCF compliance.', 'mbr-cookie-consent'); ?></p>
-                        
-                        <label style="display: block; margin-top: 15px;">
-                            <input type="checkbox" name="mbr_cc_purpose_one_treatment" value="1" <?php checked(get_option('mbr_cc_purpose_one_treatment', false)); ?>>
-                            <?php esc_html_e('Enable Purpose One Treatment', 'mbr-cookie-consent'); ?>
-                        </label>
-                        <p class="description"><?php esc_html_e('For publishers in jurisdictions that do not require consent for Purpose 1 (Store/Access Information). Consult legal counsel.', 'mbr-cookie-consent'); ?></p>
-                        
-                        <label for="gdpr_applies" style="display: block; margin-top: 15px;"><?php esc_html_e('GDPR Applies:', 'mbr-cookie-consent'); ?></label>
-                        <select name="mbr_cc_gdpr_applies" id="gdpr_applies">
-                            <option value="auto" <?php selected(get_option('mbr_cc_gdpr_applies'), 'auto'); ?>><?php esc_html_e('Auto-detect', 'mbr-cookie-consent'); ?></option>
-                            <option value="yes" <?php selected(get_option('mbr_cc_gdpr_applies'), 'yes'); ?>><?php esc_html_e('Yes (Always)', 'mbr-cookie-consent'); ?></option>
-                            <option value="no" <?php selected(get_option('mbr_cc_gdpr_applies'), 'no'); ?>><?php esc_html_e('No (Never)', 'mbr-cookie-consent'); ?></option>
-                        </select>
-                        <p class="description"><?php esc_html_e('Whether GDPR applies to your users. Auto-detect recommended.', 'mbr-cookie-consent'); ?></p>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                        <strong><?php esc_html_e('Important:', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 5px 0 0 0;"><?php esc_html_e('IAB TCF requires CMP registration. You must register as a Consent Management Platform with IAB Europe to obtain a CMP ID. This plugin provides a placeholder implementation. For production use, complete registration at:', 'mbr-cookie-consent'); ?> 
-                            <a href="https://iabeurope.eu/tcf-for-cmps/" target="_blank">https://iabeurope.eu/tcf-for-cmps/</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <p><?php esc_html_e('Google Additional Consent Mode for publishers using Google advertising products.', 'mbr-cookie-consent'); ?></p>
             
             <!-- Google ACM -->
             <div class="mbr-cc-form-row" style="margin-top: 30px;">
                 <div class="mbr-cc-form-field" style="width: 100%;">
                     <h3><?php esc_html_e('Google Additional Consent Mode (ACM)', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers (ATPs) that are not part of the IAB Global Vendor List. Required if using Google advertising products.', 'mbr-cookie-consent'); ?></p>
+                    <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers. Useful if you use Google advertising products.', 'mbr-cookie-consent'); ?></p>
                     
                     <label style="margin-top: 15px; display: block;">
                         <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
@@ -583,7 +611,7 @@ if (!defined('ABSPATH')) {
                     
                     <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
                         <strong><?php esc_html_e('What is Google ACM?', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('Google ACM allows you to manage consent for Google\'s own advertising products separately from IAB TCF. This includes:', 'mbr-cookie-consent'); ?></p>
+                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('Google ACM manages consent for Google\'s own advertising products. This includes:', 'mbr-cookie-consent'); ?></p>
                         <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
                             <li><?php esc_html_e('Google Ads', 'mbr-cookie-consent'); ?></li>
                             <li><?php esc_html_e('DoubleClick / Google Ad Manager', 'mbr-cookie-consent'); ?></li>

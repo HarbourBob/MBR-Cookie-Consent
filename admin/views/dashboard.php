@@ -32,11 +32,30 @@ if (!defined('ABSPATH')) {
             <div class="stat-value"><?php echo count($blocked_scripts); ?></div>
         </div>
         
+        <?php
+        $privacy_policy_page_id = (int) get_option('mbr_cc_privacy_policy_page_id');
+        $privacy_policy_exists  = $privacy_policy_page_id && get_post_status($privacy_policy_page_id) !== false;
+        $cookie_policy_exists   = $policy_page_id && get_post_status($policy_page_id) !== false;
+        ?>
+        
         <div class="mbr-cc-stat-card">
             <h3><?php esc_html_e('Cookie Policy Page', 'mbr-cookie-consent'); ?></h3>
             <div class="stat-value">
-                <?php if ($policy_page_id && get_post_status($policy_page_id)) : ?>
+                <?php if ($cookie_policy_exists) : ?>
                     <a href="<?php echo esc_url(get_edit_post_link($policy_page_id)); ?>" class="button">
+                        <?php esc_html_e('Edit Page', 'mbr-cookie-consent'); ?>
+                    </a>
+                <?php else : ?>
+                    <span style="font-size: 14px;"><?php esc_html_e('Not Created', 'mbr-cookie-consent'); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <div class="mbr-cc-stat-card">
+            <h3><?php esc_html_e('Privacy Policy Page', 'mbr-cookie-consent'); ?></h3>
+            <div class="stat-value">
+                <?php if ($privacy_policy_exists) : ?>
+                    <a href="<?php echo esc_url(get_edit_post_link($privacy_policy_page_id)); ?>" class="button">
                         <?php esc_html_e('Edit Page', 'mbr-cookie-consent'); ?>
                     </a>
                 <?php else : ?>
@@ -54,18 +73,23 @@ if (!defined('ABSPATH')) {
             <?php esc_html_e('Scan for Cookies', 'mbr-cookie-consent'); ?>
         </a>
         
-        <?php if (!$policy_page_id || get_post_status($policy_page_id) === false) : ?>
+        <?php if (!$cookie_policy_exists) : ?>
             <button type="button" id="mbr-cc-generate-policy" class="button button-secondary">
                 <?php esc_html_e('Generate Cookie Policy Page', 'mbr-cookie-consent'); ?>
             </button>
         <?php endif; ?>
         
-        <?php 
-        $privacy_policy_page_id = get_option('mbr_cc_privacy_policy_page_id');
-        if (!$privacy_policy_page_id || get_post_status($privacy_policy_page_id) === false) : 
-        ?>
+        <?php if (!$privacy_policy_exists) : ?>
             <button type="button" id="mbr-cc-generate-privacy-policy" class="button button-secondary">
                 <?php esc_html_e('Generate Privacy Policy Page', 'mbr-cookie-consent'); ?>
+            </button>
+        <?php else : ?>
+            <a href="<?php echo esc_url(get_edit_post_link($privacy_policy_page_id)); ?>" class="button button-secondary">
+                <?php esc_html_e('Edit Privacy Policy', 'mbr-cookie-consent'); ?>
+            </a>
+            
+            <button type="button" id="mbr-cc-regenerate-privacy-policy" class="button button-secondary">
+                <?php esc_html_e('Regenerate Privacy Policy', 'mbr-cookie-consent'); ?>
             </button>
         <?php endif; ?>
         

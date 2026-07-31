@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "fr",
+        "name": "Français",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Nous respectons votre vie privée",
+        "banner_description": "Nous utilisons des cookies pour améliorer votre expérience de navigation, proposer du contenu personnalisé et analyser notre trafic. En cliquant sur \"Tout accepter\", vous consentez à l'utilisation de cookies.",
+        "accept_all": "Tout accepter",
+        "reject_all": "Tout refuser",
+        "customize": "Personnaliser",
+        "cookie_settings": "Paramètres des cookies",
+        "manage_preferences": "Gérer les préférences de cookies",
+        "preferences_intro": "Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez choisir les types de cookies à autoriser.",
+        "save_preferences": "Enregistrer les préférences",
+        "close": "Fermer",
+        "necessary": "Nécessaires",
+        "necessary_description": "Les cookies nécessaires sont indispensables au bon fonctionnement du site web. Ils assurent les fonctionnalités de base et les dispositifs de sécurité du site.",
+        "analytics": "Analytiques",
+        "analytics_description": "Les cookies analytiques nous aident à comprendre comment les visiteurs interagissent avec notre site web en collectant et en transmettant des informations de manière anonyme.",
+        "marketing": "Marketing",
+        "marketing_description": "Les cookies marketing servent à suivre les visiteurs d'un site à l'autre afin d'afficher des publicités pertinentes et d'encourager l'engagement des utilisateurs.",
+        "preferences": "Préférences",
+        "preferences_description": "Les cookies de préférences permettent à un site web de mémoriser des informations qui modifient son comportement ou son apparence.",
+        "always_active": "Toujours actifs",
+        "privacy_policy_text": "Politique de confidentialité",
+        "cookie_policy_text": "Politique relative aux cookies",
+        "ccpa_link_text": "Ne pas vendre ni partager mes informations personnelles",
+        "blocked_heading": "Contenu bloqué",
+        "blocked_message": "Cette vidéo est bloquée car les cookies marketing n'ont pas été acceptés.",
+        "blocked_button": "Accepter les cookies et lire la vidéo",
+        "blocked_region_label": "Contenu bloqué",
+        "form_blocked_message": "Veuillez accepter les cookies avant d'envoyer ce formulaire."
+    }
+}

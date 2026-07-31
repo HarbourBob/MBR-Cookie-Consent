@@ -217,7 +217,7 @@ class MBR_CC_Subdomain_Consent {
         }
         
         $domain = self::get_cookie_domain_display();
-        $current_host = $_SERVER['HTTP_HOST'];
+        $current_host = sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'] ?? ''));
         
         return array(
             'enabled' => true,

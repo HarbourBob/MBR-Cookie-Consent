@@ -1,0 +1,115 @@
+{
+    "total_keys": 27,
+    "languages": {
+        "ar": {
+            "name": "العربية",
+            "direction": "rtl",
+            "covered": 27
+        },
+        "cs": {
+            "name": "Čeština",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "da": {
+            "name": "Dansk",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "de": {
+            "name": "Deutsch",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "el": {
+            "name": "Ελληνικά",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "es": {
+            "name": "Español",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "fi": {
+            "name": "Suomi",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "fr": {
+            "name": "Français",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "he": {
+            "name": "עברית",
+            "direction": "rtl",
+            "covered": 27
+        },
+        "it": {
+            "name": "Italiano",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "ja": {
+            "name": "日本語",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "ko": {
+            "name": "한국어",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "nl": {
+            "name": "Nederlands",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "no": {
+            "name": "Norsk",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "pl": {
+            "name": "Polski",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "pt": {
+            "name": "Português",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "ru": {
+            "name": "Русский",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "sv": {
+            "name": "Svenska",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "th": {
+            "name": "ไทย",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "tr": {
+            "name": "Türkçe",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "vi": {
+            "name": "Tiếng Việt",
+            "direction": "ltr",
+            "covered": 27
+        },
+        "zh": {
+            "name": "中文",
+            "direction": "ltr",
+            "covered": 27
+        }
+    }
+}

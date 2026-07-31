@@ -13,6 +13,20 @@ if (!defined('ABSPATH')) {
 /**
  * I18n and Accessibility class.
  */
+/**
+ * Note on automatic translation.
+ *
+ * This class used to carry a server-side auto-translation path: it read the
+ * visitor's Accept-Language header, looked the language up in a bundled PHP
+ * table, and filtered the banner text. None of it ever ran — the filter it
+ * hung on was never applied — and it could not have been made to run safely,
+ * because choosing a language from a request header writes one visitor's
+ * language into a page that a cache then serves to everybody.
+ *
+ * Automatic translation now lives in MBR_CC_Translations and happens in the
+ * browser. This class remains responsible for WPML and Polylang integration,
+ * which is safe to do server-side because those plugins vary the URL.
+ */
 class MBR_CC_I18n_Accessibility {
     
     /**
@@ -91,87 +105,12 @@ class MBR_CC_I18n_Accessibility {
      */
     private function __construct() {
         // Auto-translation hooks.
-        add_filter('mbr_cc_banner_text', array($this, 'translate_banner_text'), 10, 2);
         
         // WPML/Polylang compatibility.
         add_action('init', array($this, 'register_multilingual_strings'));
         
         // Accessibility enhancements.
         add_action('wp_footer', array($this, 'add_accessibility_announcements'), 5);
-    }
-    
-    /**
-     * Detect user's language from browser.
-     *
-     * @return string Language code.
-     */
-    public function detect_browser_language() {
-        $auto_translate = get_option('mbr_cc_auto_translate', false);
-        
-        if (!$auto_translate) {
-            return 'en';
-        }
-        
-        // Check for WPML language.
-        if (function_exists('icl_get_current_language')) {
-            return icl_get_current_language();
-        }
-        
-        // Check for Polylang language.
-        if (function_exists('pll_current_language')) {
-            return pll_current_language();
-        }
-        
-        // Detect from browser.
-        if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            $browser_lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-            if (array_key_exists($browser_lang, self::$supported_languages)) {
-                return $browser_lang;
-            }
-        }
-        
-        return 'en';
-    }
-    
-    /**
-     * Translate banner text.
-     *
-     * @param string $text Text to translate.
-     * @param string $context Context (heading, description, button, etc.).
-     * @return string Translated text.
-     */
-    public function translate_banner_text($text, $context = '') {
-        $lang = $this->detect_browser_language();
-        
-        if ($lang === 'en') {
-            return $text;
-        }
-        
-        // Get translations.
-        $translations = $this->get_translations($lang);
-        
-        // If WPML/Polylang is active, they handle translation.
-        if (function_exists('icl_t') || function_exists('pll__')) {
-            return $text; // Let WPML/Polylang handle it
-        }
-        
-        // Auto-translate based on context.
-        if (isset($translations[$context])) {
-            return $translations[$context];
-        }
-        
-        return $text;
-    }
-    
-    /**
-     * Get translations for a language.
-     *
-     * @param string $lang Language code.
-     * @return array Translations.
-     */
-    private function get_translations($lang) {
-        $translations = include MBR_CC_PLUGIN_DIR . 'languages/translations.php';
-        return isset($translations[$lang]) ? $translations[$lang] : array();
     }
     
     /**
@@ -211,18 +150,29 @@ class MBR_CC_I18n_Accessibility {
         
         // Register category strings.
         $categories = get_option('mbr_cc_cookie_categories', array());
+        
+        if (!is_array($categories)) {
+            $categories = array();
+        }
+        
         foreach ($categories as $slug => $category) {
+            // Same guard as the settings save: a malformed entry must not take
+            // the page down with a TypeError.
+            if (!is_array($category)) {
+                continue;
+            }
+            
             $cat_name = "category_{$slug}_name";
             $cat_desc = "category_{$slug}_description";
             
             if (function_exists('icl_register_string')) {
-                icl_register_string('mbr-cookie-consent', $cat_name, $category['name']);
-                icl_register_string('mbr-cookie-consent', $cat_desc, $category['description']);
+                icl_register_string('mbr-cookie-consent', $cat_name, $category['name'] ?? '');
+                icl_register_string('mbr-cookie-consent', $cat_desc, $category['description'] ?? '');
             }
             
             if (function_exists('pll_register_string')) {
-                pll_register_string($cat_name, $category['name'], 'MBR Cookie Consent');
-                pll_register_string($cat_desc, $category['description'], 'MBR Cookie Consent');
+                pll_register_string($cat_name, $category['name'] ?? '', 'MBR Cookie Consent');
+                pll_register_string($cat_desc, $category['description'] ?? '', 'MBR Cookie Consent');
             }
         }
     }
@@ -235,6 +185,23 @@ class MBR_CC_I18n_Accessibility {
      * @return string Translated text.
      */
     public static function get_translated_string($name, $original) {
+        // In the site's default language the plugin's own setting is
+        // authoritative and must win.
+        //
+        // Without this, icl_t() returns whatever was registered under $name
+        // when the string was first seen and ignores the updated $original —
+        // so editing the button text in the plugin appears to do nothing, and
+        // the only way to change it is through WPML's String Translation
+        // screen. That is a confusing failure: the setting saves correctly,
+        // the admin field shows the new value, and the front end silently
+        // keeps the old one.
+        //
+        // Translations for other languages still come from WPML or Polylang,
+        // which is the behaviour multilingual sites actually want.
+        if (self::is_default_language()) {
+            return $original;
+        }
+        
         // WPML.
         if (function_exists('icl_t')) {
             return icl_t('mbr-cookie-consent', $name, $original);
@@ -246,6 +213,43 @@ class MBR_CC_I18n_Accessibility {
         }
         
         return $original;
+    }
+    
+    /**
+     * Is the request being served in the site's default language?
+     *
+     * Returns true when no multilingual plugin is active, since a
+     * single-language site is always in its default language.
+     *
+     * @return bool
+     */
+    public static function is_default_language() {
+        // WPML.
+        if (defined('ICL_SITEPRESS_VERSION') || function_exists('icl_t')) {
+            $current = apply_filters('wpml_current_language', null);
+            $default = apply_filters('wpml_default_language', null);
+            
+            if ($current && $default) {
+                return $current === $default;
+            }
+            
+            // Could not determine — do not claim default, let WPML answer.
+            return false;
+        }
+        
+        // Polylang.
+        if (function_exists('pll_current_language') && function_exists('pll_default_language')) {
+            $current = pll_current_language();
+            $default = pll_default_language();
+            
+            if ($current && $default) {
+                return $current === $default;
+            }
+            
+            return false;
+        }
+        
+        return true;
     }
     
     /**

@@ -93,7 +93,6 @@ class MBR_CC_Geolocation {
         // Check cache first
         $cached = $this->get_cached_location();
         if ($cached) {
-            $ip = $this->get_user_ip();
             $this->country_code = $cached['country'];
             $this->region_code  = isset($cached['region_code']) ? $cached['region_code'] : null;
             $this->region = $cached['region'];

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "zh",
+        "name": "中文",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "我们重视您的隐私",
+        "banner_description": "我们使用 Cookie 来增强您的浏览体验、提供个性化内容并分析我们的流量。点击\"接受全部\"即表示您同意使用 Cookie。",
+        "accept_all": "接受全部",
+        "reject_all": "拒绝全部",
+        "customize": "自定义",
+        "cookie_settings": "Cookie 设置",
+        "manage_preferences": "管理 Cookie 偏好",
+        "preferences_intro": "我们使用 Cookie 来改善您的体验。您可以选择允许哪些类型的 Cookie。",
+        "save_preferences": "保存偏好",
+        "close": "关闭",
+        "necessary": "必要",
+        "necessary_description": "必要 Cookie 对网站的正常运行至关重要，用于保障网站的基本功能和安全特性。",
+        "analytics": "分析",
+        "analytics_description": "分析 Cookie 通过匿名收集和报告信息，帮助我们了解访问者如何使用本网站。",
+        "marketing": "营销",
+        "marketing_description": "营销 Cookie 用于跨网站追踪访问者，以展示相关广告并提升用户参与度。",
+        "preferences": "偏好",
+        "preferences_description": "偏好 Cookie 使网站能够记住会改变其行为或外观的信息。",
+        "always_active": "始终启用",
+        "privacy_policy_text": "隐私政策",
+        "cookie_policy_text": "Cookie 政策",
+        "ccpa_link_text": "请勿出售或分享我的个人信息",
+        "blocked_heading": "内容已被拦截",
+        "blocked_message": "由于未接受营销 Cookie，此视频已被拦截。",
+        "blocked_button": "接受 Cookie 并播放视频",
+        "blocked_region_label": "被拦截的内容",
+        "form_blocked_message": "请先接受 Cookie，然后再提交此表单。"
+    }
+}

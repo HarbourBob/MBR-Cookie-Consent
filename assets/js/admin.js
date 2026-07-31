@@ -29,10 +29,22 @@
                 self.generatePrivacyPolicy();
             });
             
+            // Regenerate privacy policy
+            $('#mbr-cc-regenerate-privacy-policy').on('click', function(e) {
+                e.preventDefault();
+                self.regeneratePrivacyPolicy();
+            });
+            
             // Save settings
             $('#mbr-cc-save-settings').on('click', function(e) {
                 e.preventDefault();
                 self.saveSettings();
+            });
+            
+            // Preview banner
+            $('#mbr-cc-preview-banner').on('click', function(e) {
+                e.preventDefault();
+                self.previewBanner();
             });
             
             // Toggle scan type options
@@ -155,12 +167,9 @@
             });
         },
         
-        saveSettings: function() {
-            var self = this;
-            var $button = $('#mbr-cc-save-settings');
+        gatherSettings: function() {
             var settings = {};
             
-            // Gather all settings
             $('[name^="mbr_cc_"]').each(function() {
                 var $field = $(this);
                 var name = $field.attr('name').replace('mbr_cc_', '');
@@ -168,12 +177,114 @@
                 
                 if ($field.is(':checkbox')) {
                     value = $field.is(':checked');
+                } else if ($field.is(':radio')) {
+                    if (!$field.is(':checked')) {
+                        return;
+                    }
+                    value = $field.val();
                 } else {
                     value = $field.val();
                 }
                 
                 settings[name] = value;
             });
+            
+            return settings;
+        },
+        
+        // Preview the banner using whatever is on screen right now, saved or
+        // not. Rendered server-side through the real front-end renderer and
+        // shown in an iframe: the banner stylesheet is position:fixed and
+        // heavily !important, so injecting it into wp-admin would break the
+        // page around it.
+        previewBanner: function() {
+            var $button = $('#mbr-cc-preview-banner');
+            var original = $button.html();
+            
+            $button.prop('disabled', true).text('Building preview...');
+            
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_preview_banner',
+                    nonce: mbrCcAdmin.nonce,
+                    settings: this.gatherSettings()
+                },
+                success: function(response) {
+                    if (response && response.success && response.data && response.data.document) {
+                        MbrCcAdmin.openPreviewModal(response.data.document);
+                    } else {
+                        window.alert('The preview could not be generated.');
+                    }
+                },
+                error: function() {
+                    window.alert('The preview could not be generated.');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).html(original);
+                }
+            });
+        },
+        
+        openPreviewModal: function(doc) {
+            $('#mbr-cc-preview-modal').remove();
+            
+            var $modal = $(
+                '<div id="mbr-cc-preview-modal" class="mbr-cc-preview-modal" role="dialog" aria-modal="true" aria-label="Banner preview">' +
+                    '<div class="mbr-cc-preview-modal__overlay"></div>' +
+                    '<div class="mbr-cc-preview-modal__panel">' +
+                        '<div class="mbr-cc-preview-modal__head">' +
+                            '<strong>Banner preview</strong>' +
+                            '<span class="mbr-cc-preview-modal__note">Reflects unsaved changes. Buttons are inert.</span>' +
+                            '<div class="mbr-cc-preview-modal__devices">' +
+                                '<button type="button" class="button button-small is-active" data-width="100%">Desktop</button>' +
+                                '<button type="button" class="button button-small" data-width="390px">Mobile</button>' +
+                            '</div>' +
+                            '<button type="button" class="mbr-cc-preview-modal__close" aria-label="Close preview">&times;</button>' +
+                        '</div>' +
+                        '<div class="mbr-cc-preview-modal__stage">' +
+                            '<iframe class="mbr-cc-preview-modal__frame" title="Banner preview"></iframe>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            );
+            
+            $('body').append($modal);
+            
+            // srcdoc keeps the preview in its own document with no network
+            // round trip and no shared styles with wp-admin.
+            $modal.find('iframe').attr('srcdoc', doc);
+            
+            var close = function() {
+                $modal.remove();
+                $(document).off('keydown.mbrCcPreview');
+                $('#mbr-cc-preview-banner').trigger('focus');
+            };
+            
+            $modal.on('click', '.mbr-cc-preview-modal__close', close);
+            $modal.on('click', '.mbr-cc-preview-modal__overlay', close);
+            
+            $(document).on('keydown.mbrCcPreview', function(e) {
+                if (e.key === 'Escape' || e.keyCode === 27) {
+                    close();
+                }
+            });
+            
+            $modal.on('click', '.mbr-cc-preview-modal__devices button', function() {
+                var $b = $(this);
+                $b.siblings().removeClass('is-active');
+                $b.addClass('is-active');
+                $modal.find('.mbr-cc-preview-modal__frame').css('width', $b.data('width'));
+            });
+            
+            $modal.find('.mbr-cc-preview-modal__close').trigger('focus');
+        },
+        
+        saveSettings: function() {
+            var self = this;
+            var $button = $('#mbr-cc-save-settings');
+            var settings = this.gatherSettings();
             
             $button.prop('disabled', true).text('Saving...');
             
@@ -794,6 +905,54 @@
                     } else {
                         self.showNotice(response.data.message, 'error');
                     }
+                }
+            });
+        },
+        
+        // Rewrites the existing privacy policy page from current settings.
+        // This is destructive to any wording the site owner has added by hand,
+        // on a legal document, so the warning is deliberately blunt rather than
+        // a generic "are you sure".
+        regeneratePrivacyPolicy: function() {
+            var self = this;
+            var $button = $('#mbr-cc-regenerate-privacy-policy');
+
+            if (!window.confirm(
+                'Regenerate the Privacy Policy page?\n\n' +
+                'The page content will be rewritten from your current plugin settings. ' +
+                'Any wording you have edited or added by hand will be replaced.\n\n' +
+                'The page keeps its title, URL and published status, and the current ' +
+                'version is saved as a revision so you can restore it from the page ' +
+                'editor if you need to.'
+            )) {
+                return;
+            }
+
+            var original = $button.text();
+            $button.prop('disabled', true).text('Regenerating...');
+
+            $.ajax({
+                url: mbrCcAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'mbr_cc_regenerate_privacy_policy',
+                    nonce: mbrCcAdmin.nonce
+                },
+                success: function(response) {
+                    if (response && response.success) {
+                        self.showNotice(response.data.message || 'Privacy policy regenerated.', 'success');
+                    } else {
+                        self.showNotice(
+                            (response && response.data && response.data.message) || 'Could not regenerate the privacy policy.',
+                            'error'
+                        );
+                    }
+                },
+                error: function() {
+                    self.showNotice('Could not regenerate the privacy policy.', 'error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(original);
                 }
             });
         },

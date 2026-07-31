@@ -93,7 +93,7 @@ class MBR_CC_Consent_Manager {
         // Because the nonce is advisory, this endpoint is effectively open, so
         // the throttle below — not the nonce — is what stops the consent log
         // being flooded with junk rows.
-        $nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( $_POST['nonce'], 'mbr_cc_consent_nonce' );
+        $nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'mbr_cc_consent_nonce' );
         if ( ! $nonce_valid ) {
             $this->log_stale_nonce();
         }
@@ -119,9 +119,26 @@ class MBR_CC_Consent_Manager {
         $consent_data = json_decode($raw_consent, true);
         $consent_method = isset($_POST['method']) ? sanitize_text_field(wp_unslash($_POST['method'])) : 'banner';
         
-        // Only methods the banner actually sends are accepted; anything else is
-        // recorded as 'other' rather than written through to the log verbatim.
-        $allowed_methods = array('banner', 'settings', 'revoked', 'gpc', 'api', 'form', 'auto');
+        // Anything outside this list is recorded as 'other' rather than written
+        // to the log verbatim.
+        //
+        // The first three are what banner.js sends. They were missing, so every
+        // row logged since the allowlist was introduced recorded 'other' and the
+        // Method column — in a log kept specifically as evidence of how consent
+        // was obtained — held nothing of use. The remainder cover programmatic
+        // and integration paths.
+        $allowed_methods = array(
+            'accept_all',
+            'reject_all',
+            'preferences',
+            'banner',
+            'settings',
+            'revoked',
+            'gpc',
+            'api',
+            'form',
+            'auto',
+        );
         if (!in_array($consent_method, $allowed_methods, true)) {
             $consent_method = 'other';
         }
@@ -225,7 +242,7 @@ class MBR_CC_Consent_Manager {
          * @param int $limit  Maximum writes per window. 0 disables throttling.
          * @param int $window Window length in seconds.
          */
-        $limit  = (int) apply_filters('mbr_cc_consent_log_limit', 10, 600);
+        $limit  = (int) apply_filters('mbr_cc_consent_log_limit', 10);
         $window = (int) apply_filters('mbr_cc_consent_log_window', 600);
         
         if ($limit <= 0) {

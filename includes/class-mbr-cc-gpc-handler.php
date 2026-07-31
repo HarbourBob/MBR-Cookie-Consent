@@ -85,11 +85,13 @@ class MBR_CC_GPC_Handler {
         // Pass GPC state to frontend scripts.
         add_action('wp_enqueue_scripts', array($this, 'localize_gpc_state'), 20);
 
-        // Filter consent check — treat GPC as opt-out for marketing/advertising.
-        add_filter('mbr_cc_has_category_consent', array($this, 'filter_category_consent'), 10, 2);
-
-        // Add GPC status to consent log metadata.
-        add_filter('mbr_cc_consent_log_data', array($this, 'append_gpc_to_log'));
+        // Note: this class used to register mbr_cc_has_category_consent and
+        // mbr_cc_consent_log_data filters as a "server-side backstop". Neither
+        // filter was ever applied anywhere in the plugin, so the backstop did
+        // nothing — and it could not have worked in any case. Enforcing GPC on
+        // the server means varying the page by a request header, which on a
+        // cached site writes one visitor's signal into the copy served to
+        // everybody. GPC is honoured in the browser, where it belongs.
     }
 
     /**
@@ -165,9 +167,20 @@ class MBR_CC_GPC_Handler {
         }
 
         // Attach GPC state to the existing banner script data.
+        // serverDetected is deliberately not sent.
+        //
+        // It carried the Sec-GPC header from whichever visitor happened to
+        // generate the page. On a cached site that meant a single visitor with
+        // GPC enabled could prime the cache with serverDetected: true, after
+        // which every visitor was treated as having sent the signal and
+        // marketing consent was suppressed site-wide — silently, and with
+        // nothing in the interface to explain it.
+        //
+        // The signal is read from navigator.globalPrivacyControl instead, which
+        // the GPC specification requires alongside the header and which is
+        // per-visitor by definition.
         wp_localize_script('mbr-cc-banner', 'mbrCcGpc', array(
             'enabled'                => $this->enabled,
-            'serverDetected'         => $this->gpc_detected,
             'honoredMessage'         => get_option(
                 'mbr_cc_gpc_honored_message',
                 'Opt-Out Request Honored'

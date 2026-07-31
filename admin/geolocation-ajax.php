@@ -24,8 +24,8 @@ function mbr_cc_ajax_test_geolocation() {
         wp_send_json_error('Permission denied');
     }
     
-    $country = isset($_POST['country']) ? strtoupper(sanitize_text_field($_POST['country'])) : '';
-    $region_code = isset($_POST['region']) ? strtoupper(sanitize_text_field($_POST['region'])) : '';
+    $country = isset($_POST['country']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['country']))) : '';
+    $region_code = isset($_POST['region']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['region']))) : '';
     
     if (strlen($country) !== 2) {
         wp_send_json_error('Invalid country code');

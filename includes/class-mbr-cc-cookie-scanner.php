@@ -52,8 +52,8 @@ class MBR_CC_Cookie_Scanner {
             wp_send_json_error(array('message' => 'Unauthorized.'));
         }
         
-        $scan_type = isset($_POST['scan_type']) ? sanitize_text_field($_POST['scan_type']) : 'single';
-        $url = isset($_POST['url']) ? esc_url_raw($_POST['url']) : home_url();
+        $scan_type = isset($_POST['scan_type']) ? sanitize_text_field(wp_unslash($_POST['scan_type'])) : 'single';
+        $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : home_url();
         
         if ($scan_type === 'site-wide') {
             $results = $this->scan_entire_site();

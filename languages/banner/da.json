@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "da",
+        "name": "Dansk",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Vi værdsætter dit privatliv",
+        "banner_description": "Vi bruger cookies til at forbedre din browsing-oplevelse, levere personligt indhold og analysere vores trafik. Ved at klikke på \"Accepter alle\" giver du samtykke til brug af cookies.",
+        "accept_all": "Accepter alle",
+        "reject_all": "Afvis alle",
+        "customize": "Tilpas",
+        "cookie_settings": "Cookie-indstillinger",
+        "manage_preferences": "Administrer cookie-præferencer",
+        "preferences_intro": "Vi bruger cookies til at forbedre din oplevelse. Du kan vælge, hvilke typer cookies du vil tillade.",
+        "save_preferences": "Gem præferencer",
+        "close": "Luk",
+        "necessary": "Nødvendige",
+        "necessary_description": "Nødvendige cookies er afgørende for, at hjemmesiden fungerer korrekt. De sikrer grundlæggende funktioner og sikkerhedsfunktioner på hjemmesiden.",
+        "analytics": "Analytiske",
+        "analytics_description": "Analysecookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside, ved at indsamle og rapportere oplysninger anonymt.",
+        "marketing": "Marketing",
+        "marketing_description": "Marketingcookies bruges til at spore besøgende på tværs af hjemmesider for at vise relevante annoncer og øge engagementet.",
+        "preferences": "Præferencer",
+        "preferences_description": "Præferencecookies gør det muligt for en hjemmeside at huske oplysninger, der ændrer, hvordan den opfører sig eller ser ud.",
+        "always_active": "Altid aktiv",
+        "privacy_policy_text": "Privatlivspolitik",
+        "cookie_policy_text": "Cookiepolitik",
+        "ccpa_link_text": "Sælg eller del ikke mine personlige oplysninger",
+        "blocked_heading": "Indhold blokeret",
+        "blocked_message": "Denne video er blokeret, fordi marketingcookies ikke er blevet accepteret.",
+        "blocked_button": "Accepter cookies og afspil video",
+        "blocked_region_label": "Blokeret indhold",
+        "form_blocked_message": "Accepter venligst cookies, før du sender denne formular."
+    }
+}

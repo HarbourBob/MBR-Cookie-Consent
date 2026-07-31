@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "sv",
+        "name": "Svenska",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Vi värdesätter din integritet",
+        "banner_description": "Vi använder cookies för att förbättra din surfupplevelse, tillhandahålla personligt innehåll och analysera vår trafik. Genom att klicka på \"Acceptera alla\" samtycker du till användning av cookies.",
+        "accept_all": "Acceptera alla",
+        "reject_all": "Avvisa alla",
+        "customize": "Anpassa",
+        "cookie_settings": "Cookie-inställningar",
+        "manage_preferences": "Hantera cookie-inställningar",
+        "preferences_intro": "Vi använder cookies för att förbättra din upplevelse. Du kan välja vilka typer av cookies du tillåter.",
+        "save_preferences": "Spara inställningar",
+        "close": "Stäng",
+        "necessary": "Nödvändiga",
+        "necessary_description": "Nödvändiga cookies är avgörande för att webbplatsen ska fungera korrekt. De säkerställer grundläggande funktioner och säkerhetsfunktioner på webbplatsen.",
+        "analytics": "Analytiska",
+        "analytics_description": "Analyscookies hjälper oss att förstå hur besökare använder vår webbplats genom att samla in och rapportera information anonymt.",
+        "marketing": "Marknadsföring",
+        "marketing_description": "Marknadsföringscookies används för att spåra besökare över webbplatser för att visa relevanta annonser och öka engagemanget.",
+        "preferences": "Inställningar",
+        "preferences_description": "Inställningscookies gör att en webbplats kan komma ihåg information som ändrar hur den fungerar eller ser ut.",
+        "always_active": "Alltid aktiv",
+        "privacy_policy_text": "Integritetspolicy",
+        "cookie_policy_text": "Cookiepolicy",
+        "ccpa_link_text": "Sälj eller dela inte min personliga information",
+        "blocked_heading": "Innehåll blockerat",
+        "blocked_message": "Den här videon är blockerad eftersom marknadsföringscookies inte har accepterats.",
+        "blocked_button": "Acceptera cookies och spela upp videon",
+        "blocked_region_label": "Blockerat innehåll",
+        "form_blocked_message": "Acceptera cookies innan du skickar det här formuläret."
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "no",
+        "name": "Norsk",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Vi verdsetter ditt personvern",
+        "banner_description": "Vi bruker informasjonskapsler for å forbedre nettleseropplevelsen din, levere personlig tilpasset innhold og analysere trafikken vår. Ved å klikke på \"Godta alle\" samtykker du til bruk av informasjonskapsler.",
+        "accept_all": "Godta alle",
+        "reject_all": "Avvis alle",
+        "customize": "Tilpass",
+        "cookie_settings": "Informasjonskapselinnstillinger",
+        "manage_preferences": "Administrer informasjonskapsler",
+        "preferences_intro": "Vi bruker informasjonskapsler for å forbedre opplevelsen din. Du kan velge hvilke typer informasjonskapsler du vil tillate.",
+        "save_preferences": "Lagre preferanser",
+        "close": "Lukk",
+        "necessary": "Nødvendige",
+        "necessary_description": "Nødvendige informasjonskapsler er avgjørende for at nettstedet skal fungere riktig. De sikrer grunnleggende funksjoner og sikkerhetsfunksjoner på nettstedet.",
+        "analytics": "Analytiske",
+        "analytics_description": "Analyseinformasjonskapsler hjelper oss å forstå hvordan besøkende bruker nettstedet vårt ved å samle inn og rapportere informasjon anonymt.",
+        "marketing": "Markedsføring",
+        "marketing_description": "Markedsføringsinformasjonskapsler brukes til å spore besøkende på tvers av nettsteder for å vise relevante annonser og øke engasjementet.",
+        "preferences": "Preferanser",
+        "preferences_description": "Preferanseinformasjonskapsler gjør at et nettsted kan huske informasjon som endrer hvordan det oppfører seg eller ser ut.",
+        "always_active": "Alltid aktiv",
+        "privacy_policy_text": "Personvernerklæring",
+        "cookie_policy_text": "Retningslinjer for informasjonskapsler",
+        "ccpa_link_text": "Ikke selg eller del personopplysningene mine",
+        "blocked_heading": "Innhold blokkert",
+        "blocked_message": "Denne videoen er blokkert fordi markedsføringsinformasjonskapsler ikke er godtatt.",
+        "blocked_button": "Godta informasjonskapsler og spill av video",
+        "blocked_region_label": "Blokkert innhold",
+        "form_blocked_message": "Godta informasjonskapsler før du sender inn dette skjemaet."
+    }
+}

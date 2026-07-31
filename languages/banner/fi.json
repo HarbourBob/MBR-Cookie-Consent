@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "fi",
+        "name": "Suomi",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Arvostamme yksityisyyttäsi",
+        "banner_description": "Käytämme evästeitä selauskokemuksesi parantamiseksi, personoidun sisällön tarjoamiseksi ja liikenteen analysoimiseksi. Napsauttamalla \"Hyväksy kaikki\" hyväksyt evästeiden käytön.",
+        "accept_all": "Hyväksy kaikki",
+        "reject_all": "Hylkää kaikki",
+        "customize": "Mukauta",
+        "cookie_settings": "Evästeasetukset",
+        "manage_preferences": "Hallinnoi evästeasetuksia",
+        "preferences_intro": "Käytämme evästeitä parantaaksemme kokemustasi. Voit valita, mitkä evästetyypit sallit.",
+        "save_preferences": "Tallenna asetukset",
+        "close": "Sulje",
+        "necessary": "Välttämättömät",
+        "necessary_description": "Välttämättömät evästeet ovat olennaisia sivuston asianmukaisen toiminnan kannalta. Ne varmistavat sivuston perustoiminnot ja tietoturvaominaisuudet.",
+        "analytics": "Analyyttiset",
+        "analytics_description": "Analytiikkaevästeet auttavat meitä ymmärtämään, miten kävijät käyttävät sivustoamme, keräämällä ja raportoimalla tietoja nimettömästi.",
+        "marketing": "Markkinointi",
+        "marketing_description": "Markkinointievästeitä käytetään kävijöiden seuraamiseen eri sivustoilla, jotta voidaan näyttää olennaisia mainoksia ja lisätä käyttäjien sitoutumista.",
+        "preferences": "Asetukset",
+        "preferences_description": "Asetusevästeet mahdollistavat sen, että sivusto muistaa tiedot, jotka muuttavat sen toimintaa tai ulkoasua.",
+        "always_active": "Aina aktiivinen",
+        "privacy_policy_text": "Tietosuojakäytäntö",
+        "cookie_policy_text": "Evästekäytäntö",
+        "ccpa_link_text": "Älä myy tai jaa henkilötietojani",
+        "blocked_heading": "Sisältö estetty",
+        "blocked_message": "Tämä video on estetty, koska markkinointievästeitä ei ole hyväksytty.",
+        "blocked_button": "Hyväksy evästeet ja toista video",
+        "blocked_region_label": "Estetty sisältö",
+        "form_blocked_message": "Hyväksy evästeet ennen tämän lomakkeen lähettämistä."
+    }
+}

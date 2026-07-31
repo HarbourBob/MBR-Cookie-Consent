@@ -65,6 +65,41 @@
             }
         },
         
+        /**
+         * Parse the stored consent cookie.
+         *
+         * Returns null for anything unreadable rather than throwing. Since
+         * blocking became unconditional this runs on every page load and is the
+         * only thing that releases a consenting visitor's scripts — an
+         * exception here would take the banner down with it and leave the
+         * visitor with no way to consent at all.
+         */
+        parseConsent: function(raw) {
+            if (!raw || typeof raw !== 'string' || raw.length > 2048) {
+                return null;
+            }
+
+            try {
+                var parsed = JSON.parse(raw);
+                return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : null;
+            } catch (e) {
+                return null;
+            }
+        },
+
+        /**
+         * Show the placeholders belonging to embeds that remain blocked.
+         *
+         * They are rendered hidden so that visitors who consented never see
+         * them flash. Anything still blocked once consent has been applied is
+         * revealed here.
+         */
+        revealBlockedPlaceholders: function() {
+            $('iframe[data-mbr-cc-blocked="true"], [data-mbr-cc-facade="true"]').each(function() {
+                $(this).prev('.mbr-cc-blocked-wrapper').removeAttr('data-mbr-cc-pending');
+            });
+        },
+
         checkConsent: function() {
             var consent = this.getCookie(mbrCcBanner.categories ? 'mbr_cc_consent' : 'mbr_cc_consent');
             
@@ -75,11 +110,16 @@
                 return;
             }
             
-            if (!consent) {
+            var parsed = this.parseConsent(consent);
+
+            if (!parsed) {
+                // No stored choice, or one we cannot read. Everything stays
+                // blocked, which is the safe outcome, and the banner asks again.
                 this.showBanner();
+                this.revealBlockedPlaceholders();
             } else {
                 this.showRevisitButton();
-                this.unblockScripts(JSON.parse(consent));
+                this.unblockScripts(parsed);
             }
         },
         
@@ -94,10 +134,12 @@
                 return true;
             }
             
-            // Server-side: Sec-GPC header detected by PHP (passed via wp_localize_script)
-            if (typeof mbrCcGpc !== 'undefined' && mbrCcGpc.serverDetected === true) {
-                return true;
-            }
+            // The Sec-GPC request header is deliberately not consulted here.
+            // It was passed through from PHP, which meant it described whoever
+            // generated the cached page rather than the person reading it.
+            // navigator.globalPrivacyControl is set by every browser and
+            // extension that sends the header, and is always the current
+            // visitor's own signal.
             
             return false;
         },
@@ -117,12 +159,7 @@
             // - necessary: always true
             // - suppressed categories: forced false
             // - other categories: use existing consent or leave for banner
-            var consent;
-            if (existingConsent) {
-                consent = JSON.parse(existingConsent);
-            } else {
-                consent = { necessary: true };
-            }
+            var consent = this.parseConsent(existingConsent) || { necessary: true };
             
             // Force suppressed categories off regardless of stored consent
             for (var i = 0; i < suppressedCategories.length; i++) {
@@ -380,7 +417,7 @@
             this.hideBanner();
             this.hidePreferences();
 
-            // Trigger consent saved event for TCF, ACM, and our Elementor blocker.
+            // Trigger consent saved event for ACM and our Elementor blocker.
             $(document).trigger('mbr_cc_consent_saved', [consent]);
 
             // Unblock scripts immediately.
@@ -438,7 +475,85 @@
                            .removeAttr('data-mbr-cc-blocked');
                     // Hide the placeholder overlay that sits before this iframe.
                     $iframe.prev('.mbr-cc-blocked-wrapper').remove();
+                } else {
+                    // Still blocked, so the visitor should be told why and
+                    // offered a way to change their mind. The placeholder is
+                    // rendered hidden to spare consenting visitors a flash of
+                    // it; this is where it becomes visible.
+                    $iframe.prev('.mbr-cc-blocked-wrapper').removeAttr('data-mbr-cc-pending');
                 }
+            });
+
+            // Unblock click-to-play video facades.
+            $('[data-mbr-cc-facade="true"]').each(function() {
+                var $facade  = $(this);
+                var src      = $facade.attr('data-mbr-cc-src');
+                var attr     = $facade.attr('data-mbr-cc-attr') || 'data-src';
+                var category = $facade.attr('data-mbr-cc-category') || 'marketing';
+
+                if (consent.all || consent[category] === true) {
+                    // Hand the URL back under its original attribute name so
+                    // the optimiser's own script finds the facade exactly as
+                    // it left it.
+                    $facade.attr(attr, src)
+                           .removeAttr('data-mbr-cc-blocked')
+                           .removeAttr('data-mbr-cc-facade')
+                           .removeAttr('data-mbr-cc-attr')
+                           .removeAttr('data-mbr-cc-category')
+                           .removeAttr('data-mbr-cc-src')
+                           .removeAttr('data-mbr-cc-hidden');
+
+                    $facade.prev('.mbr-cc-blocked-wrapper').remove();
+
+                    // That script has usually finished binding its handlers by
+                    // now, so a facade restored mid-page would look clickable
+                    // and do nothing. Build the embed ourselves if that turns
+                    // out to be the case — checked on click so the facade keeps
+                    // its point, which is not loading the video until asked.
+                    self.bindFacadeFallback($facade, src);
+                } else {
+                    $facade.prev('.mbr-cc-blocked-wrapper').removeAttr('data-mbr-cc-pending');
+                }
+            });
+
+            // Restore poster images withheld along with their embeds.
+            $('[data-mbr-cc-image="true"]').each(function() {
+                var $img     = $(this);
+                var category = $img.attr('data-mbr-cc-category') || 'marketing';
+
+                if (consent.all || consent[category] === true) {
+                    $img.attr('src', $img.attr('data-mbr-cc-src'))
+                        .removeAttr('data-mbr-cc-blocked')
+                        .removeAttr('data-mbr-cc-image')
+                        .removeAttr('data-mbr-cc-category')
+                        .removeAttr('data-mbr-cc-src');
+                }
+            });
+        },
+
+        /**
+         * Make a restored facade playable even if its own script has already run.
+         *
+         * Only acts if nothing else has built an iframe by the time the visitor
+         * clicks, so an optimiser that does rebind keeps full control.
+         */
+        bindFacadeFallback: function($facade, src) {
+            $facade.one('click', function() {
+                if ($facade.find('iframe').length) {
+                    return;
+                }
+
+                var iframe = document.createElement('iframe');
+                iframe.src = src.indexOf('autoplay=') === -1
+                    ? src + (src.indexOf('?') === -1 ? '?' : '&') + 'autoplay=1'
+                    : src;
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+                iframe.setAttribute('allowfullscreen', 'true');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+
+                $facade.empty().append(iframe);
             });
         },
         
@@ -448,7 +563,14 @@
                 var newScript = document.createElement('script');
                 newScript.src = src;
                 newScript.type = 'text/javascript';
-                
+
+                // Dynamically created scripts default to async, which would let
+                // restored scripts execute in download order rather than the
+                // order they appear in the document. A tracker that expects its
+                // loader to have run first would then fail intermittently, and
+                // only for visitors who accepted. Setting async false restores
+                // document-order execution.
+                newScript.async = false;
                 // Copy attributes
                 $.each($script[0].attributes, function() {
                     if (this.name !== 'type' && this.name !== 'data-mbr-cc-blocked' && this.name !== 'data-mbr-cc-src') {

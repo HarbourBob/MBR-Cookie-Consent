@@ -10,6 +10,20 @@
  */
 
 /* ── Outer wrapper ──────────────────────────────────────────────────── */
+/* A blocked video facade. Hidden rather than left as an empty frame, since
+   its poster image has been withheld too — the placeholder stands in its
+   place until the visitor consents. */
+[data-mbr-cc-hidden] {
+    display: none !important;
+}
+
+/* Hidden until banner.js has read the visitor's consent and decided whether
+   this embed stays blocked. Prevents a flash of "blocked content" on pages
+   whose embeds the visitor has in fact consented to. */
+.mbr-cc-blocked-wrapper[data-mbr-cc-pending] {
+    display: none !important;
+}
+
 .mbr-cc-blocked-wrapper {
     position: relative;
     display: flex;

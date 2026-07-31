@@ -4,11 +4,11 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.3.1
+Stable tag: 2.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Enterprise-grade GDPR/CCPA compliant cookie consent with IAB TCF v2.3, Google Consent Mode v2, 40+ languages, WCAG accessibility, and privacy policy generator.
+Enterprise-grade GDPR/CCPA compliant cookie consent with, Google Consent Mode v2, 22 languages, WCAG accessibility, and privacy policy generator.
 
 == Description ==
 
@@ -30,7 +30,7 @@ MBR Cookie Consent is the most comprehensive, enterprise-grade cookie consent ma
 ✓ Customizable cookie banner (4 layouts)
 ✓ Automatic script blocking until consent
 ✓ Granular category-level control
-✓ Preference center for users
+✓ Preference centre for users
 ✓ Consent logging with audit trail
 ✓ CSV export for compliance records
 ✓ Revisit consent button (floating icon)
@@ -40,7 +40,7 @@ MBR Cookie Consent is the most comprehensive, enterprise-grade cookie consent ma
 ✓ **Privacy Policy Generator** - Intelligent, feature-based generation
 ✓ Automatic e-commerce detection
 ✓ Analytics & advertising detection
-✓ GDPR, CCPA, IAB TCF sections
+✓ GDPR and CCPA sections
 ✓ Third-party service disclosure
 
 **Cookie Management**
@@ -50,11 +50,11 @@ MBR Cookie Consent is the most comprehensive, enterprise-grade cookie consent ma
 ✓ Blocked script management
 ✓ Real-time script unblocking
 
-= 🌍 Internationalization (40+ Languages) =
+= 🌍 Internationalisation (22 Languages) =
 
 **Auto-Translation**
 ✓ Automatic browser language detection
-✓ 40+ languages supported out-of-the-box
+✓ 22 languages supported out-of-the-box
 ✓ Zero configuration required
 ✓ Professional quality translations
 
@@ -106,7 +106,7 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, J
 ✓ Default deny for EU
 ✓ Real-time consent updates
 
-**IAB TCF v2.3 (Transparency & Consent Framework)**
+** (Transparency & Consent Framework)**
 ✓ Full __tcfapi implementation
 ✓ TC String generation
 ✓ 10 standard purposes
@@ -167,7 +167,6 @@ English, Spanish, French, German, Italian, Portuguese, Dutch, Polish, Russian, J
 ✓ Canada PIPEDA / CASL
 ✓ India DPDP Act 2023 + DPDP Rules 2025
 ✓ ePrivacy Directive (Cookie Law)
-✓ IAB Europe TCF v2.3
 ✓ WCAG 2.1 Level AA
 ✓ Section 508 (US Accessibility)
 ✓ ADA Title III
@@ -204,7 +203,6 @@ Facebook Pixel, Twitter, LinkedIn tracking
 
 = 🎓 Perfect For =
 
-✓ **Publishers** - IAB TCF for programmatic advertising
 ✓ **E-commerce** - GDPR/CCPA for online stores
 ✓ **Agencies** - Client sites with professional compliance
 ✓ **SaaS** - Multi-tenant consent management
@@ -215,7 +213,7 @@ Facebook Pixel, Twitter, LinkedIn tracking
 
 = 🔒 Privacy & Security =
 
-✓ IP anonymization (GDPR compliant)
+✓ IP anonymisation (GDPR compliant)
 ✓ Secure cookie storage (SameSite, HttpOnly)
 ✓ No external requests (all local)
 ✓ No tracking (respects user privacy)
@@ -226,11 +224,11 @@ Facebook Pixel, Twitter, LinkedIn tracking
 
 Other plugins charge for these. We don't:
 
-✓ IAB TCF v2.3 framework
+✓ framework
 ✓ Google Consent Mode v2
 ✓ Microsoft UET Consent Mode
 ✓ Google Additional Consent Mode
-✓ 40+ language auto-translation
+✓ 22 language auto-translation
 ✓ WCAG accessibility compliance
 ✓ Privacy Policy generator
 ✓ Cookie Policy generator
@@ -277,9 +275,8 @@ Done! Your site is now compliant.
 
 **Advanced Setup (If Needed):**
 1. Enable Google Consent Mode (if using GA4/Ads)
-2. Enable IAB TCF (if publisher with programmatic ads)
-3. Configure page exclusions (if e-commerce)
-4. Set up subdomain sharing (if multi-domain)
+2. Configure page exclusions (if e-commerce)
+3. Set up subdomain sharing (if multi-domain)
 
 = Recommended Settings =
 
@@ -290,7 +287,7 @@ Done! Your site is now compliant.
 ✓ Generate privacy policy
 
 **For Publishers:**
-✓ Enable IAB TCF v2.3
+✓ Enable
 ✓ Enable Google ACM
 ✓ Register CMP ID with IAB
 ✓ Configure vendor list
@@ -307,22 +304,22 @@ Done! Your site is now compliant.
 
 Yes! All features are completely free. No premium version, no upsells, no feature restrictions, no hidden costs. We believe privacy compliance should be accessible to everyone.
 
-= Do I need to register for IAB TCF? =
+= Does this plugin support IAB TCF? =
 
-Only if you're a publisher using programmatic advertising. For basic GDPR/CCPA compliance, IAB registration isn't required. The plugin works perfectly without TCF enabled.
+No. Earlier versions carried an IAB TCF option, but it never functioned — it sent a fixed consent string that bore no relation to what visitors had chosen. It was removed in 2.3.3 rather than left in place looking as though it worked. Supporting TCF properly means registering as a Consent Management Platform with IAB Europe, which this plugin has not done. If you are a publisher running programmatic advertising and need TCF, you need a registered CMP. For GDPR, UK, CCPA and the other regimes listed above, TCF is not required, and this plugin covers you.
 
 = How does the Privacy Policy Generator work? =
 
-The generator analyzes your site and detects:
+The generator analyses your site and detects:
 - E-commerce (WooCommerce, EDD)
 - Analytics (Google Analytics, etc.)
 - Advertising (Google Ads, programmatic)
 - Email marketing tools
 - Contact forms
 - Social media integrations
-- Enabled privacy frameworks (TCF, Consent Mode, CCPA)
+- Enabled privacy frameworks (Consent Mode, CCPA)
 
-It then generates a comprehensive, customized privacy policy with all relevant sections. You should review it with legal counsel before publishing.
+It then generates a comprehensive, customised privacy policy with all relevant sections. You should review it with legal counsel before publishing.
 
 = Does it block Google Analytics? =
 
@@ -330,12 +327,12 @@ Yes! The plugin can:
 - Block GA until consent is given
 - Integrate with Google Consent Mode v2
 - Enable cookieless measurement when denied
-- Adjust GA behavior based on consent
+- Adjust GA behaviour based on consent
 - Work with GA4 and Universal Analytics
 
 = Will it slow down my site? =
 
-No. The plugin is highly optimized:
+No. The plugin is highly optimised:
 - <10KB JavaScript (gzipped)
 - No external API calls
 - Efficient database queries
@@ -347,7 +344,7 @@ No. The plugin is highly optimized:
 
 Absolutely! Multiple options:
 - 4 built-in layouts
-- Color picker for all elements
+- Colour picker for all elements
 - Custom logo upload
 - Button text customization
 - Position and animation control
@@ -387,7 +384,7 @@ Yes! Enable "Subdomain Consent Sharing" and consent given on www.example.com app
 = How do I translate the banner? =
 
 Three ways:
-1. **Auto-translation** - Detects browser language (40+ languages)
+1. **Auto-translation** - Detects browser language (22 languages)
 2. **WPML** - Translate strings via WPML String Translation
 3. **Polylang** - Translate via Polylang Strings
 
@@ -426,7 +423,6 @@ Yes! Comprehensive logging:
 - `mbr_cc_consent` - Stores consent choices
 
 **Optional (if enabled):**
-- `euconsent-v2` - IAB TCF consent string
 - `mbr_cc_ac_string` - Google ACM consent string
 
 All cookies respect user privacy settings.
@@ -446,6 +442,61 @@ No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
 
+= 2.3.3 =
+Bug fix release. Recommended for every site.
+
+* Fix: quotes and apostrophes in banner text gained extra backslashes every time the settings were saved. A heading or description containing a quote was stored with the escaping WordPress adds to submitted form data, then re-escaped on the next save, so the backslashes doubled on each visit to the settings screen — one, then three, then seven, then fifteen. The same fault affected the Accept, Reject and Customise button labels, the policy link text, all geolocation regional headings and descriptions, cookie category names and descriptions, blocked script names and descriptions, and the form integration message. Fixed at every save handler.
+* Fix: existing damaged settings are repaired automatically on upgrade. Runs once, on the first admin page load after updating, and unwinds the accumulated backslashes back to the text originally typed.
+* Note: Custom CSS is deliberately left untouched by that repair. CSS uses backslashes as genuine escape characters, and there is no safe way to tell an escape you wrote from one this bug created. If you had quotes in your Custom CSS and have saved settings several times, check that box under Settings > Advanced and tidy it by hand.
+* Fix: page exclusions could take the front end down. The setting defaults to a list but is saved as text, so once anyone filled the field in — or imported a settings file containing it — every front-end page load hit a PHP 8 type error, and the site went white. The value is now accepted in either form.
+* Fix: a page exclusion pattern containing a bracket or a plus sign produced an invalid regular expression and a PHP warning on every page load. Patterns are now matched literally apart from the * wildcard.
+* Fix: Global Privacy Control could be applied to everyone. The signal was read from the visitor's request header and written into the page, so on a cached site one visitor with GPC enabled primed the cache with it and every visitor afterwards was treated as having opted out — suppressing marketing consent site-wide, silently. The signal is now read in the browser, where it describes the person actually reading the page.
+* Fix: every consent log row recorded its method as "other". The values the banner sends were missing from the list of accepted methods, so the Method column — in a log kept as evidence of how consent was obtained — held nothing useful. Existing rows cannot be recovered; new ones are recorded correctly.
+* Fix: the network consent log export could be used to attack the administrator opening it. The visitor's browser identification string is stored as sent and was written to the CSV unescaped, so a request crafted with a leading = became a live formula in the spreadsheet. The single-site export has guarded against this for some time; the network export now uses the same protection.
+* Fix: the network consent log export loaded the entire log into memory at once and would exhaust it on any network with real traffic. Rows are now fetched and written in batches.
+* Fix: a malformed cookie category no longer causes a fatal error when saving settings or registering translation strings.
+* Removed: dead GPC filters that were registered but never applied, and an unreferenced settings view left over from an earlier layout.
+* New: automatic translation actually works. The banner can now be shown in the visitor's own language, chosen from their browser settings, in 22 languages. Previously this was advertised but did nothing at all — the code that would have performed the translation was attached to a filter the plugin never called, so the setting had no effect whichever way it was set.
+* New: translations are community-contributed and must be reviewed before use. A consent notice is a legal statement, and these translations have not been checked by professional translators. Nothing is served until an administrator has read that language on the new Translations screen and approved it, so an unreviewed language falls back to your own wording rather than showing text nobody has verified.
+* Note: the number of supported languages was previously given as "40+". It was 22, and it remains 22 — but all 22 are now complete across every string the banner displays, where before they covered roughly half, leaving visitors with a banner half in their language and half in English.
+* Note: translation happens in the browser rather than on the server. Choosing a language from the visitor's request would write one visitor's language into a cached page and serve it to everyone, so the page always arrives in your own wording and the browser swaps it.
+* Fix: banner text you have customised is never overwritten by a translation. There is no community translation of your wording, so your text is shown as you wrote it rather than replaced by generic wording that may say something subtly different.
+* Fix: approved languages are excluded from settings export. An approval records that a particular person read a translation and took responsibility for publishing it, which does not transfer to another site.
+* Removed: IAB TCF v2.3. The feature never worked. It sent every vendor the same fixed consent string no matter what the visitor had chosen, reported a CMP ID of zero, and returned an empty vendor list — so no vendor could act on it correctly, and a fixed signal claiming consent is worse than sending none at all. Implementing TCF properly requires registration as a Consent Management Platform with IAB Europe, which this plugin does not have and is not in a position to obtain. The option, its settings and its scripts have been removed. Sites that had it switched on get a one-time notice explaining the change.
+* Removed: the IAB TCF section of the generated privacy policy. If you generated a policy while TCF was enabled, regenerate it — it stated that your site participates in the Transparency and Consent Framework, which was not accurate.
+* Fix: YouTube and other video embeds were not blocked on sites using a click-to-play facade. Performance plugins — including MBR Performance and the equivalent options in SG Optimiser and WP Rocket — replace the embed's iframe with a poster image and a container holding the URL in a data attribute, building the real iframe in JavaScript when the visitor clicks. No iframe therefore remained in the page for the blocker to find, and the embed loaded whatever the visitor had chosen, while the site owner had every reason to believe it was being held. Facades are now recognised and held by their data attribute, restored by the browser on consent. Sites running a video facade alongside this plugin should re-test their embeds after updating.
+* Fix: video poster images are held until consent as well. A facade avoids the embed's cookies but still fetches its thumbnail from the provider, so the visitor's IP address reached YouTube or Vimeo on page load whether or not they ever pressed play.
+* Fix: script and iframe blocking is no longer decided on the server from the visitor's cookie. It was, which meant that on a site with a page cache, the first visitor to accept everything primed the cache with fully unblocked HTML, and every visitor served that copy got the trackers running regardless of what they themselves had chosen. Nothing client-side could undo it, because by then the tags were already in the page and had already fired. Every visitor is now served the same document with all non-necessary scripts and embeds held inert, and the browser releases whatever their own choice permits. Together with the Consent Mode change above, this makes the plugin safe to use behind a page cache.
+* Fix: an inline script matching two blocked patterns at once — one calling gtag() and fbq(), say — was wrapped twice, duplicating the blocking markers and stripping the type attribute that had just been written to it.
+* Fix: blocked embed placeholders no longer flash on screen for visitors who had consented. They are rendered hidden and revealed only once the browser has established that the embed really is still blocked.
+* Fix: the blocked embed placeholder stylesheet now always loads. It was tied to the overlay toggle while the placeholder markup was rendered regardless, so sites left on the default setting showed a block of unstyled text where the embed should be.
+* Performance: pages are checked for each blocked domain with a substring test before any regular expression runs. Blocking now happens for every visitor rather than only those without consent, so this keeps a page with no third-party embeds at roughly the cost of a single scan.
+* Fix: Google and Microsoft Consent Mode reported the wrong consent state on cached sites. The default state written into every page was read from the visitor's own cookie, so on any site with a page cache the first consenting visitor's "granted" was stored in the cached HTML and served to everyone who came after — telling Google and Microsoft those visitors had consented when they had not. The default is now derived from your settings alone and is identical for every visitor, and the visitor's actual choice is applied in their browser before any tag loads. This is also how Consent Mode is specified to work: "default" sets the pre-consent baseline, "update" carries the decision.
+* Fix: restored scripts could execute out of order. Scripts released after consent were inserted as async, so they ran in download order rather than page order, and a tracker whose loader had not yet run could fail — intermittently, and only for visitors who accepted.
+* Fix: the Consent Mode script block is no longer printed into pages where both Google and Microsoft modes are switched off.
+* Fix: blocking an inline script by a text pattern could delete page content. The match had no script boundary, so where an unrelated script appeared earlier on the page it ran past that script's closing tag and consumed everything after it until it found the pattern in a later one. The result was that the wrong script was blocked, the intended one was removed entirely, and any heading, paragraph or markup between the two silently disappeared. Only sites with a custom blocked script of type "inline" were affected.
+* Fix: inline-blocked scripts were not tagged with their consent category, so the front end fell back to treating them all as marketing. A script categorised as analytics stayed blocked for a visitor who had accepted analytics but declined marketing. This is the same fault corrected for src-blocked scripts in 2.3.1, missed in the inline path.
+* New: saving settings now purges the page cache. The banner is rendered into the page, so on a cached site any change to the wording, colours, buttons or categories stayed invisible on the front end until the cache happened to expire — which looked exactly like the save had failed. SiteGround Speed Optimizer, WP Rocket, LiteSpeed, W3 Total Cache, WP Super Cache, WP Fastest Cache, WP-Optimize, Cache Enabler, Breeze, Nginx Helper and WP Engine are handled. The purge covers settings, categories, blocked scripts, the form integration message, custom CSS, and settings import and revert.
+* Dev: new filters `mbr_cc_flush_caches` and `mbr_cc_cache_ignored_options`, and new actions `mbr_cc_before_flush_caches` and `mbr_cc_flush_caches_after`, for hosts that would rather purge on their own terms.
+
+= 2.3.2 =
+Appearance and workflow release.
+
+* New: Banner logo can now be chosen from the Media Library. A "Choose from Media Library" button sits above the URL field, with a live preview and a Remove button. Pasting a URL directly still works for logos hosted elsewhere. Where the image has generated sizes, the medium size is used rather than the full original, so a large upload is not sent to every visitor to be displayed at 150px.
+* New: Glassmorphism toggle under Settings > Colors, with Opacity and Blur sliders so you can tune the effect yourself. The effect applies to the banner only — the preference centre is a dense, scrollable panel of category toggles and body copy, where translucency fights the reading rather than decorating it, so it stays on a solid surface. This holds in dark mode too. Browsers without backdrop-filter support fall back to the solid colour, and visitors who have asked their system for reduced transparency also get the solid surface.
+* New: live contrast readout beside the glassmorphism sliders. Rather than capping how transparent the banner may be, the settings screen calculates the real WCAG 2.1 contrast ratio for your chosen banner colour, text colour and opacity — compositing the surface over both a white and a black backdrop and reporting the worse of the two. If that figure passes, the banner is legible over any page behind it, which a fixed opacity limit cannot guarantee. The reading updates as you move the sliders or change either colour.
+* New: Dark Mode control under Settings > Colours, with three options: off, follow the visitor's system setting, or always on. Only the banner surface and text are swapped; your Accept and Reject button colours are kept so branding survives the switch.
+* New: "Preview banner" button under Settings > Colours. Opens the banner in a modal using the settings currently on screen, including unsaved changes, with desktop and mobile widths. The preview is rendered by the real front-end renderer rather than a separate mock-up, so it cannot drift from what visitors actually see, and it runs inside an iframe so the banner's stylesheet cannot affect the admin page around it.
+* Fix: the Media Library handler for the banner logo had been present in admin-settings.js since an earlier release but was bound to a button that was never added to the settings template, so it could never run. Replaced with a working implementation.
+* New: the Dashboard now has an Edit Privacy Policy button and a Regenerate Privacy Policy button once a policy page exists. Previously the Generate button disappeared after the page was created, leaving no way to refresh it from the plugin when your settings changed. Regenerating rewrites only the page content — the title, URL, published status and author are left alone, so a published policy stays published at the same address — and the previous version is saved as a revision first, recoverable from the page editor.
+* New: the Dashboard gained a Privacy Policy Page card alongside the existing Cookie Policy Page card, with the same Edit shortcut.
+* Fix: banner text set in the plugin (heading, description, and the Accept, Reject, Customise and revisit button labels) was ignored on the front end when WPML was active. The plugin asked WPML for the string by name, and WPML returned the copy it had registered when the string was first seen, discarding the updated value passed alongside it — so the setting saved, the admin field showed the new wording, and the front end silently kept the old. In the site's default language, the plugin's own setting is now authoritative; secondary languages still come from WPML or Polylang as before. Settings saves also refresh the registered strings so the multilingual copies no longer go stale. Sites running WPML or Polylang get a one-time dismissible notice explaining the change, since anyone who worked around the old behaviour by editing the default-language wording in String Translation will now see the plugin's setting take over.
+* Fix: the plugin update manifest declared a minimum of PHP 8.0 and WordPress 6.0, while the plugin itself declares PHP 7.4 and WordPress 5.8. The manifest is what decides whether an update is offered, so sites on PHP 7.4 were told no update was available. Corrected to PHP 7.4 and WordPress 5.8 so the manifest matches what the plugin actually supports.
+* Update: the new appearance settings — glassmorphism on/off, opacity, blur, dark mode and the banner logo URL — are all carried by settings export and import, so a tuned look can be reproduced across sites as usual.
+* Fix: settings that are meaningful only on the site they were set on are now excluded from export and import, and skipped if present in a hand-edited file. Specifically: the banner logo's Media Library attachment ID (the logo URL still travels; the ID refers to a different image, or none, on another install), the visitor IP detection mode and trusted proxy list (which proxy a site sits behind is a fact about that server, and importing it elsewhere can silently break geolocation), the ip-api.com pro key, the plain-HTTP geolocation opt-in, and the AI training disclosure settings. The last of these drive a legal statement in the generated privacy policy: carrying them between sites would publish a claim about a business's AI data practices that nobody there ever made. Agencies templating many sites for one client can opt any of these back in with the mbr_cc_site_local_settings filter. A credential should not ride along in a file that gets emailed around, and a security opt-in should never switch itself on as a side effect of importing someone else's configuration.
+* Dev: new filters `mbr_cc_banner_css`, `mbr_cc_glass_opacity`, `mbr_cc_glass_blur`, `mbr_cc_dark_palette` and `mbr_cc_site_local_settings`.
+* Dev: `MBR_CC_Banner::build_custom_css()` and `MBR_CC_Banner::hex_to_rgb()` are now public static; `render_banner()` accepts a preview argument.
+
 = 2.3.1 =
 Security and hardening release following a full audit of the plugin's own code. No exploitation of any of the issues below has been reported; they were found by review.
 
@@ -455,14 +506,14 @@ Security and hardening release following a full audit of the plugin's own code. 
 * Security: Consent log CSV exports are protected against spreadsheet formula injection. Category values originate from unauthenticated visitors, and a value beginning with =, +, - or @ is executed as a formula by Excel, LibreOffice and Sheets when the export is opened.
 * Security: The cookie scanner can no longer be pointed at arbitrary URLs. It now scans only your own site (or, on multisite, the network), and verifies TLS certificates.
 * Security: TLS certificate verification is no longer disabled on any outbound request.
-* Security: The settings save handler now writes only recognised settings, instead of accepting any key and prefixing it. As a side effect the junk mbr_cc_layout_option row, which was written on every save despite never being a real setting, is no longer created.
+* Security: The settings save handler now writes only recognised settings, instead of accepting any key and prefixing it. As a side effect, the junk mbr_cc_layout_option row, which was written on every save despite never being a real setting, is no longer created.
 * Security: The consent cookie is marked Secure on HTTPS sites, so it is never transmitted in cleartext.
 * Security: Restoring blocked inline scripts no longer uses eval(), so script blocking works under a Content-Security-Policy without 'unsafe-eval'.
 * Security: A/B test tracking endpoints are throttled per visitor.
 * Security: The subdomain cookie domain is derived from your configured site address rather than the client-supplied Host header.
-* Security: The stale-nonce message is limited to one entry per hour and only written when WP_DEBUG is on. Previously every occurrence was logged, so a traffic spike could fill the PHP error log.
+* Security: The stale-nonce message is limited to one entry per hour and only written when WP_DEBUG is on. Previously, every occurrence was logged, so a traffic spike could fill the PHP error log.
 * Security: IPv6 addresses in the consent log are now truncated by 80 bits rather than by a single group. The previous truncation left enough of the address to identify a household.
-* Fix: Scripts blocked by src were tagged with an empty consent category because of a missing variable binding, so after a visitor accepted cookies those scripts could silently fail to be restored. Iframe blocking was unaffected.
+* Fix: Scripts blocked by src were tagged with an empty consent category because of a missing variable binding, so after a visitor accepted cookies, those scripts could silently fail to be restored. Iframe blocking was unaffected.
 * Fix: A/B test impressions were counted on every page load rather than once per visitor, so a single visitor reloading a page inflated the count each time. Existing statistics are therefore overstated and are worth resetting before drawing conclusions. Conversions are now deduplicated per visitor over 24 hours.
 * Fix: Subdomain consent sharing failed across the entire .co.uk space, and other multi-part suffixes such as .com.au and .co.nz. The root domain was taken as the last two labels, so shop.example.co.uk produced a cookie scoped to "co.uk", which every browser rejects.
 * Fix: Network settings whose names contained "button" were cast to booleans, so the accept, reject and customise button labels were each stored as 1 instead of their text. Network URL settings are now validated as URLs, which also rejects unsafe schemes.
@@ -479,15 +530,15 @@ Security and hardening release following a full audit of the plugin's own code. 
 * New: Nigeria (NDPA 2023 + GAID) added as a dedicated privacy region. The NDPC's General Application and Implementation Directive, effective 19 September 2025, is one of the few instruments anywhere that prescribes banner placement — a prominent homepage notice with a genuine accept/decline choice, no pre-ticked boxes, and no implied consent from continued browsing.
 * New: China (PIPL) added as a dedicated privacy region with granular per-purpose opt-in. Note the documented limitation: PIPL's separate cross-border transfer consent and transfer mechanism are NOT provided by this plugin and must be handled separately.
 * New: South Korea (PIPA) added as a dedicated privacy region — specific, informed, prior consent wherever cookie data can identify a person.
-* New: Saudi Arabia (PDPL) added as a dedicated privacy region, with an Arabic banner heading default. Consent is the default lawful basis and SDAIA enforcement has been active since 2025.
+* New: Saudi Arabia (PDPL) added as a dedicated privacy region, with an Arabic banner heading by default. Consent is the default lawful basis, and SDAIA enforcement has been active since 2025.
 * New: South Africa (POPIA) added as a dedicated privacy region, reflecting the section 69 opt-in requirement for electronic direct marketing.
 * New: AI / LLM training disclosure. Connecticut SB 1295, effective 1 July 2026, is the first US state law requiring your privacy notice to state whether you collect, use, or sell personal data to train large language models. A new section under Advanced Consent controls this, and the privacy policy generator produces matching text — including a clear "we do not" statement when none of the options apply, which is the correct answer for most sites.
 * Update: Connecticut compliance notes substantially expanded. SB 1295 went live 1 July 2026 and is far bigger than the previous one-line summary suggested: applicability threshold cut from 100,000 to 35,000 consumers, no threshold at all if you process sensitive data or sell personal data, sensitive data widened to include neural data, government identifiers, financial account information and SSNs, profiling opt-out broadened beyond "solely" automated decisions, profiling impact assessments from 1 August 2026, and the statutory cure period removed. Connecticut SB 4 follows on 1 October 2026.
 * Update: Arkansas HB 1717 (Children and Teens' Online Privacy Protection Act) and Utah HB 418 noted, both effective 1 July 2026. Arkansas is a minors-focused law, not a comprehensive one, so the "20 states in effect" count is unchanged. This plugin has no age-assurance layer — sites serving minors must handle that separately.
 * Update: EU/EEA notes record EDPB Binding Decision 1/2026 (14 July 2026), which overturned the Belgian DPA's dismissal of a noyb cookie-banner complaint against VRT and required it to be decided on the merits. Representative complaints are now much harder to dispose of on procedural grounds.
-* Update: Digital Omnibus status refreshed — negotiations are paused and continue under the Irish Presidency, with final text not expected before late 2026 or early 2027. The ePrivacy Directive regime remains operative and no banner change is required.
+* Update: Digital Omnibus status refreshed — negotiations are paused and continue under the Irish Presidency, with final text not expected before late 2026 or early 2027. The ePrivacy Directive regime remains operative, and no banner change is required.
 * Fix: Corrected the ePrivacy Regulation withdrawal dates. The withdrawal was announced in the Commission's 2025 Work Programme on 11 February 2025, formally approved on 16 July 2025, and published in the Official Journal on 6 October 2025. The previous note gave 11 February 2026, a year out.
-* Fix: Canada PIPEDA notes no longer describe Bill C-27 as pending. It died in January 2025; PIPEDA still governs and there is no successor in force.
+* Fix: Canada PIPEDA notes no longer describe Bill C-27 as pending. It died in January 2025; PIPEDA still governs, and there is no successor in force.
 * Fix: The Geolocation testing tool reported "Rest of World" for any region added after version 2.1.0. The tool kept its own copy of the region name and behaviour tables, which was never updated when Vietnam, Indonesia and the 2.3.0 regions were added, so Nigeria, China, South Korea, Saudi Arabia, South Africa, Vietnam and Indonesia all appeared unrecognised. Live visitor detection was unaffected throughout — real visitors always received the correct regional banner; only the admin test readout was wrong. The tool now reads the real region configuration rather than a parallel list, so it cannot drift again, and it also reports auto-accept and category visibility.
 * Dev: New MBR_CC_Region_Config::get_config_for_region() accessor, and MBR_CC_Geolocation::get_region_name() now takes an optional region argument, so admin tooling can describe any region without duplicating the tables.
 * Dev: Version-gated upgrade routines consolidated into a single maybe_upgrade() method that runs on load rather than on activation, because WordPress does not fire the activation hook when a plugin is updated in place.
@@ -503,7 +554,7 @@ Security and hardening release following a full audit of the plugin's own code. 
 * Note: Consent logs are never included in a settings export (they are visitor personal data — use the CSV export on the Consent Logs screen). Site-local values (policy page IDs, the geolocation IP cache) and version markers are also excluded, as they are not valid on another site.
 
 = 2.1.2 =
-* New: Indonesia UU PDP (Personal Data Protection Law No. 27 of 2022) added as a dedicated privacy region. Fully effective since 17 October 2024 and upheld by the Constitutional Court in January 2026, it is GDPR-style and extraterritorial — visitors detected in Indonesia now receive an opt-in banner with purpose-specific consent and easy withdrawal, plus an Indonesian-language banner heading default.
+* New: Indonesia UU PDP (Personal Data Protection Law No. 27 of 2022) added as a dedicated privacy region. Fully effective since 17 October 2024 and upheld by the Constitutional Court in January 2026, it is GDPR-style and extraterritorial — visitors detected in Indonesia now receive an opt-in banner with purpose-specific consent and easy withdrawal, plus an Indonesian-language banner heading by default.
 * New: Indonesia compliance card added to Geolocation settings.
 * Update: EU/EEA Digital Omnibus notes corrected to reflect the current state of play — the Council's compromise text of 21 May 2026 dropped the relocation of cookie rules into GDPR Articles 88a/88b, the AI and Data Omnibus files have split, and adoption of the data half is not expected before late 2026. The ePrivacy Directive regime remains operative; single-click refusal and low-risk exemptions remain proposals only.
 * Update: US multi-state notes now name the four laws enacted in the 2026 session — Oklahoma SB 546 and the Louisiana Data Privacy Act (effective 1 January 2027), the Alabama Personal Data Protection Act (2027), and the Vermont Data Privacy and Online Surveillance Act (1 January 2028) — bringing the enacted total to 24 (20 in effect). All follow the Virginia opt-out model, so no banner behaviour changes. Also added: Virginia's precise-geolocation restriction (effective 1 July 2026) and California's ADMT opt-out rights (effective 1 January 2027).
@@ -590,7 +641,7 @@ Security and hardening release following a full audit of the plugin's own code. 
 * Feature: Cookie path configuration
 
 = 1.2.0 =
-* **New:** Auto-translation (40+ languages)
+* **New:** Auto-translation (22 languages)
 * **New:** WPML integration
 * **New:** Polylang integration
 * **New:** WCAG 2.1 AA accessibility compliance
@@ -652,13 +703,13 @@ Adds Quebec Law 25, Switzerland nFADP, and Australia Privacy Act as separate det
 Privacy Policy Generator added! Automatically creates comprehensive, intelligent privacy policies based on your site configuration. Highly recommended upgrade for all users.
 
 = 1.4.0 =
-Major update: IAB TCF v2.3 and Google Additional Consent Mode for professional publishers and advertisers. Enterprise-grade consent management now available.
+Major update: and Google Additional Consent Mode for professional publishers and advertisers. Enterprise-grade consent management now available.
 
 = 1.3.0 =
 Enhanced customization features including page controls and subdomain sharing. Recommended for all e-commerce and multi-domain sites.
 
 = 1.2.0 =
-Internationalization and accessibility update: 40+ languages and full WCAG compliance. Essential for international and accessible websites.
+Internationalization and accessibility update: 22 languages and full WCAG compliance. Essential for international and accessible websites.
 
 = 1.1.0 =
 Google Consent Mode v2 and Microsoft UET support. Important for sites using Google Analytics, Ads, or Microsoft Advertising.

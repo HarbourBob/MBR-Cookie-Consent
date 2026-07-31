@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "de",
+        "name": "Deutsch",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Wir schätzen Ihre Privatsphäre",
+        "banner_description": "Wir verwenden Cookies, um Ihr Browsing-Erlebnis zu verbessern, personalisierte Inhalte anzubieten und unseren Traffic zu analysieren. Durch Klicken auf \"Alle akzeptieren\" stimmen Sie der Verwendung von Cookies zu.",
+        "accept_all": "Alle akzeptieren",
+        "reject_all": "Alle ablehnen",
+        "customize": "Anpassen",
+        "cookie_settings": "Cookie-Einstellungen",
+        "manage_preferences": "Cookie-Präferenzen verwalten",
+        "preferences_intro": "Wir verwenden Cookies, um Ihr Erlebnis zu verbessern. Sie können auswählen, welche Arten von Cookies Sie zulassen möchten.",
+        "save_preferences": "Einstellungen speichern",
+        "close": "Schließen",
+        "necessary": "Notwendig",
+        "necessary_description": "Notwendige Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich. Sie gewährleisten grundlegende Funktionen und Sicherheitsmerkmale der Website.",
+        "analytics": "Analytisch",
+        "analytics_description": "Analyse-Cookies helfen uns zu verstehen, wie Besucher mit unserer Website interagieren, indem sie Informationen anonym erfassen und melden.",
+        "marketing": "Marketing",
+        "marketing_description": "Marketing-Cookies werden verwendet, um Besucher über Websites hinweg zu verfolgen, relevante Werbung anzuzeigen und die Nutzerbindung zu fördern.",
+        "preferences": "Präferenzen",
+        "preferences_description": "Präferenz-Cookies ermöglichen es einer Website, Informationen zu speichern, die das Verhalten oder das Erscheinungsbild der Website verändern.",
+        "always_active": "Immer aktiv",
+        "privacy_policy_text": "Datenschutzerklärung",
+        "cookie_policy_text": "Cookie-Richtlinie",
+        "ccpa_link_text": "Meine personenbezogenen Daten nicht verkaufen oder weitergeben",
+        "blocked_heading": "Inhalt blockiert",
+        "blocked_message": "Dieses Video ist blockiert, da Marketing-Cookies nicht akzeptiert wurden.",
+        "blocked_button": "Cookies akzeptieren und Video abspielen",
+        "blocked_region_label": "Blockierter Inhalt",
+        "form_blocked_message": "Bitte akzeptieren Sie Cookies, bevor Sie dieses Formular absenden."
+    }
+}

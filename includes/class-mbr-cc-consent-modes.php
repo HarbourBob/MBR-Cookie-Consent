@@ -45,173 +45,181 @@ class MBR_CC_Consent_Modes {
     }
     
     /**
-     * Output Google Consent Mode v2 and Microsoft UET Consent Mode scripts.
-     * These must load BEFORE Google Analytics, Google Ads, and Microsoft UET tags.
+     * Output Google Consent Mode v2 and Microsoft UET Consent Mode defaults.
+     *
+     * This must load BEFORE Google Analytics, Google Ads and Microsoft UET tags.
+     *
+     * Everything printed here is derived from site options only. No cookie is
+     * read, so the markup is identical for every visitor and safe for a page
+     * cache to store. The visitor's own decision is applied by the update call
+     * at the foot of the script, from the cookie, in the browser.
+     *
+     * That split is also how Consent Mode is specified to be used: 'default'
+     * establishes the pre-consent baseline, 'update' carries the decision.
+     * This method previously read the consent cookie and wrote the answer into
+     * 'default', which put per-visitor state into a shared document — so on any
+     * cached site the first consenting visitor's 'granted' was stored in the
+     * cached HTML and served to everyone who came after, whatever they had
+     * chosen. Google was told those visitors had consented when they had not.
+     *
+     * @return void
      */
     public function output_consent_mode_scripts() {
-        $google_enabled = get_option('mbr_cc_google_consent_mode', false);
-        $microsoft_enabled = get_option('mbr_cc_microsoft_consent_mode', false);
-        
-        // Get current consent state.
-        $consent = $this->get_current_consent();
-        
+        $google_enabled    = (bool) get_option('mbr_cc_google_consent_mode', false);
+        $microsoft_enabled = (bool) get_option('mbr_cc_microsoft_consent_mode', false);
+
+        // Nothing to say if neither framework is enabled. An empty script block
+        // was previously printed into the head of every page regardless.
+        if (!$google_enabled && !$microsoft_enabled) {
+            return;
+        }
+
+        // Site-level defaults. Constant across visitors, therefore cacheable.
+        $google_default    = get_option('mbr_cc_google_default_deny', true) ? 'denied' : 'granted';
+        $microsoft_default = get_option('mbr_cc_microsoft_default_deny', true) ? 'denied' : 'granted';
+        $redaction         = (bool) get_option('mbr_cc_google_ads_redaction', true);
+        $passthrough       = (bool) get_option('mbr_cc_google_url_passthrough', false);
         ?>
         <!-- MBR Cookie Consent - Consent Mode Integration -->
         <script data-mbr-cc-consent-mode="true">
         <?php if ($google_enabled) : ?>
-        // Google Consent Mode v2 - Default state (before user interaction)
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
-        
+
         gtag('consent', 'default', {
-            'ad_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
-            'ad_user_data': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
-            'ad_personalization': '<?php echo esc_js($this->get_google_consent_state($consent, 'marketing')); ?>',
-            'analytics_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'analytics')); ?>',
-            'functionality_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'preferences')); ?>',
-            'personalization_storage': '<?php echo esc_js($this->get_google_consent_state($consent, 'preferences')); ?>',
-            'security_storage': 'granted', // Always granted for security cookies
-            'wait_for_update': 500 // Wait 500ms for user interaction
+            'ad_storage': '<?php echo esc_js($google_default); ?>',
+            'ad_user_data': '<?php echo esc_js($google_default); ?>',
+            'ad_personalization': '<?php echo esc_js($google_default); ?>',
+            'analytics_storage': '<?php echo esc_js($google_default); ?>',
+            'functionality_storage': '<?php echo esc_js($google_default); ?>',
+            'personalization_storage': '<?php echo esc_js($google_default); ?>',
+            'security_storage': 'granted',
+            'wait_for_update': 500
         });
-        
-        <?php if (get_option('mbr_cc_google_ads_redaction', true)) : ?>
-        // Enable ads data redaction if marketing consent not given
-        gtag('set', 'ads_data_redaction', <?php echo $consent && $this->has_category_consent($consent, 'marketing') ? 'false' : 'true'; ?>);
+        <?php if ($redaction) : ?>
+        gtag('set', 'ads_data_redaction', <?php echo 'denied' === $google_default ? 'true' : 'false'; ?>);
         <?php endif; ?>
-        
-        <?php if (get_option('mbr_cc_google_url_passthrough', false)) : ?>
-        // Pass through ad click information in URLs (for conversion tracking without cookies)
+        <?php if ($passthrough) : ?>
         gtag('set', 'url_passthrough', true);
         <?php endif; ?>
         <?php endif; ?>
-        
+
         <?php if ($microsoft_enabled) : ?>
-        // Microsoft UET Consent Mode
         window.uetq = window.uetq || [];
         window.uetq.push('consent', 'default', {
-            'ad_storage': '<?php echo esc_js($this->get_microsoft_consent_state($consent, 'marketing')); ?>'
+            'ad_storage': '<?php echo esc_js($microsoft_default); ?>'
         });
         <?php endif; ?>
-        
-        // MBR Cookie Consent - Update consent mode when user makes a choice
+
         window.MbrCcConsentModes = {
-            updateGoogleConsent: function(consent) {
+
+            /**
+             * Read the stored consent choice from the cookie.
+             *
+             * Returns null when there is no cookie, when it is implausibly
+             * large, or when it does not parse — in every one of those cases
+             * the default state above stands, which is the safe outcome.
+             */
+            readStoredConsent: function () {
+                var name  = 'mbr_cc_consent=';
+                var parts = document.cookie ? document.cookie.split(';') : [];
+
+                for (var i = 0; i < parts.length; i++) {
+                    var part = parts[i];
+                    while (part.charAt(0) === ' ') { part = part.substring(1); }
+                    if (part.indexOf(name) !== 0) { continue; }
+
+                    var raw = part.substring(name.length);
+                    if (!raw || raw.length > 2048) { return null; }
+
+                    // The banner writes the value unencoded, but a proxy or an
+                    // older release may have encoded it. Try to decode, and
+                    // fall back to the raw value if that fails.
+                    try { raw = decodeURIComponent(raw); } catch (e) {}
+
+                    try {
+                        var parsed = JSON.parse(raw);
+                        return (parsed && typeof parsed === 'object') ? parsed : null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
+                return null;
+            },
+
+            /**
+             * Mirrors the server-side rule: an explicit "accept all" grants
+             * every category, otherwise the category must be true in its own
+             * right. Anything absent counts as not granted.
+             */
+            hasCategory: function (consent, category) {
+                if (!consent) { return false; }
+                if (consent.all === true) { return true; }
+                return consent[category] === true;
+            },
+
+            updateGoogleConsent: function (consent) {
                 <?php if ($google_enabled) : ?>
-                if (typeof gtag === 'function') {
-                    gtag('consent', 'update', {
-                        'ad_storage': consent.marketing ? 'granted' : 'denied',
-                        'ad_user_data': consent.marketing ? 'granted' : 'denied',
-                        'ad_personalization': consent.marketing ? 'granted' : 'denied',
-                        'analytics_storage': consent.analytics ? 'granted' : 'denied',
-                        'functionality_storage': consent.preferences ? 'granted' : 'denied',
-                        'personalization_storage': consent.preferences ? 'granted' : 'denied'
-                    });
-                    
-                    <?php if (get_option('mbr_cc_google_ads_redaction', true)) : ?>
-                    // Update ads data redaction
-                    gtag('set', 'ads_data_redaction', !consent.marketing);
-                    <?php endif; ?>
-                }
+                if (typeof gtag !== 'function') { return; }
+
+                var marketing   = this.hasCategory(consent, 'marketing');
+                var analytics   = this.hasCategory(consent, 'analytics');
+                var preferences = this.hasCategory(consent, 'preferences');
+
+                gtag('consent', 'update', {
+                    'ad_storage': marketing ? 'granted' : 'denied',
+                    'ad_user_data': marketing ? 'granted' : 'denied',
+                    'ad_personalization': marketing ? 'granted' : 'denied',
+                    'analytics_storage': analytics ? 'granted' : 'denied',
+                    'functionality_storage': preferences ? 'granted' : 'denied',
+                    'personalization_storage': preferences ? 'granted' : 'denied'
+                });
+
+                <?php if ($redaction) : ?>
+                gtag('set', 'ads_data_redaction', !marketing);
+                <?php endif; ?>
                 <?php endif; ?>
             },
-            
-            updateMicrosoftConsent: function(consent) {
+
+            updateMicrosoftConsent: function (consent) {
                 <?php if ($microsoft_enabled) : ?>
-                if (typeof window.uetq !== 'undefined') {
-                    window.uetq.push('consent', 'update', {
-                        'ad_storage': consent.marketing ? 'granted' : 'denied'
-                    });
-                }
+                if (typeof window.uetq === 'undefined') { return; }
+
+                window.uetq.push('consent', 'update', {
+                    'ad_storage': this.hasCategory(consent, 'marketing') ? 'granted' : 'denied'
+                });
                 <?php endif; ?>
             },
-            
-            updateAllConsent: function(consent) {
+
+            updateAllConsent: function (consent) {
                 this.updateGoogleConsent(consent);
                 this.updateMicrosoftConsent(consent);
+            },
+
+            /**
+             * Apply whatever the visitor has already chosen.
+             *
+             * Runs synchronously in this same script block, so a returning
+             * visitor's real state is in place before any Google or Microsoft
+             * tag has had the chance to load.
+             */
+            applyStoredConsent: function () {
+                var consent = this.readStoredConsent();
+
+                if (consent) {
+                    this.updateAllConsent(consent);
+                }
+
+                return consent;
             }
         };
+
+        window.MbrCcConsentModes.applyStoredConsent();
         </script>
         <?php
     }
-    
-    /**
-     * Get current consent from cookie.
-     *
-     * @return array|null Consent data or null if no consent.
-     */
-    private function get_current_consent() {
-        if (!isset($_COOKIE['mbr_cc_consent'])) {
-            return null;
-        }
-        
-        $raw = wp_unslash($_COOKIE['mbr_cc_consent']);
-        
-        // Client-controlled value read on every page load; reject oversized
-        // input before decoding it.
-        if (!is_string($raw) || $raw === '' || strlen($raw) > 2048) {
-            return null;
-        }
-        
-        $consent = json_decode($raw, true);
-        return is_array($consent) ? $consent : null;
-    }
-    
-    /**
-     * Check if category consent is given.
-     *
-     * @param array|null $consent Consent data.
-     * @param string $category Category slug.
-     * @return bool Has consent.
-     */
-    private function has_category_consent($consent, $category) {
-        if (empty($consent)) {
-            return false;
-        }
-        
-        // Check for "accept all".
-        if (isset($consent['all']) && $consent['all'] === true) {
-            return true;
-        }
-        
-        // Check specific category.
-        return isset($consent[$category]) && $consent[$category] === true;
-    }
-    
-    /**
-     * Get Google Consent Mode state for a category.
-     *
-     * @param array|null $consent Consent data.
-     * @param string $category Category slug.
-     * @return string 'granted' or 'denied'.
-     */
-    private function get_google_consent_state($consent, $category) {
-        // If no consent decision yet, use regional defaults
-        if ($consent === null) {
-            // For EEA/UK users, default to denied (you could enhance this with geo-location)
-            $default_deny = get_option('mbr_cc_google_default_deny', true);
-            return $default_deny ? 'denied' : 'granted';
-        }
-        
-        return $this->has_category_consent($consent, $category) ? 'granted' : 'denied';
-    }
-    
-    /**
-     * Get Microsoft UET Consent Mode state for a category.
-     *
-     * @param array|null $consent Consent data.
-     * @param string $category Category slug.
-     * @return string 'granted' or 'denied'.
-     */
-    private function get_microsoft_consent_state($consent, $category) {
-        // If no consent decision yet, default to denied for EU compliance
-        if ($consent === null) {
-            $default_deny = get_option('mbr_cc_microsoft_default_deny', true);
-            return $default_deny ? 'denied' : 'granted';
-        }
-        
-        return $this->has_category_consent($consent, $category) ? 'granted' : 'denied';
-    }
-    
+
     /**
      * Get consent mode settings for admin display.
      *

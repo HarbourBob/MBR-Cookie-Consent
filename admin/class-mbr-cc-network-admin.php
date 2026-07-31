@@ -240,6 +240,14 @@ class MBR_CC_Network_Admin {
             update_site_option($key, $value);
         }
         
+        // Network options are shared, but page caches are not: each site in the
+        // network holds its own. This purges the site the request was made
+        // from. Sub-sites pick the new wording up as their own caches expire,
+        // or immediately if an admin saves there — a synchronous purge across
+        // every site in a large network is not something to run from a form
+        // submission.
+        MBR_CC_Cache::flush('network_settings');
+        
         wp_redirect(add_query_arg(array(
             'page' => 'mbr-cc-network',
             'updated' => 'true'
@@ -300,12 +308,15 @@ class MBR_CC_Network_Admin {
         
         $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         
-        $results = $wpdb->get_results(
-            "SELECT * FROM $table_name ORDER BY timestamp DESC",
-            ARRAY_A
-        );
+        // Rows are fetched in batches rather than all at once. The previous
+        // query pulled the entire consent log into PHP memory in one go, which
+        // is fine on a test network and fatal on a real one.
+        $batch_size = (int) apply_filters('mbr_cc_network_export_batch', 2000);
+        $batch_size = max(100, min(10000, $batch_size));
         
-        if (empty($results)) {
+        $total = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+        
+        if (0 === $total) {
             return;
         }
         
@@ -329,9 +340,36 @@ class MBR_CC_Network_Admin {
             'Cookie Hash'
         ));
         
-        // Add data
-        foreach ($results as $row) {
-            fputcsv($output, $row);
+        // Add data.
+        //
+        // Every field is escaped before it is written. user_agent is stored
+        // verbatim from the request header, so an unauthenticated visitor could
+        // send a User-Agent beginning with = and have it executed as a formula
+        // when a network administrator opened this file. The single-site export
+        // has defended against this for some time; this path was never updated
+        // to match, and simply reuses the same escaper now.
+        for ($offset = 0; $offset < $total; $offset += $batch_size) {
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM $table_name ORDER BY timestamp DESC LIMIT %d OFFSET %d",
+                    $batch_size,
+                    $offset
+                ),
+                ARRAY_A
+            );
+            
+            if (empty($rows)) {
+                break;
+            }
+            
+            foreach ($rows as $row) {
+                fputcsv($output, array_map(array('MBR_CC_Database', 'escape_csv_field'), $row));
+            }
+            
+            // Push each batch to the browser rather than accumulating it.
+            if (function_exists('flush')) {
+                flush();
+            }
         }
         
         // Output stream (php://output) is used to stream the CSV download directly to the browser; WP_Filesystem operates on the local filesystem and cannot write to an output stream.

@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "es",
+        "name": "Español",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Valoramos tu privacidad",
+        "banner_description": "Utilizamos cookies para mejorar tu experiencia de navegación, ofrecer contenido personalizado y analizar nuestro tráfico. Al hacer clic en \"Aceptar todo\", consientes el uso de cookies.",
+        "accept_all": "Aceptar todo",
+        "reject_all": "Rechazar todo",
+        "customize": "Personalizar",
+        "cookie_settings": "Configuración de cookies",
+        "manage_preferences": "Gestionar preferencias de cookies",
+        "preferences_intro": "Utilizamos cookies para mejorar tu experiencia. Puedes elegir qué tipos de cookies permitir.",
+        "save_preferences": "Guardar preferencias",
+        "close": "Cerrar",
+        "necessary": "Necesarias",
+        "necessary_description": "Las cookies necesarias son esenciales para que el sitio web funcione correctamente. Garantizan las funcionalidades básicas y las características de seguridad del sitio.",
+        "analytics": "Analíticas",
+        "analytics_description": "Las cookies analíticas nos ayudan a comprender cómo interactúan los visitantes con nuestro sitio web recopilando e informando información de forma anónima.",
+        "marketing": "Marketing",
+        "marketing_description": "Las cookies de marketing se utilizan para rastrear a los visitantes en distintos sitios web con el fin de mostrar anuncios relevantes y fomentar la participación del usuario.",
+        "preferences": "Preferencias",
+        "preferences_description": "Las cookies de preferencias permiten que un sitio web recuerde información que cambia su comportamiento o su apariencia.",
+        "always_active": "Siempre activas",
+        "privacy_policy_text": "Política de privacidad",
+        "cookie_policy_text": "Política de cookies",
+        "ccpa_link_text": "No vender ni compartir mi información personal",
+        "blocked_heading": "Contenido bloqueado",
+        "blocked_message": "Este vídeo está bloqueado porque no se han aceptado las cookies de marketing.",
+        "blocked_button": "Aceptar cookies y reproducir vídeo",
+        "blocked_region_label": "Contenido bloqueado",
+        "form_blocked_message": "Acepta las cookies antes de enviar este formulario."
+    }
+}

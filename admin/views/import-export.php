@@ -52,7 +52,7 @@ $mbr_cc_export_url = add_query_arg(
         </p>
         <p class="description" style="max-width:70ch;">
             <strong><?php esc_html_e('Included:', 'mbr-cookie-consent'); ?></strong>
-            <?php esc_html_e('banner appearance and text, behaviour, cookie categories, blocked scripts, consent-mode (Google/Microsoft), GPC, IAB TCF, form integration, and all geolocation regional headings and descriptions.', 'mbr-cookie-consent'); ?>
+            <?php esc_html_e('banner appearance and text, behaviour, cookie categories, blocked scripts, consent-mode (Google/Microsoft), GPC, form integration, and all geolocation regional headings and descriptions.', 'mbr-cookie-consent'); ?>
         </p>
         <p class="description" style="max-width:70ch;">
             <strong><?php esc_html_e('Not included:', 'mbr-cookie-consent'); ?></strong>

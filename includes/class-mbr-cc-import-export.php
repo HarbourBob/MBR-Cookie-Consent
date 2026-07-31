@@ -104,6 +104,11 @@ class MBR_CC_Import_Export {
             'reject_button_color'        => 'color',
             'text_color'                 => 'color',
             'revisit_button_text_color'  => 'color',
+            'banner_glassmorphism'       => 'bool',
+            'glass_opacity'              => 'int',
+            'glass_blur'                 => 'int',
+            'banner_dark_mode'           => 'key',
+            'banner_logo_id'             => 'int',
             'show_reject_button'         => 'bool',
             'show_customize_button'      => 'bool',
             'show_close_button'          => 'bool',
@@ -172,8 +177,6 @@ class MBR_CC_Import_Export {
             'subdomain_sharing'          => 'bool',
             'subdomain_root_domain'      => 'text',
 
-            // IAB TCF v2.3.
-            'iab_tcf_enabled'            => 'bool',
             'publisher_country_code'     => 'text',
             'purpose_one_treatment'      => 'bool',
             'gdpr_applies'               => 'text', // 'auto' | 'true' | 'false'.
@@ -208,9 +211,9 @@ class MBR_CC_Import_Export {
             'geolocation_default_require' => 'bool',
             'geolocation_cache'          => 'int',
 
-            // Proxy trust (2.3.1). Deliberately NOT exported/imported by
-            // default elsewhere, but listed so the settings screen can write
-            // it through the same allowlist as everything else.
+            // Proxy trust (2.3.1). Listed so the settings screen can write it;
+            // excluded from import/export by site_local_keys(), because which
+            // proxy a site sits behind is a fact about that server.
             'proxy_mode'                 => 'key',
             'trusted_proxies'            => 'textarea',
 
@@ -302,6 +305,80 @@ class MBR_CC_Import_Export {
      * ------------------------------------------------------------------- */
 
     /**
+     * Settings that may be written from the settings screen but must never
+     * travel between sites.
+     *
+     * The settings-save allowlist and the export allowlist are not the same
+     * set, and treating them as one is how the wrong things end up in a
+     * portable file. Three kinds of value belong here:
+     *
+     *  - References to local database rows. An attachment ID means a different
+     *    image, or nothing at all, on another install — the same reasoning that
+     *    already keeps policy page IDs out of an export.
+     *  - Host infrastructure. Whether a site sits behind Cloudflare or a
+     *    reverse proxy is a fact about that server, and importing it elsewhere
+     *    can silently break visitor IP detection, and therefore geolocation.
+     *  - Credentials and security opt-ins, which should not be copied into a
+     *    file that gets emailed around, and should never be switched on as a
+     *    side effect of importing someone else's configuration.
+     *
+     * @return array Option names without the mbr_cc_ prefix.
+     */
+    private function site_local_keys() {
+        /**
+         * Filter the settings excluded from import and export.
+         *
+         * @since 2.3.2
+         *
+         * @param array $keys Option names without the mbr_cc_ prefix.
+         */
+        return (array) apply_filters('mbr_cc_site_local_settings', array(
+            // Local database reference — the logo URL travels, the ID cannot.
+            'banner_logo_id',
+            
+            // Host infrastructure.
+            'proxy_mode',
+            'trusted_proxies',
+            
+            // Credential and security opt-in.
+            'ipapi_key',
+            'allow_insecure_geo_lookup',
+            
+            // Statements of fact about one business, not design settings.
+            // These drive a legal disclosure in the generated privacy policy
+            // under Connecticut SB 1295. Carrying them to another site would
+            // publish a claim about that site's AI data practices that nobody
+            // there ever made — and a false privacy disclosure is a worse
+            // outcome than re-entering five checkboxes. Agencies templating
+            // many sites for one client can opt them back in via the
+            // mbr_cc_site_local_settings filter.
+            'ai_training_enabled',
+            'ai_training_own',
+            'ai_training_vendors',
+            'ai_training_sell',
+            'ai_training_detail',
+            
+            // A record that a person read a translation and took
+            // responsibility for publishing it. That responsibility belongs to
+            // whoever ticked the box, on the site they ticked it for. Importing
+            // it would put unverified legal text live somewhere nobody had
+            // looked at it — the precise thing the review screen exists to
+            // prevent.
+            'approved_languages',
+        ));
+    }
+    
+    /**
+     * Is this setting excluded from import and export?
+     *
+     * @param string $short Option name without the mbr_cc_ prefix.
+     * @return bool
+     */
+    public function is_site_local($short) {
+        return in_array($short, $this->site_local_keys(), true);
+    }
+    
+    /**
      * Build the export payload array (settings + array options).
      *
      * @return array
@@ -311,6 +388,10 @@ class MBR_CC_Import_Export {
         $settings = array();
 
         foreach ($this->full_scalar_map() as $short => $type) {
+            if ($this->is_site_local($short)) {
+                continue; // Meaningless, or unsafe, on another install.
+            }
+
             $value = get_option('mbr_cc_' . $short, $missing);
             if ($value === $missing) {
                 continue; // Never stored on this site; leave it out.
@@ -454,6 +535,7 @@ class MBR_CC_Import_Export {
             wp_send_json_error(array('message' => $result->get_error_message()));
         }
 
+        MBR_CC_Cache::flush('import');
         wp_send_json_success($result);
     }
 
@@ -494,6 +576,13 @@ class MBR_CC_Import_Export {
         foreach ($incoming as $short => $value) {
             if ($short === 'cookie_categories' || $short === 'blocked_scripts') {
                 continue; // Handled separately below.
+            }
+
+            // A hand-edited or third-party file could carry these even though
+            // this plugin never writes them into an export.
+            if ($this->is_site_local($short)) {
+                $skipped[] = $short;
+                continue;
             }
 
             $type = $this->resolve_sanitiser($short);
@@ -588,6 +677,8 @@ class MBR_CC_Import_Export {
         }
 
         delete_option(self::BACKUP_OPTION);
+
+        MBR_CC_Cache::flush('import_revert');
 
         wp_send_json_success(array(
             'message' => sprintf(

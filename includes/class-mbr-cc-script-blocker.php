@@ -235,59 +235,46 @@ class MBR_CC_Script_Blocker {
         ob_start( array( $this, 'process_buffer' ) );
     }
 
+    /**
+     * Rewrite the page so every non-necessary script and iframe is inert.
+     *
+     * Nothing here reads the visitor's cookie. Every visitor is served the same
+     * document with everything held, and the browser releases whatever their
+     * stored choice permits — see unblockScripts() in banner.js.
+     *
+     * This method used to return the buffer untouched when the cookie said the
+     * visitor had accepted everything. On a site with a page cache that was
+     * enough to leak consent between people: the first visitor to accept primed
+     * the cache with fully unblocked HTML, and everyone served that copy got
+     * the trackers running whatever they themselves had chosen. Client-side
+     * code could not undo it either, because by then the tags were already in
+     * the document and had already fired.
+     *
+     * Because the output no longer varies by visitor it is safe to cache, and
+     * the rewriting cost is paid once per cache miss rather than once per
+     * request.
+     *
+     * @param string $buffer Page HTML.
+     * @return string
+     */
     public function process_buffer( $buffer ) {
-        $consent = $this->get_user_consent();
-
-        // User accepted everything — nothing to block.
-        if ( isset( $consent['all'] ) && true === $consent['all'] ) {
-            return $buffer;
-        }
-
-        // Process built-in service rules.
-        $buffer = $this->apply_builtin_rules( $buffer, $consent );
-
-        // Process custom manually-added entries.
-        $buffer = $this->apply_custom_rules( $buffer, $consent );
+        $buffer = $this->apply_builtin_rules( $buffer );
+        $buffer = $this->apply_custom_rules( $buffer );
 
         return $buffer;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Consent cookie
-    // ─────────────────────────────────────────────────────────────────────
-
-    private function get_user_consent() {
-        if ( ! isset( $_COOKIE['mbr_cc_consent'] ) ) {
-            return array();
-        }
-        $raw = wp_unslash( $_COOKIE['mbr_cc_consent'] );
-
-        // Client-controlled value read on every page load; reject oversized
-        // input before decoding.
-        if ( ! is_string( $raw ) || '' === $raw || strlen( $raw ) > 2048 ) {
-            return array();
-        }
-
-        $data = json_decode( $raw, true );
-        return is_array( $data ) ? $data : array();
-    }
-
-    private function category_allowed( $category, $consent ) {
-        if ( 'necessary' === $category ) {
-            return true;
-        }
-        return isset( $consent[ $category ] ) && true === $consent[ $category ];
     }
 
     // ─────────────────────────────────────────────────────────────────────
     // Built-in rules
     // ─────────────────────────────────────────────────────────────────────
 
-    private function apply_builtin_rules( $html, $consent ) {
+    private function apply_builtin_rules( $html ) {
         foreach ( self::$builtin_services as $category => $services ) {
-            if ( $this->category_allowed( $category, $consent ) ) {
-                continue; // Consent granted — leave alone.
+            // Necessary scripts keep the site working and are never withheld.
+            if ( 'necessary' === $category ) {
+                continue;
             }
+
             foreach ( $services as $service ) {
                 foreach ( $service['domains'] as $domain ) {
                     if ( 'script' === $service['type'] || 'both' === $service['type'] ) {
@@ -295,10 +282,20 @@ class MBR_CC_Script_Blocker {
                     }
                     if ( 'iframe' === $service['type'] || 'both' === $service['type'] ) {
                         $html = $this->block_iframe_src( $html, $domain, $service['name'], $category );
+
+                        // Optimisers may already have swapped the iframe for a
+                        // click-to-play facade before this buffer ran.
+                        $html = $this->block_facade( $html, $domain, $service['name'], $category );
                     }
                 }
             }
         }
+
+        // Poster images belonging to the embeds held above.
+        foreach ( self::$thumbnail_hosts as $host ) {
+            $html = $this->block_image_src( $html, $host, 'marketing' );
+        }
+
         return $html;
     }
 
@@ -306,30 +303,27 @@ class MBR_CC_Script_Blocker {
     // Custom (manually-added) rules
     // ─────────────────────────────────────────────────────────────────────
 
-    private function apply_custom_rules( $html, $consent ) {
-        $by_category = array();
+    private function apply_custom_rules( $html ) {
         foreach ( $this->blocked_scripts as $script ) {
-            $cat = $script['category'] ?? 'marketing';
-            $by_category[ $cat ][] = $script;
-        }
+            $category = $script['category'] ?? 'marketing';
 
-        foreach ( $by_category as $category => $scripts ) {
-            if ( $this->category_allowed( $category, $consent ) ) {
+            if ( 'necessary' === $category ) {
                 continue;
             }
-            foreach ( $scripts as $script ) {
-                $id   = $script['identifier'];
-                $type = $script['type'] ?? 'src';
 
-                if ( 'src' === $type ) {
-                    $html = $this->block_script_src( $html, $id, $category );
-                } elseif ( 'inline' === $type ) {
-                    $html = $this->block_inline_script( $html, $id );
-                } elseif ( 'iframe' === $type ) {
-                    $html = $this->block_iframe_src( $html, $id, $script['name'] ?? '', $category );
-                }
+            $id   = $script['identifier'];
+            $type = $script['type'] ?? 'src';
+
+            if ( 'src' === $type ) {
+                $html = $this->block_script_src( $html, $id, $category );
+            } elseif ( 'inline' === $type ) {
+                $html = $this->block_inline_script( $html, $id, $category );
+            } elseif ( 'iframe' === $type ) {
+                $html = $this->block_iframe_src( $html, $id, $script['name'] ?? '', $category );
+                $html = $this->block_facade( $html, $id, $script['name'] ?? '', $category );
             }
         }
+
         return $html;
     }
 
@@ -341,12 +335,31 @@ class MBR_CC_Script_Blocker {
      * Block <script src="…"> tags whose src contains $pattern.
      */
     private function block_script_src( $html, $pattern, $category = 'marketing' ) {
+        // Now that blocking runs for every visitor rather than only those
+        // without consent, this loop is on the critical path for each cache
+        // miss. A substring test costs a fraction of a regex pass over the
+        // whole document, and the overwhelming majority of the built-in
+        // domains are absent from any given page.
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
+
         $regex = '/<script(\s[^>]*)?src=(["\'])([^"\']*'
                . preg_quote( $pattern, '/' )
                . '[^"\']*)(\2)/i';
 
         return preg_replace_callback( $regex, function ( $m ) use ( $category ) {
             $attrs = isset( $m[1] ) ? $m[1] : '';
+
+            // Leave tags this method has already handled alone. The pattern
+            // looks for "src=", which also occurs inside the data-mbr-cc-src
+            // attribute written below — so without this guard a second pass
+            // over the same HTML wraps the tag again, nesting the markers and
+            // corrupting the stored source URL.
+            if ( false !== strpos( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return $m[0];
+            }
+
             $src   = $m[3];
             return '<script' . $attrs
                  . ' type="text/plain"'
@@ -358,20 +371,66 @@ class MBR_CC_Script_Blocker {
 
     /**
      * Block <script>…content…</script> tags whose body contains $pattern.
+     *
+     * The body is matched with a tempered dot — (?:(?!<\/script>)[\s\S])* —
+     * which matches any character except at a position where </script> begins.
+     * The match therefore cannot leave the script it started in.
+     *
+     * The previous pattern used a lazy .*? with no such boundary. Where an
+     * earlier, unrelated <script> appeared first on the page, .*? consumed that
+     * script's closing tag and every byte after it — headings, paragraphs,
+     * whatever lay between — until it found $pattern in some later script. The
+     * callback then replaced that entire span with one tag, so the wrong script
+     * was blocked, the real one was deleted, and the page content in between
+     * silently vanished.
+     *
+     * @param string $html     Page buffer.
+     * @param string $pattern  Literal string to find in the script body.
+     * @param string $category Consent category the script belongs to.
+     * @return string
      */
-    private function block_inline_script( $html, $pattern ) {
-        $regex = '/<script(\s[^>]*)?>.*?' . preg_quote( $pattern, '/' ) . '.*?<\/script>/is';
+    private function block_inline_script( $html, $pattern, $category = 'marketing' ) {
+        // Cheap rejection before any regex runs. As well as skipping the work
+        // entirely on pages that cannot match, this keeps the tempered dot away
+        // from its worst case: on a miss it would otherwise walk each script
+        // body once per starting offset before giving up.
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
 
-        return preg_replace_callback( $regex, function ( $m ) {
-            $attrs   = isset( $m[1] ) ? $m[1] : '';
-            $content = $m[0];
-            // Strip existing type attribute, then set to text/plain.
-            $attrs = preg_replace( '/\s*type=["\'][^"\']*["\']/', '', $attrs );
-            $attrs .= ' type="text/plain" data-mbr-cc-blocked="true"';
-            // Rebuild tag preserving content.
-            preg_match( '/<script[^>]*>(.*?)<\/script>/is', $content, $inner );
-            return '<script' . $attrs . '>' . ( $inner[1] ?? '' ) . '</script>';
-        }, $html ) ?? $html;
+        $escaped = preg_quote( $pattern, '/' );
+        $body    = '(?:(?!<\/script>)[\s\S])*';
+
+        $regex = '/<script(\s[^>]*)?>(' . $body . $escaped . $body . ')<\/script>/i';
+
+        return preg_replace_callback(
+            $regex,
+            function ( $m ) use ( $category ) {
+                $attrs = isset( $m[1] ) ? $m[1] : '';
+
+                // Leave a tag alone once it has been blocked. Two custom
+                // patterns can both occur in one inline script — say a tag
+                // that calls gtag() and fbq() — and without this the second
+                // call re-wraps the first's output, duplicating the markers
+                // and stripping the type attribute it had just written.
+                if ( false !== strpos( $attrs, 'data-mbr-cc-blocked' ) ) {
+                    return $m[0];
+                }
+
+                // The body is captured directly by the match above. The previous
+                // implementation threw the whole match into a second lazy regex
+                // to recover it, which was the same bug a second time.
+                $content = isset( $m[2] ) ? $m[2] : '';
+
+                // Strip any existing type attribute, then set to text/plain.
+                $attrs  = preg_replace( '/\s*type=["\'][^"\']*["\']/', '', $attrs );
+                $attrs .= ' type="text/plain" data-mbr-cc-blocked="true"'
+                       . ' data-mbr-cc-category="' . esc_attr( $category ) . '"';
+
+                return '<script' . $attrs . '>' . $content . '</script>';
+            },
+            $html
+        ) ?? $html;
     }
 
     /**
@@ -388,6 +447,12 @@ class MBR_CC_Script_Blocker {
      *   - Self-closing or paired iframes.
      */
     private function block_iframe_src( $html, $pattern, $service_name = '', $category = 'marketing' ) {
+        // Four regex passes per call, one per source attribute, so the early
+        // rejection matters more here than anywhere else.
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
+
         $placeholder_class = 'MBR_CC_Blocked_Placeholder';
         $escaped           = preg_quote( $pattern, '/' );
 
@@ -433,6 +498,157 @@ class MBR_CC_Script_Blocker {
         }
 
         return $html;
+    }
+
+    /**
+     * Attributes used by click-to-play video facades to hold the real embed
+     * URL until the visitor clicks.
+     *
+     * @var string[]
+     */
+    private static $facade_attrs = array(
+        'data-src',
+        'data-video-src',
+        'data-embed-src',
+        'data-lazy-src',
+        'data-url',
+    );
+
+    /**
+     * Hosts serving video poster images.
+     *
+     * A facade avoids the embed's cookies but still fetches its thumbnail, so
+     * the visitor's IP address reaches the provider on page load whether or not
+     * they ever press play.
+     *
+     * @var string[]
+     */
+    private static $thumbnail_hosts = array(
+        'i.ytimg.com',
+        'img.youtube.com',
+        'i.vimeocdn.com',
+    );
+
+    /**
+     * Block click-to-play video facades.
+     *
+     * A facade is a performance optimisation: the iframe is replaced with a
+     * poster image and a container holding the embed URL in a data attribute,
+     * and the real iframe is built in JavaScript when the visitor clicks. Both
+     * MBR Performance and several third-party optimisers do this.
+     *
+     * The consequence for consent is that by the time this class sees the page
+     * there is no iframe left to block — the markup is a div — so the embed
+     * sailed straight through while the site owner reasonably believed it was
+     * being held. Renaming the URL attribute leaves the facade's own script
+     * with nothing to build from, and banner.js puts it back on consent.
+     *
+     * This runs after any optimiser because the blocker's buffer opens on
+     * template_redirect at priority 1, making it the outermost buffer and so
+     * the last callback to run.
+     *
+     * @param string $html         Page HTML.
+     * @param string $pattern      Domain fragment to match.
+     * @param string $service_name Service label for the placeholder.
+     * @param string $category     Consent category.
+     * @return string
+     */
+    private function block_facade( $html, $pattern, $service_name = '', $category = 'marketing' ) {
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
+
+        $placeholder_class = 'MBR_CC_Blocked_Placeholder';
+        $escaped           = preg_quote( $pattern, '/' );
+
+        foreach ( self::$facade_attrs as $attr ) {
+            // Any element except an iframe — those are handled separately and
+            // matching them here would wrap them twice.
+            $regex = '/<(?!iframe\b)([a-z][a-z0-9]*)((?:\s[^>]*?)?)\s'
+                   . preg_quote( $attr, '/' )
+                   . '=(["\'])([^"\']*' . $escaped . '[^"\']*)\3((?:[^>]*?)?)>/i';
+
+            $html = ( preg_replace_callback(
+                $regex,
+                function ( $m ) use ( $attr, $service_name, $category, $placeholder_class ) {
+                    $tag    = $m[1];
+                    $before = $m[2];
+                    $url    = $m[4];
+                    $after  = $m[5];
+
+                    if ( false !== strpos( $before . $after, 'data-mbr-cc-blocked' ) ) {
+                        return $m[0];
+                    }
+
+                    // The original attribute name travels with the element so
+                    // the browser can put the facade back exactly as it was.
+                    $blocked = '<' . $tag
+                        . $before
+                        . ' data-mbr-cc-blocked="true"'
+                        . ' data-mbr-cc-facade="true"'
+                        . ' data-mbr-cc-attr="' . esc_attr( $attr ) . '"'
+                        . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
+                        . ' data-mbr-cc-src="' . esc_attr( $url ) . '"'
+                        . ' data-mbr-cc-hidden="true"'
+                        . $after
+                        . '>';
+
+                    $overlay = class_exists( $placeholder_class )
+                        ? $placeholder_class::render( array( 'service' => $service_name ) )
+                        : '';
+
+                    return $overlay . $blocked;
+                },
+                $html
+            ) ?? $html );
+        }
+
+        return $html;
+    }
+
+    /**
+     * Block poster images served by video providers.
+     *
+     * Replaces the source with a transparent pixel so the layout does not
+     * collapse, keeping the real URL for the browser to restore on consent.
+     *
+     * @param string $html     Page HTML.
+     * @param string $pattern  Host fragment to match.
+     * @param string $category Consent category.
+     * @return string
+     */
+    private function block_image_src( $html, $pattern, $category = 'marketing' ) {
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
+
+        $transparent = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+        $regex = '/<img((?:\s[^>]*?)?)\s(?<![a-zA-Z0-9_-])src=(["\'])([^"\']*'
+               . preg_quote( $pattern, '/' ) . '[^"\']*)\2((?:[^>]*?)?)>/i';
+
+        return preg_replace_callback(
+            $regex,
+            function ( $m ) use ( $category, $transparent ) {
+                $before = $m[1];
+                $url    = $m[3];
+                $after  = $m[4];
+
+                if ( false !== strpos( $before . $after, 'data-mbr-cc-blocked' ) ) {
+                    return $m[0];
+                }
+
+                return '<img' . $before
+                    . ' src="' . $transparent . '"'
+                    . ' data-mbr-cc-blocked="true"'
+                    . ' data-mbr-cc-image="true"'
+                    . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
+                    . ' data-mbr-cc-src="' . esc_attr( $url ) . '"'
+                    . $after
+                    . '>';
+            },
+            $html
+        ) ?? $html;
     }
 
     // ─────────────────────────────────────────────────────────────────────

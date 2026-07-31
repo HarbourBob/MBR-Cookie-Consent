@@ -1,0 +1,38 @@
+{
+    "_meta": {
+        "language": "it",
+        "name": "Italiano",
+        "direction": "ltr",
+        "reviewed": false,
+        "coverage": "27/27"
+    },
+    "strings": {
+        "banner_heading": "Rispettiamo la tua privacy",
+        "banner_description": "Utilizziamo i cookie per migliorare la tua esperienza di navigazione, fornire contenuti personalizzati e analizzare il nostro traffico. Cliccando su \"Accetta tutto\", acconsenti all'uso dei cookie.",
+        "accept_all": "Accetta tutto",
+        "reject_all": "Rifiuta tutto",
+        "customize": "Personalizza",
+        "cookie_settings": "Impostazioni cookie",
+        "manage_preferences": "Gestisci preferenze cookie",
+        "preferences_intro": "Utilizziamo i cookie per migliorare la tua esperienza. Puoi scegliere quali tipi di cookie consentire.",
+        "save_preferences": "Salva preferenze",
+        "close": "Chiudi",
+        "necessary": "Necessari",
+        "necessary_description": "I cookie necessari sono essenziali per il corretto funzionamento del sito web. Garantiscono le funzionalità di base e le caratteristiche di sicurezza del sito.",
+        "analytics": "Analitici",
+        "analytics_description": "I cookie analitici ci aiutano a capire come i visitatori interagiscono con il nostro sito web raccogliendo e riportando informazioni in forma anonima.",
+        "marketing": "Marketing",
+        "marketing_description": "I cookie di marketing vengono utilizzati per tracciare i visitatori sui vari siti web al fine di mostrare annunci pertinenti e incoraggiare il coinvolgimento degli utenti.",
+        "preferences": "Preferenze",
+        "preferences_description": "I cookie di preferenza consentono a un sito web di ricordare informazioni che modificano il comportamento o l'aspetto del sito.",
+        "always_active": "Sempre attivi",
+        "privacy_policy_text": "Informativa sulla privacy",
+        "cookie_policy_text": "Informativa sui cookie",
+        "ccpa_link_text": "Non vendere né condividere le mie informazioni personali",
+        "blocked_heading": "Contenuto bloccato",
+        "blocked_message": "Questo video è bloccato perché i cookie di marketing non sono stati accettati.",
+        "blocked_button": "Accetta i cookie e riproduci il video",
+        "blocked_region_label": "Contenuto bloccato",
+        "form_blocked_message": "Accetta i cookie prima di inviare questo modulo."
+    }
+}

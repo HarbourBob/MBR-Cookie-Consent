@@ -341,7 +341,7 @@ class MBR_CC_Database {
         // Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
         $output = fopen('php://temp', 'r+'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         foreach ($csv as $row) {
-            fputcsv($output, array_map(array($this, 'escape_csv_field'), $row));
+            fputcsv($output, array_map(array(__CLASS__, 'escape_csv_field'), $row));
         }
         rewind($output);
         $csv_content = stream_get_contents($output);
@@ -362,7 +362,7 @@ class MBR_CC_Database {
      * @param mixed $value Field value.
      * @return mixed Escaped field value.
      */
-    private function escape_csv_field($value) {
+    public static function escape_csv_field($value) {
         if (!is_string($value) || $value === '') {
             return $value;
         }
