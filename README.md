@@ -12,7 +12,7 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-2.3.1-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
+[![Version](https://img.shields.io/badge/version-2.3.3-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
@@ -20,8 +20,8 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 
 [![GDPR](https://img.shields.io/badge/GDPR-compliant-success?style=flat-square)](https://littlewebshack.com)
 [![UK DUAA](https://img.shields.io/badge/UK%20DUAA%202025-compliant-success?style=flat-square)](https://littlewebshack.com)
-[![IAB TCF](https://img.shields.io/badge/IAB%20TCF-v2.3-orange?style=flat-square)](https://iabeurope.eu)
 [![GPC](https://img.shields.io/badge/Global%20Privacy%20Control-supported-blueviolet?style=flat-square)](https://globalprivacycontrol.org)
+[![Cache-safe](https://img.shields.io/badge/page%20cache-safe-success?style=flat-square)](#consent-that-survives-a-page-cache-v233)
 
 <br>
 
@@ -45,15 +45,16 @@ It is built the way I build everything: pure PHP, no Composer, no external depen
 
 |  |  |
 |---|---|
-| **Real script blocking** | Non-essential scripts are held at the server via output buffering and never execute until consent is given. Not a banner that hides and hopes. |
+| **Real script blocking** | Non-essential scripts and embeds are held at the server via output buffering and never execute until consent is given. Not a banner that hides and hopes. |
+| **Safe behind a page cache** | Every visitor is served an identical, fully-blocked page and their own choice is applied in the browser — so a cache can never serve one visitor's consent to another. *(v2.3.3)* |
 | **Server-side form gating** | Form submissions are blocked on the server until consent is granted — cannot be bypassed by disabling JavaScript. |
 | **Automatic regional compliance** | Sixteen detected privacy regions, each with the correct consent model applied automatically. |
-| **Consent Mode v2 + TCF v2.3** | Google Consent Mode v2, Microsoft UET Consent Mode, IAB TCF v2.3, Google Additional Consent. |
-| **Global Privacy Control** | The `Sec-GPC` browser signal detected server-side and client-side, and honoured automatically. |
+| **Consent Mode v2** | Google Consent Mode v2, Microsoft UET Consent Mode and Google Additional Consent, signalled the way the specification intends — denied default, then an update carrying the visitor's choice. |
+| **Global Privacy Control** | The GPC browser signal detected per visitor and honoured automatically, without banner interaction. |
 | **AI / LLM training disclosure** | Connecticut SB 1295 requires your privacy notice to state whether personal data trains large language models. Built in. *(v2.3.0)* |
 | **Settings portability** | Export a tuned configuration to JSON and import it on any number of other sites. *(v2.2.0)* |
 | **Audit-ready logging** | Every consent interaction recorded with anonymised IP, exportable to CSV. |
-| **40+ languages** | Browser-language auto-translation, plus full WPML and Polylang string registration. |
+| **22 languages** | Community translations selected by browser language, each requiring your approval before it is shown. Full WPML and Polylang string registration alongside. *(working from v2.3.3)* |
 | **WCAG 2.1 AA** | Keyboard navigation, screen reader support, focus traps, ARIA labels, reduced-motion support. |
 
 ---
@@ -63,13 +64,13 @@ It is built the way I build everything: pure PHP, no Composer, no external depen
 | | MBR Cookie Consent | Typical premium plugins |
 |---|---|---|
 | **Price** | Free forever | £99–£299/year |
-| **IAB TCF v2.3** | Included | Premium only |
 | **Google Consent Mode v2** | Included | Premium only |
 | **Global Privacy Control** | Included | Premium only |
 | **UK DUAA 2025 compliance** | Included | Premium only |
 | **US multi-state coverage** | Included | Premium only |
 | **AI / LLM training disclosure** | Included | Rarely offered at all |
-| **40+ language auto-translation** | Included | Premium only |
+| **22 community translations** | Included | Premium only |
+| **Correct behind a page cache** | Yes | Frequently not |
 | **Server-side form gating** | Included | Rarely offered at all |
 | **Settings import / export** | Included | Premium only |
 | **A/B testing** | Included | Premium only |
@@ -128,6 +129,48 @@ The fallback region previously shipped with implied consent and auto-accept-on-s
 
 **Existing sites are not changed.** An upgrade routine writes your previous values as explicit settings, so only new installations get the stricter posture. You can change it either way under Geolocation.
 
+### Consent that survives a page cache *(v2.3.3)*
+
+The largest correctness change the plugin has had, and the reason to update.
+
+Everything that mattered — what to block, what to tell Google, whether the visitor had sent a GPC signal — was decided on the server by reading the visitor's own request. A page cache stores one copy of a page and serves it to everybody, so whichever visitor happened to generate that copy had their consent baked into it.
+
+In practice: the first visitor to accept everything caused a fully unblocked page to be stored, and every visitor served that copy afterwards got the trackers running whatever they themselves had chosen. Google and Microsoft were told those visitors had consented. And a single visitor with Global Privacy Control enabled could cause everyone after them to be treated as having opted out.
+
+None of it was visible from the admin screens. The settings were right, the banner appeared, and the blocking was not happening.
+
+Every visitor is now served an identical page with everything held, and their own choice is applied in their browser. Blocking, Consent Mode signalling, GPC and language selection all moved client-side. The page is the same whoever generates it, which is precisely what makes it safe to cache — and faster, since the rewriting work happens once per cache miss rather than once per visitor.
+
+### Video facades are blocked *(v2.3.3)*
+
+Performance plugins commonly replace a video embed with a click-to-play facade: a poster image and a placeholder holding the video address, with the real player built in JavaScript on click. No embed remained in the page for the consent layer to find, so the video loaded regardless of consent while the site owner had every reason to believe it was blocked.
+
+Facades are now recognised and held by their data attribute, and released by the browser on consent. The technique is matched rather than any one product, so MBR Performance, SG Optimizer, WP Rocket and others are all covered. Poster images are held too — a facade avoids the provider's cookies but still fetched its thumbnail, sending the visitor's IP to YouTube or Vimeo on page load.
+
+> **If you run a video lazy-load or facade option, test an embed after updating.** Reject cookies and confirm the placeholder appears in place of the video. This was a silent failure, so it is worth seeing it work.
+
+### Automatic translation actually works *(v2.3.3)*
+
+Earlier versions advertised auto-translation in "40+ languages". There were 22, they covered about half the strings the banner displays, and none of them ever reached a visitor — the translation code was attached to a filter the plugin never called. The setting had no effect whichever way it was set.
+
+All 22 are now complete across every string, and the feature works. Because these are consent notices rather than ordinary interface text, and the translations are community-contributed rather than professionally produced, **nothing is served until an administrator has read that language and approved it** on the new Translations screen. An unapproved language falls back to your own wording.
+
+Corrections and new languages are welcome — the catalogues are plain JSON, one file per language, in [`languages/banner/`](languages/banner).
+
+### IAB TCF removed *(v2.3.3)*
+
+The feature never worked. It sent every vendor the same fixed consent string regardless of what the visitor had chosen, reported a CMP ID of zero, and returned an empty vendor list — so no vendor could act on it correctly, and a fixed signal claiming consent is worse than sending none at all.
+
+Supporting TCF properly requires registration as a Consent Management Platform with IAB Europe, which this plugin does not have and is not in a position to obtain. The option, its settings and its scripts have been removed, and sites that had it enabled get a one-time notice.
+
+> **If you generated a privacy policy while TCF was enabled, regenerate it.** It stated that your site participates in the Transparency and Consent Framework, which was not accurate.
+
+### Appearance and workflow *(v2.3.2)*
+
+Glassmorphism with opacity and blur controls and a live WCAG contrast readout, a dark mode that can follow the visitor's system setting, a Media Library logo picker, and a Preview button that renders the banner with your unsaved changes.
+
+Also a correction worth knowing about: banner text set in the plugin was being ignored on the front end when WPML was active. The setting saved, the admin field showed the new wording, and the front end silently kept the old. In your site's default language the plugin's own setting is now authoritative.
+
 ### Security release *(v2.3.1)*
 
 Version 2.3.1 is the outcome of a full security audit of the plugin's own source code. Eleven security findings and seven reliability findings were identified and fixed. No exploitation was reported — everything was found by review.
@@ -148,13 +191,15 @@ Full detail in the [changelog](#changelog) and the [security audit report](MBR-C
 
 ## Security
 
-The plugin's source code was audited in full at version 2.3.0 and every finding was remediated in 2.3.1.
+The plugin's source code was audited in full at version 2.3.0 and every finding was remediated in 2.3.1. A second review at 2.3.2 raised eighteen further findings — correctness and architecture rather than exploitable vulnerabilities — and all eighteen were fixed in 2.3.3, along with two problems that review had not found.
 
 **[Read the security audit report (PDF)](MBR-Cookie-Consent-Security-Audit.pdf)**
 
 The audit was carried out by Claude (claude.ai), an AI assistant made by Anthropic, at my request. It was a static source code review — not a penetration test, not an accredited third-party audit, and it carries no warranty or certification. The report states its own limitations plainly, and I would rather publish it with those caveats attached than not publish it at all.
 
 What it found clean is worth stating: no SQL injection, no cross-site scripting, no missing permission or nonce checks across the plugin's twenty administrative actions, and none of the PHP functions commonly associated with serious vulnerabilities. What it found wrong clustered in one place — the endpoints that must accept requests from ordinary visitors rather than logged-in administrators, which is genuinely awkward territory for a consent plugin when page caching makes nonces unreliable.
+
+The 2.3.3 round is worth summarising honestly, because several findings were features that did not work rather than code that was unsafe: consent state leaking between visitors through a page cache, an inline-blocking pattern that could delete page content, a page-exclusion setting that caused a fatal error on every front-end request once used, consent log rows that all recorded the same method, and an unescaped CSV export that let an unauthenticated visitor plant a spreadsheet formula. Two more were found by testing on a live site rather than by review: video facades defeating script blocking entirely, and the GPC caching fault described above.
 
 Found something? Email **[rob@littlewebshack.com](mailto:rob@littlewebshack.com)** rather than opening a public issue, and I will credit you here unless you would rather I did not.
 
@@ -202,6 +247,7 @@ To test GPC, use Firefox or Brave with the signal enabled and confirm the "Opt-O
 - **Revisit consent button** — floating button so visitors can change their mind any time
 - **CCPA "Do Not Sell or Share"** — required opt-out link for US visitors
 - **Global Privacy Control** — automatic detection and honouring of the GPC signal *(v2.0.0)*
+- **Click-to-play facade blocking** — video facades built by performance plugins are held too, along with their poster images *(v2.3.3)*
 - **Consent logging** — every interaction recorded, exportable to CSV
 - **GDPR-compliant storage** — IP anonymisation and proper data handling
 - **Geolocation detection** — auto-detects country and applies the right regime *(v1.6.0)*
@@ -217,11 +263,12 @@ To test GPC, use Firefox or Brave with the signal enabled and confirm the "Opt-O
 
 ### Global Privacy Control *(v2.0.0)*
 When a browser sends `Sec-GPC: 1` (Firefox, Brave, DuckDuckGo, Privacy Badger), the plugin:
-- Detects the signal server-side (PHP) and client-side (JavaScript)
+- Detects the signal in the visitor's own browser via `navigator.globalPrivacyControl`
 - Suppresses marketing cookies without requiring banner interaction
 - Shows the California-mandated "Opt-Out Request Honored" confirmation toast
 - Logs GPC status alongside the consent record
-- Applies a server-side backstop forcing marketing consent to `false` regardless of cookie state
+
+> **Changed in 2.3.3.** Earlier versions also read the `Sec-GPC` request header on the server and wrote the result into the page. On a cached site that meant one visitor with GPC enabled could prime the cache with it, after which *every* visitor was treated as having opted out — suppressing marketing consent site-wide, silently. Detection is now per-visitor in the browser, which is where the GPC specification puts it. A "server-side backstop" was also documented in earlier releases; it never functioned, and could not have done behind a cache.
 
 Enabled by default. To also suppress analytics, enable `mbr_cc_gpc_suppress_analytics`, or filter the categories via `mbr_cc_gpc_suppressed_categories`.
 
@@ -237,7 +284,9 @@ The privacy policy generator writes matching text, including an explicit "we do 
 - **Layouts** — bar (full width), box (bottom left/right), popup (centre)
 - **Colours** — primary, accept, reject, and text colours
 - **Custom text** — heading, description, and every button label
-- **Logo** — your own branding on the banner and preference centre
+- **Logo** — chosen from the Media Library, on the banner and preference centre *(v2.3.2)*
+- **Glassmorphism and dark mode** — with a live WCAG contrast readout as you adjust *(v2.3.2)*
+- **Preview** — render the banner with unsaved changes before committing *(v2.3.2)*
 - **Reload on consent** — optional page reload after a consent action
 
 ### Cookie scanner and management
@@ -264,7 +313,9 @@ Blocks form submissions **server-side** until consent is granted — cannot be b
 - **Promote winner** — one click sets the winning variant live
 
 ### Internationalisation and accessibility
-- **40+ languages** — browser-language detection, no configuration needed
+- **22 community translations** — selected by browser language, applied in the browser so pages stay cacheable *(working from v2.3.3)*
+- **Approval required** — no translation is shown to a visitor until an administrator has read and approved that language
+- **Your wording is never overwritten** — strings you have customised are left as you wrote them
 - **WPML and Polylang** — full string registration and translation support
 - **WCAG 2.1 AA** — keyboard navigation, screen readers, focus traps, ARIA labels, high contrast, reduced motion
 
@@ -326,9 +377,6 @@ Consent is the default lawful basis. Enforceable since September 2023 with the g
 ### South Africa — POPIA *(v2.3.0)*
 Section 69 requires opt-in for electronic direct marketing, which is the operative provision for most cookie use.
 
-### IAB TCF v2.3
-Full `__tcfapi` JavaScript API · TC String generation and storage · 10 standard consent purposes · Global Vendor List integration ready.
-
 </details>
 
 ---
@@ -383,6 +431,15 @@ $ip = mbr_cc_get_client_ip();
 | `mbr_cc_consent_log_limit` / `mbr_cc_consent_log_window` | Consent log write throttle per visitor. Defaults `10` writes per `600` seconds. *(v2.3.1)* |
 | `mbr_cc_ab_impression_window` / `mbr_cc_ab_conversion_window` | A/B tracking dedupe windows. Defaults 1 hour and 24 hours. *(v2.3.1)* |
 | `mbr_cc_is_multi_part_suffix` | Override whether a two-label suffix (e.g. `co.uk`) registers at the third level. *(v2.3.1)* |
+| `mbr_cc_flush_caches` | Return `false` to stop the plugin purging page caches when settings are saved. *(v2.3.3)* |
+| `mbr_cc_cache_ignored_options` | Options whose change should *not* trigger a cache purge. *(v2.3.3)* |
+| `mbr_cc_site_local_settings` | Settings excluded from export because they belong to one specific site. *(v2.3.3)* |
+| `mbr_cc_network_export_batch` | Rows per batch when streaming the network consent log export. Default `2000`. *(v2.3.3)* |
+
+| Action | Purpose |
+|---|---|
+| `mbr_cc_before_flush_caches` | Fires before third-party caches are purged. *(v2.3.3)* |
+| `mbr_cc_flush_caches_after` | Fires after. Hook your own cache layer here. *(v2.3.3)* |
 
 ```php
 // Also suppress analytics when GPC is active
@@ -397,6 +454,14 @@ add_filter('mbr_cc_geolocation_failure_cache', fn() => 60);
 // Behind a load balancer on a public address
 add_filter('mbr_cc_proxy_mode', fn() => 'proxy');
 add_filter('mbr_cc_trusted_proxies', fn() => ['203.0.113.0/24']);
+
+// Purging is handled by a deploy script — leave the caches alone
+add_filter('mbr_cc_flush_caches', '__return_false');
+
+// Agency templating many sites for one client: let approvals travel
+add_filter('mbr_cc_site_local_settings', function ($local) {
+    return array_diff($local, ['approved_languages']);
+});
 ```
 
 ### Testing constants
@@ -409,7 +474,9 @@ define('MBR_CC_TEST_REGION', 'QC');        // force a sub-national region
 
 ### How script blocking works
 
-The plugin uses PHP output buffering to intercept HTML before it reaches the browser. Blocked scripts have their `type` attribute rewritten to `text/plain` and gain a `data-mbr-cc-blocked` attribute. On consent, they are restored and executed client-side by replacing the element — not via `eval()`, so blocking works under a Content-Security-Policy without `unsafe-eval`. Because interception happens on the server, nothing fires ahead of consent, including on the very first page view.
+The plugin uses PHP output buffering to intercept HTML before it reaches the browser. Blocked scripts have their `type` attribute rewritten to `text/plain` and gain `data-mbr-cc-blocked` and `data-mbr-cc-category` attributes. Iframes have their `src` moved aside; click-to-play facades have whichever data attribute held the video address renamed, so the optimiser's own script finds nothing to build from. On consent, everything is restored client-side by replacing the element — not via `eval()`, so blocking works under a Content-Security-Policy without `unsafe-eval`.
+
+**From 2.3.3 this runs for every visitor, without reading any cookie.** Deciding what to block from the visitor's own request is what made consent leak between people on cached sites. The output is now identical for everybody, so a cache can store it safely, and each blocked service is checked with a plain substring test before any pattern matching runs — a page with no third-party embeds costs roughly a single scan. The practical consequence is that a consenting visitor has their scripts released a moment after the page arrives rather than as it is parsed, which is how every mature consent platform behaves and the only arrangement that is correct behind a cache.
 
 ---
 
@@ -429,9 +496,9 @@ No Composer. No external packages. No CDN dependencies.
 ## Roadmap
 
 - ✅ Google Consent Mode v2 · Microsoft UET *(v1.1.0)*
-- ✅ 40+ language auto-translation · WPML/Polylang · WCAG 2.1 AA *(v1.2.0)*
+- ✅ WPML/Polylang · WCAG 2.1 AA *(v1.2.0)*
 - ✅ Page-specific controls · custom CSS · subdomain consent sharing *(v1.3.0)*
-- ✅ IAB TCF v2.3 · Google Additional Consent *(v1.4.0)*
+- ✅ Google Additional Consent *(v1.4.0)* · IAB TCF added then withdrawn as non-functional *(v2.3.3)*
 - ✅ Privacy Policy Generator *(v1.4.1)*
 - ✅ Multisite support *(v1.5.0)*
 - ✅ Geolocation detection *(v1.6.0)*
@@ -444,7 +511,11 @@ No Composer. No external packages. No CDN dependencies.
 - ✅ Nigeria NDPA · China PIPL · South Korea PIPA · Saudi PDPL · South Africa POPIA *(v2.3.0)*
 - ✅ AI / LLM training disclosure for Connecticut SB 1295 *(v2.3.0)*
 - ✅ Full security audit and remediation *(v2.3.1)*
-- Client-side region resolution, so page caches can never freeze a region into cached HTML
+- ✅ Appearance controls, contrast readout, preview, WPML precedence fix *(v2.3.2)*
+- ✅ Cache-safe consent: blocking, Consent Mode, GPC and language all moved client-side *(v2.3.3)*
+- ✅ Click-to-play video facade blocking *(v2.3.3)*
+- ✅ Community translations that actually work, with per-language approval *(v2.3.3)*
+- Client-side region resolution, so page caches can never freeze a region into cached HTML — the last remaining place a cache and this plugin interact awkwardly
 - Selective / partial import (choose which sections to bring across)
 - Network-wide settings push for Multisite
 
@@ -452,6 +523,54 @@ No Composer. No external packages. No CDN dependencies.
 
 <details>
 <summary><h3>Changelog</h3></summary>
+
+### 2.3.3 — Cache-safe consent, and a lot of honesty
+
+The largest correctness release so far. It began as one bug report about apostrophes and became a full review. Most entries below are faults that were invisible from the admin screens.
+
+**Consent no longer leaks between visitors**
+- **Fix:** script and iframe blocking is no longer decided from the visitor's cookie. On a cached site the first visitor to accept everything primed the cache with fully unblocked HTML, and everyone served that copy got the trackers running whatever they had chosen. Nothing client-side could undo it — the scripts were already in the page and had already run. Every visitor is now served the same fully-blocked document and their own choice is applied in the browser
+- **Fix:** Google and Microsoft Consent Mode wrote the visitor's own consent into the page's *default* state, so a cached page told both platforms that later visitors had consented when they had not. The default is now static and the visitor's choice arrives as an `update` from the browser, which is what the specification asks for
+- **Fix:** Global Privacy Control was read from the request header and written into the page. One visitor with GPC enabled could prime the cache with it, after which every visitor was treated as having opted out — suppressing marketing consent site-wide, silently. Now read per visitor via `navigator.globalPrivacyControl`
+- **Removed:** the GPC "server-side backstop" documented in earlier releases. It was registered but never applied, and could not have worked behind a cache
+- **Performance:** each blocked service is checked with a substring test before any regular expression runs. Blocking now happens for every visitor rather than only those without consent, so a clean page costs roughly a single scan — and the work is paid once per cache miss rather than once per request
+
+**Video embeds**
+- **Fix:** click-to-play facades built by performance plugins defeated blocking entirely. No iframe remained in the page, so the video loaded regardless of consent. Facades are now held by their data attribute and released on consent
+- **Fix:** facade poster images are held too. A facade avoids the provider's cookies but still fetched its thumbnail, sending the visitor's IP to YouTube or Vimeo on page load
+
+**Translation**
+- **New:** automatic translation works. 22 languages, complete across every string, selected by browser language and applied in the browser
+- **New:** Translations screen. No language is served until an administrator has read and approved it; unapproved languages fall back to your own wording
+- **Fix:** wording you have customised is never overwritten by a translation
+- **Note:** the count was previously given as "40+". It was 22, and remains 22 — but all 22 are now complete, where before they covered about half
+- **Removed:** the dead server-side translation path. It hung on a filter the plugin never called
+
+**Removed**
+- **Removed:** IAB TCF v2.3, which never functioned — a fixed consent string for every vendor, CMP ID zero, empty vendor list. Regenerate your privacy policy if you created one while it was enabled
+- **Removed:** the IAB TCF section of the privacy policy generator, an unreferenced settings view, and dead GPC filters
+
+**Correctness and security**
+- **Fix:** quotes and apostrophes gained backslashes on every save. Repaired automatically on update, except in Custom CSS, which must be checked by hand
+- **Fix:** blocking an inline script by pattern could delete page content between two scripts. Affected sites using a custom blocked script of type "inline"
+- **Fix:** inline-blocked scripts carried no consent category, so all were treated as marketing
+- **Fix:** page exclusions caused a fatal error on every front-end request once the field had been used — the setting stores a list but saves as text
+- **Fix:** an exclusion pattern containing a bracket or plus sign produced an invalid regular expression and a warning per page load
+- **Fix:** every consent log row recorded its method as "other". Existing rows cannot be recovered
+- **Security:** the network consent log export wrote visitor-supplied text to CSV unescaped, letting an unauthenticated visitor plant a formula that ran when a network administrator opened the file. It also loaded the entire log into memory; rows are now batched
+- **Fix:** malformed cookie categories no longer cause a fatal error
+- **New:** saving settings purges the page cache automatically — SiteGround Speed Optimizer, WP Rocket, LiteSpeed, W3TC, WP Super Cache, WP Fastest Cache, WP-Optimize, Cache Enabler, Breeze, Nginx Helper, WP Engine
+- **Fix:** approved languages are excluded from settings export
+
+### 2.3.2 — Appearance, preview and a WPML correction
+
+- **New:** glassmorphism with opacity and blur controls, and a live WCAG contrast ratio calculated against both white and black backdrops
+- **New:** dark mode — off, follow the visitor's system setting, or always on
+- **New:** Media Library logo picker, using the medium size where one exists
+- **New:** Preview banner — renders unsaved changes at desktop and mobile widths, using the real front-end renderer inside an iframe
+- **New:** Edit and Regenerate buttons for the generated privacy policy. Regenerating rewrites content only, leaving title, URL and published status alone, with the previous version kept as a revision
+- **Fix:** banner text set in the plugin was ignored on the front end when WPML was active. The plugin's setting is now authoritative in the site's default language
+- **Fix:** the update manifest declared PHP 8.0 and WordPress 6.0 while the plugin supports 7.4 and 5.8, so sites on older versions were never offered an update
 
 ### 2.3.1 — Security audit remediation
 
@@ -504,7 +623,7 @@ Outcome of a full audit of the plugin's own source code. No exploitation was rep
 - **Dev:** cached geolocation entries record whether they came from a genuine provider answer (`detected` flag)
 
 ### 2.2.0 — Settings import & export
-- **New:** Import / Export screen — download the site's configuration as a portable JSON file and import it on another install. Covers banner appearance and text, behaviour, cookie categories, blocked scripts, Google/Microsoft Consent Mode, GPC, IAB TCF, form integration, and all geolocation regional headings and descriptions
+- **New:** Import / Export screen — download the site's configuration as a portable JSON file and import it on another install. Covers banner appearance and text, behaviour, cookie categories, blocked scripts, Google/Microsoft Consent Mode, GPC, form integration, and all geolocation regional headings and descriptions
 - **New:** one-step "Revert last import" — a backup of the changed settings is taken automatically before an import is applied
 - **Security:** import is allowlist-driven. Unrecognised fields are ignored and every value is re-validated through the plugin's own sanitisers before storage. Uploads are size-capped and validated
 - **Note:** consent logs are never included in a settings export. Site-local values (policy page IDs, geolocation cache) and version markers are also excluded
@@ -557,9 +676,9 @@ Outcome of a full audit of the plugin's own source code. No exploitation was rep
 - **1.6.0** — geolocation detection (GDPR/CCPA/LGPD/PIPEDA)
 - **1.5.0** — multisite support
 - **1.4.1** — Privacy Policy Generator
-- **1.4.0** — IAB TCF v2.3 and Google Additional Consent Mode
+- **1.4.0** — IAB TCF v2.3 *(withdrawn in 2.3.3 — it never functioned)* and Google Additional Consent Mode
 - **1.3.0** — page-specific controls, custom CSS editor, subdomain consent sharing
-- **1.2.0** — 40+ language auto-translation, WPML/Polylang, WCAG 2.1 AA
+- **1.2.0** — auto-translation *(advertised as 40+ languages; it was 22, and did not work until 2.3.3)*, WPML/Polylang, WCAG 2.1 AA
 - **1.1.0** — Google Consent Mode v2, Microsoft UET Consent Mode
 - **1.0.0** — banner, script blocking, categories, preference centre, consent logging, scanner, CSV export, cookie policy generator
 
@@ -575,7 +694,25 @@ Outcome of a full audit of the plugin's own source code. No exploitation was rep
 
 **Scripts not firing after consent?** If you are on 2.3.0 or earlier, this is the `src`-blocked script category bug fixed in 2.3.1. Update.
 
+**Video playing without consent?** If you run a performance plugin with a video lazy-load or facade option, that is almost certainly the cause. Fixed in 2.3.3 — update, purge your caches, and confirm the placeholder appears with cookies rejected.
+
+**Trackers running for visitors who rejected?** On 2.3.2 or earlier with any page cache, this is the caching fault fixed in 2.3.3. It is not configuration; update and purge.
+
+**Marketing cookies off for everyone, for no obvious reason?** Same release. One visitor with Global Privacy Control enabled could cause every subsequent visitor on a cached site to be treated as having opted out.
+
+**Banner still in English for foreign visitors?** Check three things in order: auto-translation enabled under Settings, at least one language approved under Translations, and the visitor's browser asking for a language you approved. Strings you have customised yourself are never translated, which is intentional.
+
 **Consent not shared across subdomains on a `.co.uk` domain?** Fixed in 2.3.1 — the cookie domain was being miscalculated for all multi-part suffixes.
+
+---
+
+## Contributing
+
+The translation catalogues are plain JSON, one file per language, in [`languages/banner/`](languages/banner). If you are a native speaker and something reads awkwardly — or worse, inaccurately — a correction is genuinely welcome. These are consent notices, so precision matters more than elegance.
+
+A new language needs one file with the same 27 keys, and the `_meta` block filled in. Open a pull request or email it; either is fine.
+
+Bug reports are equally welcome, and the more specific the better. The video facade fault in 2.3.3 was found because somebody looked at a real page and noticed a video playing that should not have been.
 
 ---
 
