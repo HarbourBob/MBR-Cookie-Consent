@@ -337,7 +337,11 @@ class MBR_CC_Network_Admin {
             'Categories Accepted',
             'Consent Method',
             'Timestamp',
-            'Cookie Hash'
+            // Not a hash of the consent cookie, whatever the column is called —
+            // it is a salted digest of the visitor's IP address and user agent.
+            // The heading says so, because a compliance export that mislabels
+            // its own columns is worse than one that omits them.
+            'Visitor Hash'
         ));
         
         // Add data.

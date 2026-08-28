@@ -71,82 +71,116 @@
             $(this).closest('.mbr-cc-layout-card').addClass('selected');
         });
         
-        // ── Banner logo: Media Library picker ──────────────────────
-        // Replaces the previous handler, which was bound to a button that was
-        // never added to the settings template and therefore never ran.
-        var logoFrame = null;
+        // ── Logo fields: Media Library picker ──────────────────────
+        //
+        // Two fields need identical behaviour — the banner logo and the
+        // blocked-content overlay logo — so the wiring lives in one place
+        // rather than being copied and left to drift apart.
+        function initLogoPicker(opts) {
+            var $chooseBtn = $(opts.chooseBtn);
 
-        $('#mbr-cc-choose-logo').on('click', function (e) {
-            e.preventDefault();
-
-            if (typeof wp === 'undefined' || typeof wp.media === 'undefined') {
-                window.alert('The WordPress media library could not be loaded. Paste the image URL into the field below instead.');
+            // Nothing to wire up if this field is not on the page.
+            if (!$chooseBtn.length) {
                 return;
             }
 
-            if (logoFrame) {
-                logoFrame.open();
-                return;
+            var $removeBtn  = $(opts.removeBtn);
+            var $urlField   = $(opts.urlField);
+            var $idField    = $(opts.idField);
+            var $preview    = $(opts.preview);
+            var $previewBox = $(opts.previewWrap);
+            var frame       = null;
+
+            function setPreview(url) {
+                if (url) {
+                    $preview.attr('src', url);
+                    $previewBox.show();
+                    $removeBtn.show();
+                } else {
+                    $preview.attr('src', '');
+                    $previewBox.hide();
+                    $removeBtn.hide();
+                }
             }
 
-            logoFrame = wp.media({
-                title: 'Select banner logo',
-                button: { text: 'Use this logo' },
-                library: { type: 'image' },
-                multiple: false
-            });
+            $chooseBtn.on('click', function (e) {
+                e.preventDefault();
 
-            logoFrame.on('select', function () {
-                var attachment = logoFrame.state().get('selection').first().toJSON();
-
-                // Prefer a sensibly sized version over the full original — the
-                // banner renders it at 150px, and shipping a 4000px original to
-                // every visitor for that is wasteful.
-                var url = attachment.url;
-
-                if (attachment.sizes) {
-                    if (attachment.sizes.medium) {
-                        url = attachment.sizes.medium.url;
-                    } else if (attachment.sizes.thumbnail) {
-                        url = attachment.sizes.thumbnail.url;
-                    }
+                if (typeof wp === 'undefined' || typeof wp.media === 'undefined') {
+                    window.alert('The WordPress media library could not be loaded. Paste the image URL into the field below instead.');
+                    return;
                 }
 
-                $('#banner_logo_url').val(url);
-                $('#banner_logo_id').val(attachment.id);
-                $('#mbr-cc-logo-preview').attr('src', url);
-                $('#mbr-cc-logo-preview-wrap').show();
-                $('#mbr-cc-remove-logo').show();
+                if (frame) {
+                    frame.open();
+                    return;
+                }
+
+                frame = wp.media({
+                    title: opts.frameTitle,
+                    button: { text: 'Use this logo' },
+                    library: { type: 'image' },
+                    multiple: false
+                });
+
+                frame.on('select', function () {
+                    var attachment = frame.state().get('selection').first().toJSON();
+
+                    // Prefer a sensibly sized version over the full original —
+                    // it renders at 150px, and shipping a 4000px original to
+                    // every visitor for that is wasteful.
+                    var url = attachment.url;
+
+                    if (attachment.sizes) {
+                        if (attachment.sizes.medium) {
+                            url = attachment.sizes.medium.url;
+                        } else if (attachment.sizes.thumbnail) {
+                            url = attachment.sizes.thumbnail.url;
+                        }
+                    }
+
+                    $urlField.val(url);
+                    $idField.val(attachment.id);
+                    setPreview(url);
+                });
+
+                frame.open();
             });
 
-            logoFrame.open();
+            $removeBtn.on('click', function (e) {
+                e.preventDefault();
+
+                $urlField.val('');
+                $idField.val(0);
+                setPreview('');
+            });
+
+            // Keep the preview honest when a URL is pasted or edited by hand.
+            $urlField.on('change input', function () {
+                // A pasted URL is not a Media Library attachment.
+                $idField.val(0);
+                setPreview($.trim($(this).val()));
+            });
+        }
+
+        initLogoPicker({
+            chooseBtn:   '#mbr-cc-choose-logo',
+            removeBtn:   '#mbr-cc-remove-logo',
+            urlField:    '#banner_logo_url',
+            idField:     '#banner_logo_id',
+            preview:     '#mbr-cc-logo-preview',
+            previewWrap: '#mbr-cc-logo-preview-wrap',
+            frameTitle:  'Select banner logo'
         });
 
-        $('#mbr-cc-remove-logo').on('click', function (e) {
-            e.preventDefault();
-
-            $('#banner_logo_url').val('');
-            $('#banner_logo_id').val(0);
-            $('#mbr-cc-logo-preview').attr('src', '');
-            $('#mbr-cc-logo-preview-wrap').hide();
-            $(this).hide();
-        });
-
-        // Keep the preview honest when a URL is pasted or edited by hand.
-        $('#banner_logo_url').on('change input', function () {
-            var url = $.trim($(this).val());
-
-            // A pasted URL is not a Media Library attachment.
-            $('#banner_logo_id').val(0);
-
-            if (url) {
-                $('#mbr-cc-logo-preview').attr('src', url);
-                $('#mbr-cc-logo-preview-wrap').show();
-                $('#mbr-cc-remove-logo').show();
-            } else {
-                $('#mbr-cc-logo-preview-wrap').hide();
-                $('#mbr-cc-remove-logo').hide();
-            }
+        initLogoPicker({
+            chooseBtn:   '#mbr-cc-choose-overlay-logo',
+            removeBtn:   '#mbr-cc-remove-overlay-logo',
+            urlField:    '#mbr_cc_blocked_overlay_logo_url',
+            idField:     '#mbr_cc_blocked_overlay_logo_id',
+            preview:     '#mbr-cc-overlay-logo-preview',
+            previewWrap: '#mbr-cc-overlay-logo-preview-wrap',
+            frameTitle:  'Select blocked content logo'
         });
 
         // ── Glassmorphism: sliders and live contrast readout ───────

@@ -56,7 +56,8 @@ class MBR_CC_Cookie_Scanner {
         $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : home_url();
         
         if ($scan_type === 'site-wide') {
-            $results = $this->scan_entire_site();
+            $offset  = isset($_POST['offset']) ? max(0, (int) wp_unslash($_POST['offset'])) : 0;
+            $results = $this->scan_entire_site($offset);
         } else {
             $results = $this->scan_page($url);
         }
@@ -112,24 +113,72 @@ class MBR_CC_Cookie_Scanner {
      *
      * @return array Scan results organized by category.
      */
-    public function scan_entire_site() {
-        // Increase timeout for large sites.
-        set_time_limit(300); // 5 minutes
-        
-        // Get all published pages and posts.
-        $urls = $this->get_all_site_urls();
-        
-        $all_scripts = array();
-        $all_iframes = array();
-        $scanned_count = 0;
-        $max_pages = 1000; // Increased from 50
-        
-        foreach (array_slice($urls, 0, $max_pages) as $url) {
+    /**
+     * Scan the site in batches, resuming from an offset.
+     *
+     * The previous implementation fetched up to a thousand pages at a
+     * thirty-second timeout apiece inside a single AJAX request. set_time_limit()
+     * does not help — many hosts ignore it, and a web server or proxy will close
+     * the connection long before PHP gives up — so on any site with real content
+     * the scan simply died, usually with no useful message.
+     *
+     * Each call now works for a fixed wall-clock budget, stores what it has found
+     * so far, and reports where it got to. The browser calls back with that
+     * offset until the scan reports itself finished, so a large site takes
+     * several short requests instead of one that cannot complete.
+     *
+     * @param int $offset Index in the URL list to resume from.
+     * @return array Scan state, including 'done'.
+     */
+    public function scan_entire_site($offset = 0) {
+        $started = microtime(true);
+
+        /**
+         * Seconds of wall clock per batch.
+         *
+         * Deliberately well inside the 30-second default that most hosts and
+         * proxies enforce, so a batch returns cleanly rather than being cut off.
+         */
+        $budget = (float) apply_filters('mbr_cc_scan_time_budget', 12.0);
+
+        /** Hard cap on pages per batch, so a site of fast pages still yields. */
+        $batch_cap = (int) apply_filters('mbr_cc_scan_batch_size', 25);
+
+        $urls      = $this->get_all_site_urls();
+        $max_pages = (int) apply_filters('mbr_cc_scan_max_pages', 500);
+        $urls      = array_slice($urls, 0, $max_pages);
+        $total     = count($urls);
+
+        // Findings so far are held in a transient between batches rather than
+        // being sent back and forth through the browser.
+        $progress_key = 'mbr_cc_scan_progress';
+        $progress     = (0 === $offset) ? array('scripts' => array(), 'iframes' => array(), 'scanned' => 0)
+                                        : get_transient($progress_key);
+
+        if (!is_array($progress) || !isset($progress['scripts'])) {
+            $progress = array('scripts' => array(), 'iframes' => array(), 'scanned' => 0);
+            $offset   = 0;
+        }
+
+        $all_scripts   = $progress['scripts'];
+        $all_iframes   = $progress['iframes'];
+        $scanned_count = (int) $progress['scanned'];
+        $index         = $offset;
+        $in_batch      = 0;
+
+        while ($index < $total && $in_batch < $batch_cap) {
+            if ((microtime(true) - $started) >= $budget) {
+                break;
+            }
+
+            $url          = $urls[$index];
             $page_results = $this->scan_page($url);
-            
+            $index++;
+            $in_batch++;
+
             if (!is_wp_error($page_results)) {
                 $scanned_count++;
-                
+
                 // Merge scripts (avoiding duplicates).
                 foreach ($page_results['scripts'] as $script) {
                     $identifier = $script['identifier'];
@@ -139,7 +188,7 @@ class MBR_CC_Cookie_Scanner {
                     }
                     $all_scripts[$identifier]['found_on'][] = $url;
                 }
-                
+
                 // Merge iframes (avoiding duplicates).
                 foreach ($page_results['iframes'] as $iframe) {
                     $identifier = $iframe['identifier'];
@@ -151,17 +200,38 @@ class MBR_CC_Cookie_Scanner {
                 }
             }
         }
-        
+
+        $done = ($index >= $total);
+
+        if (!$done) {
+            set_transient($progress_key, array(
+                'scripts' => $all_scripts,
+                'iframes' => $all_iframes,
+                'scanned' => $scanned_count,
+            ), HOUR_IN_SECONDS);
+
+            return array(
+                'done'          => false,
+                'offset'        => $index,
+                'pages_scanned' => $scanned_count,
+                'total_urls'    => $total,
+                'count'         => count($all_scripts) + count($all_iframes),
+            );
+        }
+
+        delete_transient($progress_key);
+
         // Organize by category.
         $organized = $this->organize_by_category(array_values($all_scripts), array_values($all_iframes));
         
         return array(
+            'done' => true,
             'scripts' => array_values($all_scripts),
             'iframes' => array_values($all_iframes),
             'by_category' => $organized,
             'count' => count($all_scripts) + count($all_iframes),
             'pages_scanned' => $scanned_count,
-            'total_urls' => count($urls),
+            'total_urls' => $total,
             'max_pages' => $max_pages,
         );
     }
@@ -260,7 +330,7 @@ class MBR_CC_Cookie_Scanner {
         
         // Fetch page content.
         $response = wp_remote_get($url, array(
-            'timeout' => 30,
+            'timeout' => 10,
         ));
         
         if (is_wp_error($response)) {

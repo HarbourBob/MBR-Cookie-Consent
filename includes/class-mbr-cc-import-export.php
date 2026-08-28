@@ -160,7 +160,24 @@ class MBR_CC_Import_Export {
 
             // i18n & accessibility.
             'auto_translate'             => 'bool',
-            'wcag_compliance'            => 'text',
+
+            // A checkbox. This said 'text' until 2.3.5, and the settings screen
+            // saves over AJAX, where jQuery serialises a JavaScript boolean as
+            // the string "true" or "false". sanitize_text_field() passed those
+            // straight through, so the option held the four-character string
+            // "true" rather than a boolean, and two things followed from it:
+            //
+            //  - checked() compares (string) $checked === (string) $current, so
+            //    "true" was never equal to "1" and the box rendered clear on the
+            //    next page load however it had been left. Ticking it and saving
+            //    looked exactly like the save had failed.
+            //  - "false" is a non-empty string, so it is truthy in PHP. The
+            //    front-end guard in MBR_CC_I18n_Accessibility never fired and
+            //    the accessibility layer stayed on regardless of the setting.
+            //
+            // The screen therefore reported the opposite of the truth in both
+            // directions. upgrade_to_235() rewrites any stored string.
+            'wcag_compliance'            => 'bool',
 
             // Page-specific controls.
             'excluded_pages'             => 'textarea',
@@ -169,6 +186,7 @@ class MBR_CC_Import_Export {
             'exclude_checkout'           => 'bool',
             'exclude_cart'               => 'bool',
             'exclude_account'            => 'bool',
+            'exclusions_skip_blocking'   => 'bool',
 
             // Custom CSS.
             'custom_css'                 => 'css',
@@ -181,8 +199,6 @@ class MBR_CC_Import_Export {
             'purpose_one_treatment'      => 'bool',
             'gdpr_applies'               => 'text', // 'auto' | 'true' | 'false'.
 
-            // Google ACM.
-            'google_acm_enabled'         => 'bool',
 
             // Blocked content overlay.
             'blocked_overlay_enabled'    => 'bool',
@@ -190,6 +206,7 @@ class MBR_CC_Import_Export {
             'blocked_overlay_message'    => 'textarea',
             'blocked_overlay_btn_text'   => 'text',
             'blocked_overlay_logo_url'   => 'url',
+            'blocked_overlay_logo_id'    => 'int',
 
             // GPC.
             'gpc_enabled'                => 'bool',
@@ -333,8 +350,9 @@ class MBR_CC_Import_Export {
          * @param array $keys Option names without the mbr_cc_ prefix.
          */
         return (array) apply_filters('mbr_cc_site_local_settings', array(
-            // Local database reference — the logo URL travels, the ID cannot.
+            // Local database references — the logo URLs travel, the IDs cannot.
             'banner_logo_id',
+            'blocked_overlay_logo_id',
             
             // Host infrastructure.
             'proxy_mode',

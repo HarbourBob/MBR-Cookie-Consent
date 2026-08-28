@@ -15,6 +15,30 @@ if (!defined('ABSPATH')) {
 class MBR_CC_Geolocation {
     
     /**
+     * The provider used when the site has not chosen one.
+     *
+     * There is one of these, and everything reads it, because until 2.3.4 there
+     * were two and they disagreed. The settings dropdown defaulted to ipapi
+     * while the lookup itself defaulted to ip-api, so on any install where the
+     * geolocation form had never been saved the admin was shown ipapi.co
+     * selected and the plugin used ip-api.com. ip-api.com then declined to run
+     * the lookup at all — its free endpoint is plaintext and detect_via_ipapi()
+     * refuses to send a visitor's IP over it without an explicit opt-in — so
+     * every visitor silently fell back to the default country and regional
+     * banners never appeared.
+     *
+     * That path was not obscure. The installation instructions tell people to
+     * enable geolocation with the MBR_CC_FORCE_GEOLOCATION constant in
+     * wp-config.php, which turns the feature on without ever opening the
+     * settings screen that would have written the option.
+     *
+     * ipapi.co is the default because it is the only provider here that serves
+     * HTTPS free of charge. Cloudflare is better still where it is available,
+     * since it needs no outbound request at all, but it cannot be a default.
+     */
+    const DEFAULT_PROVIDER = 'ipapi';
+    
+    /**
      * Singleton instance
      */
     private static $instance = null;
@@ -78,7 +102,43 @@ class MBR_CC_Geolocation {
     /**
      * Detect user's location
      */
+    /**
+     * Whether detection has already run for this request.
+     *
+     * @var bool
+     */
+    private $detected = false;
+
+    /**
+     * Discard the memoised result.
+     *
+     * Only needed where one PHP process serves more than one visitor — WP-CLI
+     * loops, test harnesses — or when a test constant is changed mid-request.
+     *
+     * @return void
+     */
+    public function reset_detection() {
+        $this->detected     = false;
+        $this->country_code = null;
+        $this->region_code  = null;
+        $this->region       = null;
+    }
+
     public function detect_location() {
+        // Detection is settled once per request.
+        //
+        // The region cannot change between two calls within the same request,
+        // but get_region() is reached from is_eu(), is_us(), the banner config
+        // filter, the GPC override and the compliance screens — eighteen call
+        // sites in all. Without this each one repeated the whole routine: an
+        // option read, a transient read, and on a cold cache an outbound HTTP
+        // lookup, several times over on a single page view.
+        if ( $this->detected ) {
+            return;
+        }
+
+        $this->detected = true;
+
         // Check if geolocation is enabled (constant or option)
         $geo_enabled = defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION;
         if (!$geo_enabled) {
@@ -181,7 +241,7 @@ class MBR_CC_Geolocation {
         }
         
         // Get API provider
-        $provider = get_option('mbr_cc_geolocation_provider', 'ip-api');
+        $provider = get_option('mbr_cc_geolocation_provider', self::DEFAULT_PROVIDER);
         
         $detected = false;
         
@@ -196,7 +256,10 @@ class MBR_CC_Geolocation {
                 $detected = $this->detect_via_cloudflare();
                 break;
             default:
-                $detected = $this->detect_via_ipapi($ip);
+                // An unrecognised value — a hand-edited option, or an import
+                // from a version that named providers differently. Fall back to
+                // the HTTPS provider rather than the plaintext one.
+                $detected = $this->detect_via_ipapi_com($ip);
         }
         
         // Normalise return value to array form.
@@ -667,7 +730,6 @@ class MBR_CC_Geolocation {
      * Get detected region
      */
     public function get_region() {
-        // Always detect fresh for each request (don't trust cached object property)
         $this->detect_location();
         return $this->region;
     }

@@ -100,8 +100,114 @@
             });
         },
 
+        /**
+         * Apply the visitor's regional configuration to the rendered banner.
+         *
+         * The document arrives in the site's own configuration, identical for
+         * everyone, so that a page cache can serve one copy to the world. That
+         * is the whole reason this runs here rather than in PHP: deciding on
+         * the server which buttons a visitor sees means the first visitor's
+         * region is written into the copy every later visitor receives, and a
+         * cached US banner served to somebody in the EU is one with no Reject
+         * button on it.
+         *
+         * Only the keys PHP marks with data-mbr-cc-region are touched, and the
+         * set of those keys is fixed by MBR_CC_Region_Config::$client_keys. If
+         * a region wants to change something not in that list, the answer is to
+         * implement it here, not to add it to the PHP array and hope.
+         */
+        applyRegionConfig: function(config) {
+            if (!config || typeof config !== 'object') {
+                return;
+            }
+
+            document.querySelectorAll('[data-mbr-cc-region]').forEach(function(el) {
+                var key = el.getAttribute('data-mbr-cc-region');
+
+                if (!Object.prototype.hasOwnProperty.call(config, key)) {
+                    return;
+                }
+
+                var value = config[key];
+
+                if (typeof value === 'boolean') {
+                    el.style.display = value ? '' : 'none';
+                    return;
+                }
+
+                if (typeof value === 'string' && value !== '') {
+                    // textContent, never innerHTML. This is text that arrived
+                    // over the network, and banner copy has no need of markup.
+                    el.textContent = value;
+
+                    // A region that supplies its own wording outranks the
+                    // community translation of the generic wording, which says
+                    // something legally different. Same rule the translation
+                    // layer already applies to text the site owner rewrote.
+                    el.removeAttribute('data-mbr-cc-i18n');
+                }
+            });
+        },
+
+        /**
+         * Fetch the visitor's region, then run the callback either way.
+         *
+         * Failure is not an error condition worth reporting to the visitor. A
+         * blocked request, an offline CDN, a security plugin that has decided
+         * the REST API is a threat — in every case the banner shown is the one
+         * PHP already rendered from the site's own settings, which is a valid
+         * banner. The only unacceptable outcome is no banner at all, so the
+         * timeout is a hard deadline rather than a suggestion.
+         */
+        resolveRegion: function(done) {
+            // No banner on this page — an excluded page showing only the
+            // Cookie Settings button — so there is nothing regional to decide
+            // and no reason to spend a request deciding it.
+            if (!$('#mbr-cc-banner').length) {
+                done();
+                return;
+            }
+
+            if (!mbrCcBanner.geoEnabled || !mbrCcBanner.regionUrl || typeof window.fetch !== 'function') {
+                done();
+                return;
+            }
+
+            var self = this;
+            var settled = false;
+
+            var finish = function(config) {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+
+                if (config) {
+                    self.applyRegionConfig(config);
+                }
+
+                done();
+            };
+
+            setTimeout(function() {
+                finish(null);
+            }, mbrCcBanner.regionTimeout || 1500);
+
+            fetch(mbrCcBanner.regionUrl, {
+                credentials: 'omit',
+                cache: 'no-store'
+            }).then(function(response) {
+                return response.ok ? response.json() : null;
+            }).then(function(data) {
+                finish(data && data.config ? data.config : null);
+            })['catch'](function() {
+                finish(null);
+            });
+        },
+
         checkConsent: function() {
-            var consent = this.getCookie(mbrCcBanner.categories ? 'mbr_cc_consent' : 'mbr_cc_consent');
+            var self = this;
+            var consent = this.getCookie('mbr_cc_consent');
             
             // Check for Global Privacy Control (GPC) signal.
             // Required by 12+ US states as of January 2026.
@@ -115,8 +221,21 @@
             if (!parsed) {
                 // No stored choice, or one we cannot read. Everything stays
                 // blocked, which is the safe outcome, and the banner asks again.
-                this.showBanner();
+                //
+                // Placeholders first, and not inside the callback below. What
+                // they say does not vary by region, so making a visitor stare
+                // at a gap where a video should be while a lookup completes
+                // buys nothing.
                 this.revealBlockedPlaceholders();
+
+                // The region lookup happens only on this path. A visitor who
+                // has already chosen is not being asked anything, so there is
+                // nothing regional to decide and no reason to spend a request
+                // finding out where they are — which is most traffic, and the
+                // reason this costs almost nothing in aggregate.
+                this.resolveRegion(function() {
+                    self.showBanner();
+                });
             } else {
                 this.showRevisitButton();
                 this.unblockScripts(parsed);
@@ -124,9 +243,12 @@
         },
         
         /**
-         * Detect Global Privacy Control signal.
-         * Checks both the JS API (navigator.globalPrivacyControl) and
-         * the server-side detection passed via mbrCcGpc localized data.
+         * Detect a Global Privacy Control signal.
+         *
+         * navigator.globalPrivacyControl only. The docblock here used to claim
+         * this also consulted server-side detection passed through mbrCcGpc;
+         * that was removed when the Sec-GPC header turned out to describe
+         * whoever generated the cached page rather than whoever was reading it.
          */
         isGpcActive: function() {
             // Client-side: navigator.globalPrivacyControl
@@ -190,8 +312,17 @@
             
             // If the visitor has NOT yet interacted with the banner at all,
             // still show it so they can make choices for non-GPC categories.
+            //
+            // The region matters more here than anywhere, not less. A GPC
+            // signal is largely a US instrument, and the "Do Not Sell or Share"
+            // link this visitor is entitled to see is revealed by the US
+            // regional configuration. Until 2.3.4 that link was switched on in
+            // PHP from the Sec-GPC header, which meant it was switched on in
+            // the cached copy for everyone else too.
             if (!existingConsent) {
-                this.showBanner();
+                this.resolveRegion(function() {
+                    self.showBanner();
+                });
             }
         },
         
@@ -298,6 +429,16 @@
             if (this._consentSaved) {
                 return;
             }
+
+            // This page may be one the owner excluded the banner from, in which
+            // case there is no banner element to show — but scripts are still
+            // being held back, so the visitor needs some way to say yes. The
+            // floating Cookie Settings button is that way.
+            if (!$('#mbr-cc-banner').length) {
+                this.showRevisitButton();
+                return;
+            }
+
             $('#mbr-cc-banner').fadeIn(300);
             // Show popup overlay if using popup layout
             if ($('#mbr-cc-popup-overlay').length) {
@@ -402,7 +543,7 @@
                 // Write without domain — browser will scope to current host.
                 var expDate = new Date();
                 expDate.setTime(expDate.getTime() + (mbrCcConsent.cookieExpiry * 24 * 60 * 60 * 1000));
-                document.cookie = 'mbr_cc_consent=' + consentJson +
+                document.cookie = 'mbr_cc_consent=' + encodeURIComponent(consentJson) +
                     '; expires=' + expDate.toUTCString() +
                     '; path=/; SameSite=Lax' +
                     (window.location.protocol === 'https:' ? '; Secure' : '');
@@ -417,7 +558,9 @@
             this.hideBanner();
             this.hidePreferences();
 
-            // Trigger consent saved event for ACM and our Elementor blocker.
+            // Public event. Our Elementor blocker listens for this, and it is
+            // the documented hook for third-party code that needs to react to
+            // a consent decision.
             $(document).trigger('mbr_cc_consent_saved', [consent]);
 
             // Unblock scripts immediately.
@@ -635,7 +778,17 @@
             // visitor's recorded consent state.
             var secure = (window.location.protocol === 'https:') ? '; Secure' : '';
 
-            document.cookie = name + '=' + (value || '') + expires + domain + path + '; SameSite=Lax' + secure;
+            // Percent-encode the value. The consent cookie holds JSON, so it
+            // contains commas, braces and double quotes — all of which RFC 6265
+            // excludes from a cookie value. Browsers tolerate them, which is
+            // why this went unnoticed, but a CDN, WAF or reverse proxy in front
+            // of the site is under no obligation to, and one that decides to
+            // split on the comma leaves a visitor's consent unreadable.
+            //
+            // PHP percent-decodes $_COOKIE for us, so nothing on the server
+            // needs to change. Old unencoded cookies keep working — see
+            // getCookie() for how.
+            document.cookie = name + '=' + encodeURIComponent(value || '') + expires + domain + path + '; SameSite=Lax' + secure;
         },
         
         getCookie: function(name) {
@@ -644,9 +797,36 @@
             for (var i = 0; i < ca.length; i++) {
                 var c = ca[i];
                 while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    return this.decodeCookieValue(c.substring(nameEQ.length, c.length));
+                }
             }
             return null;
+        },
+        
+        /**
+         * Read a cookie value written by either the current or the old format.
+         *
+         * Cookies written before 2.3.4 hold raw JSON. Those are still in
+         * millions of browsers with up to a year left to run, and a visitor
+         * whose stored choice suddenly becomes unreadable gets asked to consent
+         * again — which looks like the plugin losing their preferences.
+         *
+         * Decoding is safe for both: raw JSON of booleans contains no percent
+         * sign, so decodeURIComponent returns it untouched. The catch is there
+         * for a stray percent in a hand-edited cookie, where the raw value is
+         * still the better guess than nothing.
+         */
+        decodeCookieValue: function(value) {
+            if (value === null || value === '') {
+                return value;
+            }
+            
+            try {
+                return decodeURIComponent(value);
+            } catch (e) {
+                return value;
+            }
         }
     };
     

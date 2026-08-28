@@ -144,6 +144,55 @@ class MBR_CC_Enhanced_Customization {
     }
     
     /**
+     * Whether consent is enforced on this request — that is, whether the
+     * script blocker holds third-party scripts and iframes back.
+     *
+     * This is a different question from should_show_banner(), and conflating
+     * the two was a real defect. The script blocker never consulted the
+     * exclusion settings at all: it blocked everywhere, while the banner obeyed
+     * them. A site owner who ticked "Hide on Checkout Pages" got scripts held
+     * back on checkout with no banner offering to release them, and a
+     * first-time visitor landing straight on that page had no route to consent
+     * at all.
+     *
+     * The two settings mean genuinely different things and both are reasonable:
+     *
+     *   "Hide the banner here"  — usually about not interrupting a purchase.
+     *                             Blocking continues, which is the correct
+     *                             outcome under GDPR: no consent, no tracking.
+     *                             The floating Cookie Settings button is
+     *                             rendered on these pages so the visitor still
+     *                             has a way to say yes if they want to.
+     *
+     *   "Don't enforce here"    — a deliberate decision that this page's
+     *                             third-party scripts must run regardless.
+     *                             Off by default, because switching it on is a
+     *                             compliance choice the site owner has to make
+     *                             knowingly rather than inherit.
+     *
+     * The exception is mbr_cc_disable_banner. With the banner switched off
+     * site-wide there is no banner and no Cookie Settings button anywhere, so
+     * nothing could ever release the blocked scripts. Blocking would be
+     * permanent and silent, which is a trap rather than a policy — so turning
+     * the banner off turns enforcement off with it.
+     *
+     * @return bool
+     */
+    public static function should_enforce_consent() {
+        if (get_option('mbr_cc_disable_banner', false)) {
+            return false;
+        }
+        
+        // Blocking is independent of where the banner is displayed unless the
+        // owner has explicitly asked otherwise.
+        if (!get_option('mbr_cc_exclusions_skip_blocking', false)) {
+            return true;
+        }
+        
+        return self::should_show_banner();
+    }
+    
+    /**
      * Check if current page is login page.
      *
      * @return bool Is login page.

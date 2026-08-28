@@ -595,48 +595,12 @@ if (!defined('ABSPATH')) {
         <!-- Advanced Consent Management -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Advanced Consent Management', 'mbr-cookie-consent'); ?></h2>
-            <p><?php esc_html_e('Google Additional Consent Mode for publishers using Google advertising products.', 'mbr-cookie-consent'); ?></p>
             
-            <!-- Google ACM -->
-            <div class="mbr-cc-form-row" style="margin-top: 30px;">
-                <div class="mbr-cc-form-field" style="width: 100%;">
-                    <h3><?php esc_html_e('Google Additional Consent Mode (ACM)', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('Google\'s Additional Consent Mode manages consent for Google Ad Tech Providers. Useful if you use Google advertising products.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <label style="margin-top: 15px; display: block;">
-                        <input type="checkbox" name="mbr_cc_google_acm_enabled" value="1" <?php checked(get_option('mbr_cc_google_acm_enabled', false)); ?>>
-                        <?php esc_html_e('Enable Google Additional Consent Mode', 'mbr-cookie-consent'); ?>
-                    </label>
-                    <p class="description"><?php esc_html_e('Generates AC String for Google Ad Tech Providers outside the IAB framework.', 'mbr-cookie-consent'); ?></p>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: #e7f3e7; border-left: 4px solid #46b450;">
-                        <strong><?php esc_html_e('What is Google ACM?', 'mbr-cookie-consent'); ?></strong>
-                        <p style="margin: 10px 0 0 0;"><?php esc_html_e('Google ACM manages consent for Google\'s own advertising products. This includes:', 'mbr-cookie-consent'); ?></p>
-                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('Google Ads', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('DoubleClick / Google Ad Manager', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('AdSense', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Campaign Manager 360', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Display & Video 360', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('And other Google ATP providers', 'mbr-cookie-consent'); ?></li>
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-top: 15px;">
-                        <h4><?php esc_html_e('How ACM Works', 'mbr-cookie-consent'); ?></h4>
-                        <ol style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li><?php esc_html_e('User gives marketing consent via cookie banner', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Plugin generates AC String (e.g., "1~1.2.3.4.5")', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('AC String passed to Google ad tags', 'mbr-cookie-consent'); ?></li>
-                            <li><?php esc_html_e('Google applies consent to ATP providers', 'mbr-cookie-consent'); ?></li>
-                        </ol>
-                    </div>
-                    
             <!-- AI / LLM Training Disclosure -->
             <div class="mbr-cc-form-row" style="margin-top: 30px;">
                 <div class="mbr-cc-form-field" style="width: 100%;">
                     <h3><?php esc_html_e('AI / LLM Training Disclosure', 'mbr-cookie-consent'); ?></h3>
-                    <p class="description"><?php esc_html_e('Connecticut SB 1295, effective 1 July 2026, requires your privacy notice to state whether you collect, use, or sell personal data to train large language models. It is the first US state law to ask this directly. Other states are expected to follow.', 'mbr-cookie-consent'); ?></p>
+                    <p class="description"><?php esc_html_e('Connecticut SB 1295, effective 1 July 2026, requires your privacy notice to state whether you collect, use, or sell personal data to train large language models. It was the first US state law to ask this directly, and Vermont imposes the same duty from 1 January 2028.', 'mbr-cookie-consent'); ?></p>
 
                     <label style="margin-top: 15px; display: block;">
                         <input type="checkbox" name="mbr_cc_ai_training_enabled" value="1" <?php checked(get_option('mbr_cc_ai_training_enabled', false)); ?>>
@@ -683,8 +647,6 @@ if (!defined('ABSPATH')) {
         </div>
         
         <!-- TAB 6: CUSTOMIZATION -->
-            </div>
-        </div>
         </div>
         <div class="mbr-cc-tab-content" id="tab-customization">
         <!-- Enhanced Customization -->
@@ -697,6 +659,13 @@ if (!defined('ABSPATH')) {
                 <div class="mbr-cc-form-field" style="width: 100%;">
                     <h3><?php esc_html_e('Page-Specific Controls', 'mbr-cookie-consent'); ?></h3>
                     <p class="description"><?php esc_html_e('Control where the cookie banner appears. Useful for hiding the banner on checkout, login, or other sensitive pages.', 'mbr-cookie-consent'); ?></p>
+                    
+                    <div class="mbr-cc-info-box" style="background: #f0f6fc; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">
+                        <p style="margin: 0;">
+                            <strong><?php esc_html_e('These settings hide the banner. They do not switch off consent.', 'mbr-cookie-consent'); ?></strong>
+                            <?php esc_html_e('On an excluded page, third-party scripts are still held back until the visitor consents — which is what the law requires, since they have not agreed to anything. What changes is that they are not interrupted by a banner. The floating "Cookie Settings" button still appears on these pages so anyone who wants to accept can.', 'mbr-cookie-consent'); ?>
+                        </p>
+                    </div>
                     
                     <div style="margin-top: 15px;">
                         <h4><?php esc_html_e('Quick Exclusions', 'mbr-cookie-consent'); ?></h4>
@@ -724,6 +693,18 @@ if (!defined('ABSPATH')) {
                             <?php esc_html_e('Hide on Account Pages', 'mbr-cookie-consent'); ?>
                         </label>
                         <p class="description" style="margin-left: 25px;"><?php esc_html_e('Excludes WooCommerce and EDD account/dashboard pages.', 'mbr-cookie-consent'); ?></p>
+                    </div>
+                    
+                    <div style="margin-top: 25px;">
+                        <h4><?php esc_html_e('Script Blocking on Excluded Pages', 'mbr-cookie-consent'); ?></h4>
+                        
+                        <label style="display: block; margin-bottom: 10px;">
+                            <input type="checkbox" name="mbr_cc_exclusions_skip_blocking" value="1" <?php checked(get_option('mbr_cc_exclusions_skip_blocking', false)); ?>>
+                            <?php esc_html_e('Also allow third-party scripts to run on excluded pages', 'mbr-cookie-consent'); ?>
+                        </label>
+                        <p class="description" style="margin-left: 25px;">
+                            <?php esc_html_e('Leave this off unless you have a specific reason. Switching it on means analytics, advertising and embedded content load on excluded pages for visitors who have not consented — a deliberate compliance decision, not a display setting. It exists for cases where a checkout genuinely will not function without a particular third-party script.', 'mbr-cookie-consent'); ?>
+                        </p>
                     </div>
                     
                     <div style="margin-top: 25px;">
@@ -905,15 +886,33 @@ if (!defined('ABSPATH')) {
 
                     <div style="margin-top: 16px;">
                         <label for="mbr_cc_blocked_overlay_logo_url" style="display:block; font-weight:600; margin-bottom:4px;">
-                            <?php esc_html_e( 'Custom Logo URL (optional override)', 'mbr-cookie-consent' ); ?>
+                            <?php esc_html_e( 'Custom Logo (optional override)', 'mbr-cookie-consent' ); ?>
                         </label>
+
+                        <p class="mbr-cc-logo-actions" style="margin: 0 0 10px;">
+                            <button type="button" class="button button-secondary" id="mbr-cc-choose-overlay-logo">
+                                <span class="dashicons dashicons-format-image" style="vertical-align: text-bottom;"></span>
+                                <?php esc_html_e( 'Choose from Media Library', 'mbr-cookie-consent' ); ?>
+                            </button>
+                            <button type="button" class="button button-link-delete" id="mbr-cc-remove-overlay-logo" <?php echo get_option( 'mbr_cc_blocked_overlay_logo_url' ) ? '' : 'style="display: none;"'; ?>>
+                                <?php esc_html_e( 'Remove logo', 'mbr-cookie-consent' ); ?>
+                            </button>
+                        </p>
+
                         <input type="url"
                                name="mbr_cc_blocked_overlay_logo_url"
                                id="mbr_cc_blocked_overlay_logo_url"
                                value="<?php echo esc_attr( get_option( 'mbr_cc_blocked_overlay_logo_url', '' ) ); ?>"
                                class="large-text"
                                placeholder="https://example.com/logo.png">
-                        <p class="description"><?php esc_html_e( 'Recommended size: up to 150&thinsp;&times;&thinsp;150 px. Leave blank to use the automatic logo cascade described above.', 'mbr-cookie-consent' ); ?></p>
+                        <input type="hidden" name="mbr_cc_blocked_overlay_logo_id" id="mbr_cc_blocked_overlay_logo_id" value="<?php echo esc_attr( (int) get_option( 'mbr_cc_blocked_overlay_logo_id', 0 ) ); ?>">
+
+                        <p class="description"><?php esc_html_e( 'Pick an image from your Media Library, or paste a URL directly if the logo is hosted elsewhere. Recommended size: up to 150&thinsp;&times;&thinsp;150 px. Leave blank to use the automatic logo cascade described above.', 'mbr-cookie-consent' ); ?></p>
+
+                        <div id="mbr-cc-overlay-logo-preview-wrap" style="margin-top: 15px;<?php echo get_option( 'mbr_cc_blocked_overlay_logo_url' ) ? '' : ' display: none;'; ?>">
+                            <strong><?php esc_html_e( 'Preview:', 'mbr-cookie-consent' ); ?></strong><br>
+                            <img id="mbr-cc-overlay-logo-preview" src="<?php echo esc_url( get_option( 'mbr_cc_blocked_overlay_logo_url', '' ) ); ?>" alt="" style="max-width: 150px; max-height: 150px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; background: #fff;">
+                        </div>
                     </div>
 
                     <div style="margin-top: 16px; padding: 12px 16px; background: #f0f6fc; border-left: 4px solid #0073aa;">

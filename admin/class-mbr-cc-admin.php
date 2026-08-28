@@ -77,6 +77,10 @@ class MBR_CC_Admin {
             $notices['mbr_cc_233_tcf_withdrawn'] = __('MBR Cookie Consent has withdrawn its IAB TCF option, which you had switched on. The feature was never functional: it sent every vendor the same fixed consent string regardless of what your visitors had chosen, and reported a CMP ID of zero, so no vendor could act on it correctly. Implementing TCF properly requires registration with IAB Europe, which this plugin does not have. If you need TCF, you will need a registered CMP. If you generated a privacy policy while the option was enabled, regenerate it — it claimed TCF participation that was not accurate.', 'mbr-cookie-consent');
         }
         
+        if (get_option('mbr_cc_234_acm_withdrawn')) {
+            $notices['mbr_cc_234_acm_withdrawn'] = __('MBR Cookie Consent has withdrawn its Google Additional Consent Mode option, which you had switched on. The feature was never functional: no AC String was ever generated, stored or sent to Google, its provider list was a placeholder, and its JavaScript was never loaded. Switching it on only added an empty callback to your pages. Nothing on your site relied on it, so nothing will change — but if you use Google programmatic advertising and need Additional Consent Mode, you will need a consent platform that implements it. If you generated a privacy policy while the option was enabled, regenerate it: it may list Google Ad Manager as a service you use.', 'mbr-cookie-consent');
+        }
+        
         if (get_option('mbr_cc_232_multilingual_precedence')) {
             $notices['mbr_cc_232_multilingual_precedence'] = __('MBR Cookie Consent now takes precedence over WPML and Polylang for banner wording in your site\'s default language. Previously, editing the banner heading, description or button labels in this plugin had no effect on the front end once the strings had been registered with your translation plugin — the old wording was served instead. Translations for your other languages are unchanged and still come from WPML or Polylang. If you had worked around this by editing the default-language wording in String Translation, set it in Cookie Consent > Settings instead.', 'mbr-cookie-consent');
         }
@@ -111,6 +115,7 @@ class MBR_CC_Admin {
         $notice = isset($_GET['notice']) ? sanitize_key(wp_unslash($_GET['notice'])) : '';
         
         $allowed = array(
+            'mbr_cc_234_acm_withdrawn',
             'mbr_cc_233_tcf_withdrawn',
             'mbr_cc_232_multilingual_precedence',
             'mbr_cc_231_geo_provider_switched',
@@ -306,14 +311,14 @@ class MBR_CC_Admin {
             'mbr-cc-admin',
             MBR_CC_PLUGIN_URL . 'assets/css/admin.css',
             array(),
-            MBR_CC_VERSION
+            mbr_cc_asset_version('assets/css/admin.css')
         );
         
         wp_enqueue_script(
             'mbr-cc-admin',
             MBR_CC_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery', 'wp-color-picker'),
-            MBR_CC_VERSION,
+            mbr_cc_asset_version('assets/js/admin.js'),
             true
         );
         
@@ -323,7 +328,7 @@ class MBR_CC_Admin {
             'mbr-cc-admin-settings',
             MBR_CC_PLUGIN_URL . 'assets/js/admin-settings.js',
             array('jquery'),
-            MBR_CC_VERSION,
+            mbr_cc_asset_version('assets/js/admin-settings.js'),
             true
         );
         

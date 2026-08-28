@@ -15,6 +15,70 @@ if (!defined('ABSPATH')) {
 class MBR_CC_Region_Config {
     
     /**
+     * REST namespace and route for region resolution.
+     */
+    const REST_NAMESPACE = 'mbr-cc/v1';
+    const REST_ROUTE     = '/region';
+    
+    /**
+     * The configuration keys the front end actually honours.
+     *
+     * This list is the contract, and it is deliberately short.
+     *
+     * Until 2.3.4 each region method returned a dozen keys and the banner read
+     * three of them. The rest — require_consent, show_categories,
+     * auto_accept_on_scroll, reject_button_prominence, duaa_exempt_categories —
+     * were never consulted by any front-end code path. The only thing that read
+     * them was the geolocation test tool in the admin, which meant the tool
+     * confidently reported behaviour the banner did not implement: it would
+     * tell an administrator that UK visitors got DUAA-exempt category handling
+     * and the DUAA wording, and they got neither.
+     *
+     * Anything added here must be implemented in banner.js. Anything that
+     * cannot be implemented does not belong in a region method at all.
+     *
+     * @var string[]
+     */
+    private static $client_keys = array(
+        'show_reject_button',
+        'show_customize_button',
+        'enable_ccpa',
+        'banner_heading',
+        'banner_description',
+    );
+    
+    /**
+     * Where each region keeps its own banner wording.
+     *
+     * Region key => the option-name stem, so 'uk' resolves to
+     * mbr_cc_geolocation_uk_heading and mbr_cc_geolocation_uk_description.
+     * Regions carrying pre-2.3.0 option names list the old stem second.
+     *
+     * 'default' is absent on purpose: rest-of-world has no wording of its own
+     * to impose, so a visitor there reads whatever the site itself says.
+     *
+     * @var array<string,string[]>
+     */
+    private static $region_text_options = array(
+        'eu_gdpr'     => array('eu', 'eu_uk'),
+        'uk_duaa'     => array('uk'),
+        'us_multi'    => array('us', 'ccpa'),
+        'ca_quebec'   => array('quebec'),
+        'pipeda'      => array('pipeda'),
+        'ch_nfadp'    => array('switzerland'),
+        'au_privacy'  => array('australia'),
+        'lgpd'        => array('lgpd'),
+        'india_dpdp'  => array('india'),
+        'vn_pdpl'     => array('vietnam'),
+        'id_pdp'      => array('indonesia'),
+        'ng_ndpa'     => array('nigeria'),
+        'cn_pipl'     => array('china'),
+        'kr_pipa'     => array('korea'),
+        'sa_pdpl'     => array('saudi'),
+        'za_popia'    => array('southafrica'),
+    );
+    
+    /**
      * Singleton instance
      */
     private static $instance = null;
@@ -35,51 +99,217 @@ class MBR_CC_Region_Config {
     }
     
     /**
-     * Constructor
+     * Constructor.
+     *
+     * Note what is NOT here: this class used to hook mbr_cc_banner_config and
+     * rewrite the banner server-side according to the visitor's IP. The
+     * rendered HTML therefore varied by visitor, and on any site with a page
+     * cache the first visitor through primed the cache for everybody else. A
+     * US visitor could prime a copy with no Reject button, which an EU visitor
+     * would then be served — the exact failure the script blocker and the GPC
+     * handler were already changed to avoid.
+     *
+     * The page is now rendered identically for every visitor, and the region is
+     * resolved in the browser through the REST route below. Same approach as
+     * MBR_CC_Translations, and for the same reason.
      */
     private function __construct() {
         $this->geo = mbr_cc_geolocation();
         
-        // Filter banner configuration based on region
-        add_filter('mbr_cc_banner_config', array($this, 'apply_region_config'));
+        add_action('rest_api_init', array($this, 'register_rest_route'));
     }
     
     /**
-     * Apply region-specific configuration
+     * Whether regional behaviour is switched on for this site.
+     *
+     * @return bool
      */
-    public function apply_region_config($config) {
-        
-        // Check constant first, then database option
-        $geo_enabled = defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION;
-        
-        if (!$geo_enabled) {
-            $geo_enabled = get_option('mbr_cc_geolocation_enabled', false);
+    public static function is_enabled() {
+        if (defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION) {
+            return true;
         }
         
-        if (!$geo_enabled) {
-            return $config;
-        }
-        
-        $region = $this->geo->get_region();
-        
-        // Map legacy region keys to new method names.
+        return (bool) get_option('mbr_cc_geolocation_enabled', false);
+    }
+    
+    /**
+     * Normalise a region key, accepting the pre-2.3.0 names.
+     *
+     * @param string $region Region key.
+     * @return string
+     */
+    private static function normalise_region($region) {
         $legacy_map = array(
             'eu_uk' => 'eu_gdpr',
             'ccpa'  => 'us_multi',
         );
-        if (isset($legacy_map[$region])) {
-            $region = $legacy_map[$region];
+        
+        $region = is_string($region) ? $region : '';
+        
+        return isset($legacy_map[$region]) ? $legacy_map[$region] : $region;
+    }
+    
+    /**
+     * Register the region lookup route.
+     *
+     * @return void
+     */
+    public function register_rest_route() {
+        register_rest_route(
+            self::REST_NAMESPACE,
+            self::REST_ROUTE,
+            array(
+                'methods'             => 'GET',
+                'callback'            => array($this, 'rest_get_region'),
+                'permission_callback' => '__return_true',
+            )
+        );
+    }
+    
+    /**
+     * Resolve the current visitor's region.
+     *
+     * This is the one request in the whole front end that is allowed to vary by
+     * visitor, which is precisely why it is a separate request: page caches do
+     * not store REST responses alongside the document, and the no-cache headers
+     * below stop any intermediate proxy deciding otherwise. Get that wrong and
+     * one visitor's region is handed to everyone, which is the bug this whole
+     * arrangement exists to prevent.
+     *
+     * @return WP_REST_Response
+     */
+    public function rest_get_region() {
+        $response = new WP_REST_Response();
+        
+        if (!self::is_enabled()) {
+            $response->set_data(array(
+                'region' => '',
+                'config' => new stdClass(),
+            ));
+        } else {
+            $region = self::normalise_region($this->geo->get_region());
+            
+            $response->set_data(array(
+                'region' => $region,
+                'config' => $this->get_client_config($region),
+            ));
         }
         
-        // Get region-specific overrides
-        $method = "get_{$region}_config";
-        if (method_exists($this, $method)) {
-            $region_config = $this->$method();
-            $config = array_merge($config, $region_config);
+        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Vary', 'Cookie');
+        
+        return $response;
+    }
+    
+    /**
+     * The subset of a region's configuration that the browser can act on.
+     *
+     * Every caller that needs to know what a region does — the banner, the
+     * admin test tool — goes through here. Two callers reading two different
+     * shapes of the same data is how the test tool drifted out of step with the
+     * banner in the first place.
+     *
+     * @param string|null $region Region key. Current visitor's region if null.
+     * @return array<string,mixed>
+     */
+    public function get_client_config($region = null) {
+        if (null === $region) {
+            $region = $this->geo->get_region();
         }
         
+        $region = self::normalise_region($region);
+        $config = $this->get_config_for_region($region);
+        $client = array();
         
-        return $config;
+        foreach (self::$client_keys as $key) {
+            if (array_key_exists($key, $config)) {
+                $client[$key] = $config[$key];
+            }
+        }
+        
+        $client = self::filter_region_text($client, $region);
+        
+        /**
+         * Filter the regional configuration handed to the browser.
+         *
+         * Values here are sent to every visitor in that region and must not
+         * depend on anything visitor-specific beyond the region itself.
+         *
+         * @since 2.3.4
+         *
+         * @param array  $client Client-facing configuration.
+         * @param string $region Region key.
+         */
+        return apply_filters('mbr_cc_region_client_config', $client, $region);
+    }
+    
+    /**
+     * Decide whether a region's wording is allowed to replace the site's own.
+     *
+     * The order is: text the owner wrote for this specific region, then the
+     * region's stock wording, then the site's own banner text — and that last
+     * one is a floor, not a fallback. If somebody has sat down and written
+     * their own banner copy, a regional default does not get to overwrite it,
+     * because their sentence is the one they meant and ours is a guess about
+     * their jurisdiction. Region wording exists to improve on a default nobody
+     * touched, not to correct a deliberate choice.
+     *
+     * This is the same rule MBR_CC_Translations applies before swapping a
+     * community translation in: rewritten copy is left alone, because there is
+     * no translation of a sentence the translator never saw.
+     *
+     * @param array  $client Client-facing configuration.
+     * @param string $region Region key.
+     * @return array
+     */
+    private static function filter_region_text($client, $region) {
+        if (!isset(self::$region_text_options[$region])) {
+            // Rest of world. Nothing regional to say.
+            unset($client['banner_heading'], $client['banner_description']);
+            return $client;
+        }
+        
+        $customised = class_exists('MBR_CC_Translations')
+            ? MBR_CC_Translations::customised_keys()
+            : array();
+        
+        $stems = self::$region_text_options[$region];
+        
+        $suffixes = array(
+            'banner_heading'     => 'heading',
+            'banner_description' => 'description',
+        );
+        
+        foreach ($suffixes as $key => $suffix) {
+            if (!isset($client[$key])) {
+                continue;
+            }
+            
+            // Text written for this region specifically always wins: setting it
+            // is an explicit instruction about this region.
+            $explicit = false;
+            
+            foreach ($stems as $stem) {
+                $stored = get_option('mbr_cc_geolocation_' . $stem . '_' . $suffix, '');
+                
+                if (is_string($stored) && '' !== $stored) {
+                    $explicit = true;
+                    break;
+                }
+            }
+            
+            if ($explicit) {
+                continue;
+            }
+            
+            // Otherwise the owner's own banner copy wins if they wrote any.
+            if (in_array($key, $customised, true)) {
+                unset($client[$key]);
+            }
+        }
+        
+        return $client;
     }
     
     /**
@@ -96,15 +326,20 @@ class MBR_CC_Region_Config {
      * it was published in the Official Journal on 6 October 2025. The 2002/58/EC
      * Directive (as amended) therefore remains the controlling instrument.
      *
-     * Digital Omnibus status (July 2026): the package split in two. The AI
+     * Digital Omnibus status (August 2026): the package split in two. The AI
      * Omnibus was adopted by the Council on 29 June 2026; the Data Omnibus
      * (GDPR/ePrivacy) remains in negotiation, and the Council's compromise
      * text of 21 May 2026 (doc 9547/26) DELETED the relocation of cookie
-     * consent into GDPR Arts 88a/88b. Negotiations are currently paused and
-     * continue under the Irish Presidency; commentators expect final text no
+     * consent into GDPR Arts 88a/88b. Negotiations continue under the Irish
+     * Presidency with no agreed text; commentators expect final wording no
      * earlier than late 2026 / early 2027. The Directive regime stays operative
      * and single-click refusal, the six-month cooldown and the proposed
      * low-risk exemptions remain proposals only — no action required yet.
+     *
+     * Note that the Digital Omnibus does not repeal the ePrivacy Directive even
+     * if adopted, so a transitional period in which national implementations of
+     * the Directive and the new GDPR articles both apply is possible. Nothing
+     * to build for until there is a text.
      *
      * Enforcement note: on 14 July 2026 the EDPB issued Binding Decision 1/2026
      * in a dispute between the Austrian and Belgian supervisory authorities over
@@ -117,22 +352,11 @@ class MBR_CC_Region_Config {
      */
     private function get_eu_gdpr_config() {
         return array(
-            // GDPR + ePrivacy requires explicit consent for all non-essential cookies
-            'require_consent' => true,
-            
             // Reject button must be equally prominent
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show customize/preferences button
             'show_customize_button' => true,
-            
-            // Don't auto-accept on scroll/click
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
-            // Show all cookie categories
-            'show_categories' => true,
             
             // EU-specific text (falls back to legacy eu_uk option keys)
             'banner_heading' => get_option('mbr_cc_geolocation_eu_heading', get_option('mbr_cc_geolocation_eu_uk_heading', 'We value your privacy')),
@@ -174,30 +398,11 @@ class MBR_CC_Region_Config {
      */
     private function get_uk_duaa_config() {
         return array(
-            // Advertising still requires explicit consent
-            'require_consent' => true,
-            
             // Reject button equally prominent (for advertising consent)
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show customize button so users can opt out of exempt categories
             'show_customize_button' => true,
-            
-            // No auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
-            // Show categories — exempt categories default ON with easy opt-out
-            'show_categories' => true,
-            
-            // DUAA-exempt categories per the ICO 29 April 2026 finalised guidance.
-            // 'necessary' is always essential; the entries here are the
-            // additional categories that no longer require prior consent under
-            // the new PECR exceptions, provided they are used solely for the
-            // exempt purpose (purpose limitation is mandatory).
-            'duaa_exempt_categories' => array('analytics', 'preferences'),
-            'duaa_consent_required_categories' => array('marketing'),
             
             // UK-specific text
             'banner_heading' => get_option('mbr_cc_geolocation_uk_heading', 'Your privacy choices'),
@@ -212,16 +417,45 @@ class MBR_CC_Region_Config {
     /**
      * US Multi-State Configuration
      *
-     * As of July 2026, 20 US states have comprehensive privacy laws in
+     * As of August 2026, 20 US states have comprehensive privacy laws in
      * effect — Indiana, Kentucky, and Rhode Island took effect on
      * 1 January 2026, joining Maryland (effective 1 October 2025) and 16
      * earlier laws. The 2026 session added four more enacted-but-not-yet-
      * effective laws (24 enacted total): Oklahoma SB 546 and the Louisiana
      * Data Privacy Act (both effective 1 Jan 2027), the Alabama Personal
-     * Data Protection Act (2027 — effective date reported variously as
-     * 1 Jan or 1 May), and the Vermont Data Privacy and Online Surveillance
-     * Act (1 Jan 2028). All four follow the Virginia opt-out model, so no
-     * banner behaviour change is required — opt-out link + GPC covers them.
+     * Data Protection Act (HB 351, effective 1 May 2027) and the Vermont Data
+     * Privacy and Online Surveillance Act (1 Jan 2028). All four follow the
+     * Virginia opt-out model, so no banner behaviour change is required —
+     * opt-out link + GPC covers them.
+     *
+     * Two of the four carry provisions worth noting beyond the banner:
+     *   - Vermont requires privacy notices to state whether personal
+     *     information is collected, used or sold to train large language
+     *     models. That is the same disclosure Connecticut introduced, so the
+     *     AI/LLM training disclosure in this plugin now serves two states
+     *     rather than one — see section 14 and the settings screen.
+     *   - Oklahoma treats pseudonymous data as personal data wherever it can
+     *     reasonably be linked to an identifiable person, which is the reading
+     *     that brings cookie identifiers squarely into scope.
+     *
+     * MID-2026 AMENDMENTS to laws already in force. None changes the consent
+     * model, but all three narrow what may be done with data the banner
+     * governs:
+     *   - Maryland, effective 1 July 2026: "precise geolocation" widened to
+     *     cover information identifying a consumer, a mobile device OR a
+     *     vehicle within a 1,750-foot radius, with revised treatment of
+     *     information drawn from government records.
+     *   - Virginia, effective 1 July 2026: outright prohibition on selling or
+     *     offering to sell precise geolocation information.
+     *   - New Jersey, effective 30 June 2026: prohibits ANY person or entity
+     *     from selling sensitive data, with no consumer-volume threshold at
+     *     all. It therefore reaches businesses that sit well below the NJDPA's
+     *     own applicability thresholds and would otherwise be out of scope.
+     *
+     * The direction of travel is that sensitive categories — precise location
+     * above all — are moving from "opt-out with consent" to "may not be sold
+     * at all". An opt-out link does not satisfy a flat prohibition, so site
+     * owners selling location data need advice, not a banner setting.
      *
      * Key requirements across the landscape:
      *
@@ -253,8 +487,10 @@ class MBR_CC_Region_Config {
      *     data cannot be sold without consent and requires opt-in to process.
      *   - FIRST-IN-NATION: controllers must disclose in their privacy notice
      *     whether they collect, use or sell personal data for the purpose of
-     *     training large language models. See the AI/LLM training disclosure
-     *     settings and class-mbr-cc-privacy-policy-generator.php.
+     *     training large language models. Vermont's DPOSA carries the same
+     *     obligation from 1 January 2028, so this is now a pattern rather than
+     *     a one-off. See the AI/LLM training disclosure settings and
+     *     class-mbr-cc-privacy-policy-generator.php.
      *   - Profiling opt-out broadened beyond decisions made "solely" by
      *     automated processing, plus new automated decision-making
      *     transparency duties and minors' protections.
@@ -286,12 +522,6 @@ class MBR_CC_Region_Config {
      */
     private function get_us_multi_config() {
         return array(
-            // US is opt-out based
-            'require_consent' => false,
-            
-            // Can use implied consent
-            'auto_accept_on_scroll' => get_option('mbr_cc_ccpa_auto_accept', false),
-            
             // Show "Do Not Sell or Share" link prominently (CCPA/CPRA mandate)
             'enable_ccpa' => true,
             'ccpa_link_text' => get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information'),
@@ -301,9 +531,6 @@ class MBR_CC_Region_Config {
             
             // Show customize for granular control
             'show_customize_button' => true,
-            
-            // GPC support flag — the GPC handler reads this
-            'gpc_enabled' => true,
             
             // US-specific text (falls back to legacy ccpa option keys)
             'banner_heading' => get_option('mbr_cc_geolocation_us_heading', get_option('mbr_cc_geolocation_ccpa_heading', 'Your Privacy Rights')),
@@ -318,19 +545,11 @@ class MBR_CC_Region_Config {
      */
     private function get_lgpd_config() {
         return array(
-            // LGPD similar to GDPR
-            'require_consent' => true,
-            
             // Equal reject button
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show customize button
             'show_customize_button' => true,
-            
-            // No auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             // LGPD-specific text
             'banner_heading' => get_option('mbr_cc_geolocation_lgpd_heading', 'Nós valorizamos sua privacidade'),
@@ -347,9 +566,6 @@ class MBR_CC_Region_Config {
      */
     private function get_pipeda_config() {
         return array(
-            // PIPEDA requires meaningful consent
-            'require_consent' => true,
-            
             // Show reject button
             'show_reject_button' => true,
             
@@ -394,20 +610,11 @@ class MBR_CC_Region_Config {
      */
     private function get_india_dpdp_config() {
         return array(
-            // DPDP requires explicit consent
-            'require_consent' => true,
-            
             // Reject/withdraw must be as easy as giving consent
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show granular categories
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            // No auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             // India-specific text (English default; Hindi/regional can be set in admin)
             'banner_heading' => get_option('mbr_cc_geolocation_india_heading', 'Your Privacy Matters'),
@@ -440,22 +647,11 @@ class MBR_CC_Region_Config {
      */
     private function get_ca_quebec_config() {
         return array(
-            // Express opt-in required (Law 25, like GDPR)
-            'require_consent' => true,
-            
             // Equal-prominence reject button
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show customize for granular control
             'show_customize_button' => true,
-            
-            // No auto-accept under Law 25
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
-            // Show all cookie categories
-            'show_categories' => true,
             
             // French-default messaging — site owners can override.
             'banner_heading' => get_option('mbr_cc_geolocation_quebec_heading', 'Vos choix de confidentialité'),
@@ -497,20 +693,11 @@ class MBR_CC_Region_Config {
      */
     private function get_vn_pdpl_config() {
         return array(
-            // PDPL requires explicit, prior, opt-in consent for non-essential cookies
-            'require_consent' => true,
-            
             // Reject/withdraw must be at least as easy as giving consent
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Granular, per-purpose consent — show categories
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            // Silence is not consent — never auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             // Vietnam-specific text. Vietnamese heading is a safe default; the
             // auto-translate layer / admin can localise the description.
@@ -540,21 +727,11 @@ class MBR_CC_Region_Config {
      */
     private function get_id_pdp_config() {
         return array(
-            // UU PDP requires explicit, prior, opt-in consent for
-            // non-essential processing
-            'require_consent' => true,
-            
             // Withdrawal must be available; keep reject equally prominent
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Purpose-specific consent — show categories
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            // Explicit consent only — never auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             // Indonesia-specific text. Indonesian heading is a safe default;
             // the auto-translate layer / admin can localise the description.
@@ -588,20 +765,10 @@ class MBR_CC_Region_Config {
      */
     private function get_ng_ndpa_config() {
         return array(
-            // GAID requires affirmative opt-in for all non-essential cookies
-            'require_consent' => true,
-            
             // A genuine decline option is mandatory, not a sub-layer link
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            // Continued browsing is explicitly not consent
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
             'banner_heading' => get_option('mbr_cc_geolocation_nigeria_heading', 'Your privacy choices'),
             'banner_description' => get_option('mbr_cc_geolocation_nigeria_description',
                 'We use cookies and similar technologies. Under the Nigeria Data Protection Act and the NDPC\'s General Application and Implementation Directive, we ask for your consent before setting any non-essential cookies. Only strictly necessary cookies are used without your agreement. You can accept, decline, or manage your choices at any time.'
@@ -640,18 +807,9 @@ class MBR_CC_Region_Config {
      */
     private function get_cn_pipl_config() {
         return array(
-            // Explicit, prior opt-in for anything non-essential
-            'require_consent' => true,
-            
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
-            
             // Bundled consent is not acceptable — force granular categories
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             'banner_heading' => get_option('mbr_cc_geolocation_china_heading', '我们重视您的隐私'),
             'banner_description' => get_option('mbr_cc_geolocation_china_description',
@@ -681,17 +839,8 @@ class MBR_CC_Region_Config {
      */
     private function get_kr_pipa_config() {
         return array(
-            'require_consent' => true,
-            
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
-            
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
             'banner_heading' => get_option('mbr_cc_geolocation_korea_heading', '개인정보 보호를 존중합니다'),
             'banner_description' => get_option('mbr_cc_geolocation_korea_description',
                 'We use cookies and similar technologies. Under the Personal Information Protection Act (PIPA), we ask for your specific, informed consent before setting cookies that can identify you. You can refuse or withdraw consent at any time, including for targeted advertising.'
@@ -722,17 +871,8 @@ class MBR_CC_Region_Config {
      */
     private function get_sa_pdpl_config() {
         return array(
-            'require_consent' => true,
-            
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
-            
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
             'banner_heading' => get_option('mbr_cc_geolocation_saudi_heading', 'نحن نحترم خصوصيتك'),
             'banner_description' => get_option('mbr_cc_geolocation_saudi_description',
                 'We use cookies and similar technologies. Under the Personal Data Protection Law (PDPL), consent is our lawful basis for non-essential cookies, so we ask before setting them. You can accept, reject, or manage your choices at any time.'
@@ -763,18 +903,10 @@ class MBR_CC_Region_Config {
      */
     private function get_za_popia_config() {
         return array(
-            'require_consent' => true,
-            
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
-            
             // Granular categories let functional/measurement be separated from
             // the marketing cookies that carry the section 69 risk.
             'show_customize_button' => true,
-            'show_categories' => true,
-            
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
             
             'banner_heading' => get_option('mbr_cc_geolocation_southafrica_heading', 'Your privacy choices'),
             'banner_description' => get_option('mbr_cc_geolocation_southafrica_description',
@@ -802,22 +934,11 @@ class MBR_CC_Region_Config {
      */
     private function get_ch_nfadp_config() {
         return array(
-            // GDPR-equivalent — explicit consent for non-essential
-            'require_consent' => true,
-            
             // Reject button must be equally prominent
             'show_reject_button' => true,
-            'reject_button_prominence' => 'equal',
             
             // Show customize/preferences button
             'show_customize_button' => true,
-            
-            // No auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
-            // Show all cookie categories
-            'show_categories' => true,
             
             // Switzerland is multilingual (DE/FR/IT/RM); English is a safe default
             // and the auto-translate layer can localise based on Accept-Language.
@@ -855,21 +976,11 @@ class MBR_CC_Region_Config {
      */
     private function get_au_privacy_config() {
         return array(
-            // APP-based — informed consent expected for personal-information cookies
-            'require_consent' => true,
-            
             // Reject available with clear prominence
             'show_reject_button' => true,
             
             // Show customize button for granular control
             'show_customize_button' => true,
-            
-            // No auto-accept
-            'auto_accept_on_scroll' => false,
-            'auto_accept_on_click' => false,
-            
-            // Show all cookie categories
-            'show_categories' => true,
             
             'banner_heading' => get_option('mbr_cc_geolocation_australia_heading', 'Your privacy choices'),
             'banner_description' => get_option('mbr_cc_geolocation_australia_description',
@@ -908,20 +1019,16 @@ class MBR_CC_Region_Config {
      * Cabinet in April 2026 and now before the Diet, which would bring cookie
      * and device identifiers into scope (expected to apply around 2028).
      *
-     * Site owners who want the old lenient behaviour can set the four options
-     * below. EXISTING INSTALLS ARE NOT CHANGED: the 2.3.0 upgrade routine in
-     * mbr-cookie-consent.php writes the previous values explicitly for any
-     * site upgrading from below 2.3.0, so this stricter posture applies to
-     * new installations only.
+     * CHANGED IN 2.3.4 — the implied-consent options this docblock used to
+     * describe (mbr_cc_geolocation_default_require, mbr_cc_default_auto_accept)
+     * have been removed along with the rest of the keys no front-end code ever
+     * read. Nothing in the banner has ever implemented accept-on-scroll, so an
+     * option promising to switch it off was describing a setting that governed
+     * nothing. Consent posture is now what the banner actually does: a visitor
+     * has to press something.
      */
     private function get_default_config() {
         return array(
-            // Opt-in by default — see docblock. Override per site if needed.
-            'require_consent' => get_option('mbr_cc_geolocation_default_require', true),
-            
-            // Never imply consent from scrolling.
-            'auto_accept_on_scroll' => get_option('mbr_cc_default_auto_accept', false),
-            
             // A reject route must exist wherever consent is being relied on.
             'show_reject_button' => get_option('mbr_cc_default_show_reject', true),
             'show_customize_button' => get_option('mbr_cc_default_show_customize', true),
@@ -950,13 +1057,7 @@ class MBR_CC_Region_Config {
      * @return array Banner configuration, falling back to the default region.
      */
     public function get_config_for_region($region) {
-        $legacy_map = array(
-            'eu_uk' => 'eu_gdpr',
-            'ccpa'  => 'us_multi',
-        );
-        if (isset($legacy_map[$region])) {
-            $region = $legacy_map[$region];
-        }
+        $region = self::normalise_region($region);
         
         $method = "get_{$region}_config";
         if (method_exists($this, $method)) {
@@ -970,26 +1071,7 @@ class MBR_CC_Region_Config {
      * Get current region configuration
      */
     public function get_current_config() {
-        $config = array();
-        $region = $this->geo->get_region();
-        
-        // Map legacy keys
-        $legacy_map = array(
-            'eu_uk' => 'eu_gdpr',
-            'ccpa'  => 'us_multi',
-        );
-        if (isset($legacy_map[$region])) {
-            $region = $legacy_map[$region];
-        }
-        
-        $method = "get_{$region}_config";
-        if (method_exists($this, $method)) {
-            $config = $this->$method();
-        } else {
-            $config = $this->get_default_config();
-        }
-        
-        return $config;
+        return $this->get_config_for_region($this->geo->get_region());
     }
     
     /**
@@ -1012,8 +1094,8 @@ class MBR_CC_Region_Config {
                     'Cookie categories must be shown',
                     'Withdrawal of consent must be as easy as giving it',
                     'Applies in all 27 EU Member States plus Iceland, Liechtenstein and Norway (EEA)',
-                    'Proposed ePrivacy Regulation withdrawn 11 February 2026 — Directive remains in force',
-                    'Digital Omnibus: Council compromise text (21 May 2026) dropped the move of cookie rules into GDPR Arts 88a/88b — outcome uncertain, adoption not before late 2026',
+                    'Proposed ePrivacy Regulation withdrawn — announced 11 February 2025, approved 16 July 2025, published in the Official Journal 6 October 2025. The 2002/58/EC Directive remains in force',
+                    'Digital Omnibus: Council compromise text (21 May 2026) dropped the move of cookie rules into GDPR Arts 88a/88b — still in negotiation as of August 2026, final text expected no earlier than late 2026 / early 2027',
                     'Single-click refusal, 6-month cooldown and low-risk exemptions remain proposals only — no action required',
                     'Browser-level consent signals not expected to be mandatory before ~2028 — monitor, no action required yet',
                 ),
@@ -1050,13 +1132,18 @@ class MBR_CC_Region_Config {
                     'California: CPPA running joint GPC investigations with Colorado and Connecticut',
                     'Indiana, Kentucky and Rhode Island laws took effect 1 January 2026',
                     'Maryland MODPA effective 1 October 2025 with strict data-minimisation rules',
-                    '2026 session: Oklahoma SB 546 and Louisiana DPA effective 1 Jan 2027, Alabama PDPA 2027, Vermont DPOSA 1 Jan 2028 — all Virginia-model opt-out (24 enacted total)',
-                    'Virginia amendment restricting sale of precise geolocation data effective 1 July 2026',
+                    '2026 session: Oklahoma SB 546 and Louisiana DPA effective 1 Jan 2027, Alabama PDPA (HB 351) 1 May 2027, Vermont DPOSA 1 Jan 2028 — all Virginia-model opt-out (24 enacted total)',
+                    'Vermont DPOSA also requires privacy notices to state whether personal data trains large language models — the second state to do so after Connecticut',
+                    'Oklahoma: pseudonymous data counts as personal data where it can reasonably be linked to a person, which brings cookie identifiers into scope',
+                    'Virginia amendment prohibiting the sale of precise geolocation data effective 1 July 2026',
+                    'Maryland amendment (1 July 2026): precise geolocation widened to a 1,750-foot radius covering a consumer, mobile device or vehicle',
+                    'New Jersey amendment (30 June 2026): sale of sensitive data prohibited for any entity, with no consumer-volume threshold',
                     'Connecticut SB 1295 (live 1 July 2026): threshold cut to 35,000 consumers, and no threshold at all if you process sensitive data or sell personal data',
                     'Connecticut: sensitive data now includes neural data, government IDs, financial account details and SSNs — opt-in to process, consent to sell',
-                    'Connecticut: privacy notice must state whether personal data is collected, used or sold to train large language models (first US state to require this)',
+                    'Connecticut: privacy notice must state whether personal data is collected, used or sold to train large language models (first state to require this; Vermont follows on 1 January 2028)',
                     'Connecticut: profiling opt-out widened beyond "solely" automated decisions; profiling impact assessments from 1 August 2026; cure period removed',
-                    'Connecticut SB 4 (1 October 2026): geolocation sales ban, data broker registration, surveillance pricing and facial recognition rules',
+                    'Connecticut SB 4 (1 October 2026): facial recognition rules, a flat ban on selling precise geolocation, revised treatment of publicly available information and related deletion requests, surveillance pricing restrictions and genetic data protections',
+                    'Connecticut data brokers must register before selling or licensing personal information from 1 January 2027 ($2,500 annual fee); a state deletion system follows on 1 July 2028',
                     'Utah HB 418: correction right + social-media portability effective 1 July 2026',
                     'Arkansas HB 1717 (1 July 2026): minors-focused, not comprehensive — parental consent under 13, teen-or-parent 13-16, targeted ads to minors banned outright',
                     'California Delete Act DROP platform: brokers must process deletions from 1 August 2026',
@@ -1143,8 +1230,9 @@ class MBR_CC_Region_Config {
                     'Granular consent with one-click withdrawal',
                     'Verifiable parental consent for minors',
                     'Data Protection Board operational from 13 November 2025',
+                    'From 13 November 2026 the Board may hear complaints, conduct inquiries and levy penalties — enforcement powers arrive six months before full compliance is due',
                     'Consent Manager registration opens 13 November 2026 (India-incorporated only)',
-                    'Full compliance mandatory by 13 May 2027',
+                    'Full compliance mandatory by 13 May 2027 — notice, consent, security, breach reporting, rights and children\'s data',
                     '72-hour personal data breach notification',
                     'Automated deletion with proof required',
                 ),

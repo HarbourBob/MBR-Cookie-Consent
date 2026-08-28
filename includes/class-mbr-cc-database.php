@@ -121,8 +121,33 @@ class MBR_CC_Database {
         
         $data = wp_parse_args($data, $defaults);
         
-        // Hash IP and user agent for privacy.
-        $data['cookie_hash'] = hash('sha256', $data['ip_address'] . $data['user_agent']);
+        // Fingerprint the request so repeat interactions from the same visitor
+        // can be grouped without keeping the raw address.
+        //
+        // The column is named cookie_hash for historical reasons and the name is
+        // wrong: this has never been a hash of the consent cookie, it is a hash
+        // of the IP address and user agent. Renaming a populated column is a
+        // migration, and it is not worth one for a label — but see the note on
+        // the export heading, which now says what this actually is.
+        //
+        // The salt matters more than the name. Unsalted, this was SHA-256 over
+        // a value with very little entropy: the whole IPv4 space is 2^32, user
+        // agent strings are drawn from a short list, and an attacker holding an
+        // exported log could recover the original address by exhausting it in
+        // minutes on ordinary hardware. That makes an unsalted digest a
+        // pseudonymous identifier rather than an anonymised one, and it is not
+        // the protection the surrounding code assumes it is. wp_salt() is
+        // per-site and never leaves the server, so the digest is no longer
+        // reversible by brute force.
+        //
+        // Rows written before 2.3.5 used the unsalted digest and will not match
+        // rows written after it. Nothing queries or joins on this column, so
+        // that costs nothing beyond a discontinuity in the history.
+        $data['cookie_hash'] = hash_hmac(
+            'sha256',
+            $data['ip_address'] . '|' . $data['user_agent'],
+            wp_salt('auth')
+        );
         
         // Anonymize IP (GDPR requirement).
         $data['ip_address'] = $this->anonymize_ip($data['ip_address']);

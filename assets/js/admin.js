@@ -339,18 +339,39 @@
                 $results.html('<p>Scanning page...</p>');
             }
             
-            $.ajax({
+            // A site-wide scan runs in batches. The server works for a fixed
+            // spell, reports how far it reached, and this calls back with that
+            // offset until it reports itself finished — so a large site takes
+            // several short requests rather than one that cannot complete.
+            var runScan = function(offset) {
+                $.ajax({
                 url: mbrCcAdmin.ajaxUrl,
                 type: 'POST',
                 data: {
                     action: 'mbr_cc_scan_cookies',
                     nonce: mbrCcAdmin.nonce,
                     scan_type: scanType,
-                    url: url
+                    url: url,
+                    offset: offset || 0
                 },
                 success: function(response) {
                     if (response.success && response.data) {
                         if (scanType === 'site-wide') {
+                            var d = response.data;
+
+                            if (d.done === false) {
+                                var pct = d.total_urls
+                                    ? Math.min(95, Math.round((d.offset / d.total_urls) * 100))
+                                    : 10;
+                                $('#mbr-cc-progress-bar').css('width', pct + '%');
+                                $('#mbr-cc-progress-text').text(
+                                    'Scanned ' + d.pages_scanned + ' of ' + d.total_urls +
+                                    ' pages — ' + d.count + ' items found so far…'
+                                );
+                                runScan(d.offset);
+                                return;
+                            }
+
                             $('#mbr-cc-progress-bar').css('width', '100%');
                             $('#mbr-cc-progress-text').text('Scan complete!');
                             setTimeout(function() {
@@ -374,7 +395,10 @@
                 complete: function() {
                     $button.prop('disabled', false).text('Start Scan');
                 }
-            });
+                });
+            };
+
+            runScan(0);
         },
         
         displaySinglePageResults: function(data) {

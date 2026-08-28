@@ -368,7 +368,11 @@ class MBR_CC_Privacy_Policy_Generator {
                 return true;
             }
         }
-        return (bool) get_option('mbr_cc_google_acm_enabled', false);
+        // The Google ACM option used to be consulted here as a third signal.
+        // It was withdrawn in 2.3.4 — the feature never worked — so advertising
+        // is now inferred purely from the scripts the site actually blocks,
+        // which was always the more reliable of the two tests.
+        return false;
     }
     
     /**
@@ -426,10 +430,6 @@ class MBR_CC_Privacy_Policy_Generator {
         
         if (get_option('mbr_cc_google_consent_mode', false)) {
             $services[] = 'Google Ads';
-        }
-        
-        if (get_option('mbr_cc_google_acm_enabled', false)) {
-            $services[] = 'Google Ad Manager';
         }
         
         if ($this->has_social_media()) {
@@ -823,9 +823,12 @@ class MBR_CC_Privacy_Policy_Generator {
      * Connecticut SB 1295 (Public Act 25-113), effective 1 July 2026, requires
      * controllers to state in their privacy notice whether they collect, use or
      * sell personal data for the purpose of training large language models. It
-     * is the first US state disclosure obligation aimed at the AI training
+     * was the first US state disclosure obligation aimed at the AI training
      * supply chain, and a boilerplate "we may use data to improve our services"
-     * does not answer it.
+     * does not answer it. Vermont's Data Privacy and Online Surveillance Act
+     * imposes the same duty from 1 January 2028, so the section this generates
+     * is not Connecticut-specific and is worth completing accurately even if
+     * Connecticut does not reach you.
      *
      * The three flags below map directly onto the statutory verbs:
      *   own     — the site trains or fine-tunes models on personal data

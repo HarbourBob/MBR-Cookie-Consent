@@ -243,6 +243,26 @@
     opacity: 0.6;
 }
 
+/* Banner Actions — the button row plus the credit beneath it.
+   The existing margin-top on __buttons in the box/popup layouts still applies
+   inside this column, so the spacing above the buttons is unchanged. */
+.mbr-cc-banner__actions {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 768px) {
+    .mbr-cc-banner__actions {
+        width: 100%;
+    }
+}
+
+.mbr-cc-banner--box-left .mbr-cc-banner__actions,
+.mbr-cc-banner--box-right .mbr-cc-banner__actions,
+.mbr-cc-banner--popup .mbr-cc-banner__actions {
+    width: 100%;
+}
+
 /* Banner Buttons */
 .mbr-cc-banner__buttons {
     display: flex;
@@ -254,6 +274,47 @@
     .mbr-cc-banner__buttons {
         width: 100%;
     }
+}
+
+/* Author Credit */
+.mbr-cc-banner__credit {
+    margin: 10px 0 0 0;
+    padding: 10px 0 0 0;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.4;
+    opacity: 0.75;
+}
+
+/* The corner box layouts are narrow and left-aligned, so a centred credit
+   reads as floating. Tucking it under the right-hand edge of the button row
+   lines it up with the layout instead. */
+.mbr-cc-banner--box-left .mbr-cc-banner__credit,
+.mbr-cc-banner--box-right .mbr-cc-banner__credit {
+    text-align: right;
+}
+
+.mbr-cc-banner__credit a {
+    color: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: none;
+}
+
+.mbr-cc-banner__credit a:hover,
+.mbr-cc-banner__credit a:focus {
+    text-decoration: underline;
+}
+
+.mbr-cc-banner__credit-heart {
+    width: 1em;
+    height: 1em;
+    fill: #ff4d6d;
+    flex-shrink: 0;
+    position: relative;
+    top: 0.5px;
 }
 
 .mbr-cc-btn {

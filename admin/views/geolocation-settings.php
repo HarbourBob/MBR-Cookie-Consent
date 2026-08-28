@@ -30,6 +30,16 @@ $region_name = $geo->get_region_name();
     <h2><?php esc_html_e('Geolocation & Regional Compliance', 'mbr-cookie-consent'); ?></h2>
     <p><?php esc_html_e('Automatically detect user location and apply appropriate privacy law requirements (EU/EEA GDPR, UK DUAA, US Multi-State/GPC, Quebec Law 25, PIPEDA, Switzerland nFADP, Australia Privacy Act, Brazil LGPD, India DPDP, etc.)', 'mbr-cookie-consent'); ?></p>
     
+    <div class="mbr-cc-info-box" style="background: #f0f6fc; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">
+        <p style="margin: 0;">
+            <strong><?php esc_html_e('Your own banner text always wins.', 'mbr-cookie-consent'); ?></strong>
+            <?php esc_html_e('Each region ships suggested wording — the UK text mentions the PECR exemptions, the US text mentions opt-out rights, and so on. That wording is only used where you have left the banner heading and description at their defaults. If you have written your own text on the Settings screen, visitors see your text everywhere, in every region.', 'mbr-cookie-consent'); ?>
+        </p>
+        <p style="margin: 8px 0 0 0;">
+            <?php esc_html_e('Buttons are different: which of Accept, Reject and the "Do Not Sell or Share" link appear is decided by the region, because that part is a legal requirement rather than a matter of wording.', 'mbr-cookie-consent'); ?>
+        </p>
+    </div>
+    
     <!-- Current Detection Status -->
     <div class="mbr-cc-info-box" style="background: #e7f3e7; border-color: #46b450;">
         <h3 style="margin-top: 0;"><?php esc_html_e('Current Detection', 'mbr-cookie-consent'); ?></h3>
@@ -56,18 +66,22 @@ $region_name = $geo->get_region_name();
         <div class="mbr-cc-form-field">
             <label for="geolocation_provider"><?php esc_html_e('IP Lookup Provider', 'mbr-cookie-consent'); ?></label>
             <select name="mbr_cc_geolocation_provider" id="geolocation_provider">
-                <option value="ipapi" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'ipapi'); ?>>
+                <option value="ipapi" <?php selected(get_option('mbr_cc_geolocation_provider', MBR_CC_Geolocation::DEFAULT_PROVIDER), 'ipapi'); ?>>
                     <?php esc_html_e('ipapi.co — HTTPS, free, 1000 req/day', 'mbr-cookie-consent'); ?>
                 </option>
-                <option value="cloudflare" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'cloudflare'); ?>>
+                <option value="cloudflare" <?php selected(get_option('mbr_cc_geolocation_provider', MBR_CC_Geolocation::DEFAULT_PROVIDER), 'cloudflare'); ?>>
                     <?php esc_html_e('Cloudflare headers — no outbound request', 'mbr-cookie-consent'); ?>
                 </option>
-                <option value="ip-api" <?php selected(get_option('mbr_cc_geolocation_provider', 'ipapi'), 'ip-api'); ?>>
+                <option value="ip-api" <?php selected(get_option('mbr_cc_geolocation_provider', MBR_CC_Geolocation::DEFAULT_PROVIDER), 'ip-api'); ?>>
                     <?php esc_html_e('ip-api.com — 45 req/min (HTTPS requires a pro key)', 'mbr-cookie-consent'); ?>
                 </option>
             </select>
             <p class="description">
                 <?php esc_html_e('Cloudflare is fastest as it needs no outbound request. ip-api.com offers a higher free rate limit but only serves HTTPS on its paid tier — see the transport note below.', 'mbr-cookie-consent'); ?>
+            </p>
+            <p class="description" style="margin-top: 10px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                <strong><?php esc_html_e('Check your provider\'s terms before going live.', 'mbr-cookie-consent'); ?></strong>
+                <?php esc_html_e('Both lookup services are third parties with their own licensing. Their free tiers are generally offered for non-commercial, testing or development use, and those terms change without notice. If this is a commercial site, confirm you are within your chosen provider\'s current terms — or use the Cloudflare option, which resolves the country from a header your CDN already sends and makes no outbound request at all.', 'mbr-cookie-consent'); ?>
             </p>
         </div>
         
@@ -577,14 +591,17 @@ jQuery(document).ready(function($) {
                 var heading = country + (region ? ' / ' + region : '');
                 html += '<h4 style="margin: 0 0 10px 0;">Results for ' + heading + ':</h4>';
                 html += '<p><strong>Region:</strong> ' + response.data.region_name + '</p>';
-                html += '<p><strong>Requires Consent:</strong> ' + (response.data.requires_consent ? 'Yes' : 'No') + '</p>';
                 html += '<p><strong>Show Reject Button:</strong> ' + (response.data.show_reject ? 'Yes' : 'No') + '</p>';
+                html += '<p><strong>Show Customize Button:</strong> ' + (response.data.show_customize ? 'Yes' : 'No') + '</p>';
                 html += '<p><strong>Enable CCPA Link:</strong> ' + (response.data.enable_ccpa ? 'Yes' : 'No') + '</p>';
-                if (response.data.gpc_enabled) {
-                    html += '<p><strong>GPC Signal Honoured:</strong> Yes (mandated in CA, CO, CT, DE, MD, MN, MT, NE, NH, NJ, OR, TX)</p>';
+                if (response.data.banner_heading) {
+                    html += '<p><strong>Banner Heading:</strong> ' + $('<div/>').text(response.data.banner_heading).html() + '</p>';
                 }
-                if (response.data.duaa_exempt) {
-                    html += '<p><strong>DUAA Exempt Categories:</strong> Analytics, Preferences (opt-out)</p>';
+                if (!response.data.geo_enabled) {
+                    html += '<p style="margin-top:12px;padding:8px;background:#fcf3cd;border-left:3px solid #dba617;">'
+                          + '<strong>Note:</strong> regional detection is currently switched off, so live visitors '
+                          + 'see this site\'s own banner settings regardless of where they are. '
+                          + 'This test shows what they <em>would</em> see if you enabled it.</p>';
                 }
                 html += '</div>';
                 $('#test-results').html(html);

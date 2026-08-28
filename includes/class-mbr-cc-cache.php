@@ -93,6 +93,7 @@ class MBR_CC_Cache {
             'mbr_cc_230_default_region_preserved',
             'mbr_cc_231_geo_provider_switched',
             'mbr_cc_232_multilingual_precedence',
+            'mbr_cc_234_acm_withdrawn',
         );
         
         /**

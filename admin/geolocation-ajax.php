@@ -56,27 +56,30 @@ function mbr_cc_ajax_test_geolocation() {
     // batch) reported as "Rest of World" in this tool even though live detection
     // was resolving them correctly. Reading the real configuration instead means
     // this tool cannot drift from actual banner behaviour again.
+    // get_client_config() is the same method the REST route hands to the
+    // browser, so this tool reports what the visitor gets and cannot report
+    // anything else.
+    //
+    // It used to read keys straight off the region array, which is how it came
+    // to announce "Requires Consent: Yes" and "DUAA Exempt Categories:
+    // Analytics, Preferences" for regions where the banner implemented neither.
+    // Those keys existed, so the tool printed them; nothing on the front end
+    // had ever read one. An administrator testing GB got a confident report of
+    // behaviour that did not exist, which is worse than no test tool, because a
+    // wrong answer gets believed.
     $region_name = $geo->get_region_name($region);
-    $cfg         = mbr_cc_region_config()->get_config_for_region($region);
-    
-    $requires_consent = !empty($cfg['require_consent']);
-    $show_reject      = !empty($cfg['show_reject_button']);
-    $enable_ccpa      = !empty($cfg['enable_ccpa']);
-    $gpc_enabled      = !empty($cfg['gpc_enabled']);
-    $duaa_exempt      = !empty($cfg['duaa_exempt_categories']);
+    $cfg         = mbr_cc_region_config()->get_client_config($region);
     
     wp_send_json_success(array(
-        'country' => $country,
-        'region_input' => $region_code,
-        'region' => $region,
-        'region_name' => $region_name,
-        'requires_consent' => $requires_consent,
-        'show_reject' => $show_reject,
-        'enable_ccpa' => $enable_ccpa,
-        'gpc_enabled' => $gpc_enabled,
-        'duaa_exempt' => $duaa_exempt,
-        'auto_accept_on_scroll' => !empty($cfg['auto_accept_on_scroll']),
-        'show_categories' => !empty($cfg['show_categories']),
+        'country'        => $country,
+        'region_input'   => $region_code,
+        'region'         => $region,
+        'region_name'    => $region_name,
+        'show_reject'    => !empty($cfg['show_reject_button']),
+        'show_customize' => !empty($cfg['show_customize_button']),
+        'enable_ccpa'    => !empty($cfg['enable_ccpa']),
+        'banner_heading' => isset($cfg['banner_heading']) ? $cfg['banner_heading'] : '',
+        'geo_enabled'    => MBR_CC_Region_Config::is_enabled(),
     ));
 }
 

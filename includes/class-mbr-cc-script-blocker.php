@@ -232,6 +232,18 @@ class MBR_CC_Script_Blocker {
         if ( is_admin() || wp_doing_ajax() ) {
             return;
         }
+
+        // Until 2.3.4 this was the whole test, and the exclusion settings on
+        // the Settings screen governed the banner only. Scripts were held back
+        // on every front-end page regardless, including pages the owner had
+        // explicitly excluded, where nothing was rendered that could release
+        // them. See MBR_CC_Enhanced_Customization::should_enforce_consent()
+        // for what the two settings now mean.
+        if ( class_exists( 'MBR_CC_Enhanced_Customization' )
+            && ! MBR_CC_Enhanced_Customization::should_enforce_consent() ) {
+            return;
+        }
+
         ob_start( array( $this, 'process_buffer' ) );
     }
 

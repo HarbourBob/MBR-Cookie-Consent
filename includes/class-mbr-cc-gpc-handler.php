@@ -76,11 +76,10 @@ class MBR_CC_GPC_Handler {
             return;
         }
 
-        // Detect server-side GPC header.
+        // Detect server-side GPC header. Retained for is_gpc_active(), which
+        // integrations may call during a request that is not being cached.
+        // Nothing rendered into the page may depend on it — see below.
         $this->detect_gpc_signal();
-
-        // Filter banner config when GPC is active.
-        add_filter('mbr_cc_banner_config', array($this, 'apply_gpc_overrides'), 20);
 
         // Pass GPC state to frontend scripts.
         add_action('wp_enqueue_scripts', array($this, 'localize_gpc_state'), 20);
@@ -92,6 +91,17 @@ class MBR_CC_GPC_Handler {
         // the server means varying the page by a request header, which on a
         // cached site writes one visitor's signal into the copy served to
         // everybody. GPC is honoured in the browser, where it belongs.
+        //
+        // 2.3.4 removed the last of that: apply_gpc_overrides() was still
+        // hooked to mbr_cc_banner_config and still set enable_ccpa, which is
+        // rendered into the document. One visitor sending Sec-GPC from a US
+        // address primed the cache with the "Do Not Sell or Share" link
+        // showing, and every subsequent visitor was served it. Harmless in
+        // effect — it over-discloses rather than under-discloses — but it was
+        // the same defect as the one this class had already been fixed for
+        // once, sitting two methods further down. The link is now revealed in
+        // the browser by banner.js, from the region the visitor actually
+        // resolved to.
     }
 
     /**
@@ -124,34 +134,6 @@ class MBR_CC_GPC_Handler {
      */
     public function is_gpc_active() {
         return $this->enabled && $this->gpc_detected;
-    }
-
-    /**
-     * Apply GPC overrides to the banner configuration.
-     *
-     * When GPC is detected we suppress marketing/advertising consent prompts and
-     * ensure the "Do Not Sell or Share" link is visible.
-     *
-     * @param array $config Banner configuration array.
-     * @return array Modified configuration.
-     */
-    public function apply_gpc_overrides($config) {
-        if (!$this->gpc_detected) {
-            return $config;
-        }
-
-        // Force CCPA opt-out link visible for US visitors with GPC.
-        $geo = function_exists('mbr_cc_geolocation') ? mbr_cc_geolocation() : null;
-        if ($geo) {
-            $region = $geo->get_region();
-            if (in_array($region, array('us_multi', 'ccpa'), true)) {
-                $config['enable_ccpa'] = true;
-                $config['gpc_detected'] = true;
-                $config['gpc_opt_out_honored'] = true;
-            }
-        }
-
-        return $config;
     }
 
     /**

@@ -54,22 +54,48 @@ class MBR_CC_Banner {
             'mbr-cc-banner',
             MBR_CC_PLUGIN_URL . 'assets/css/banner.css',
             array(),
-            MBR_CC_VERSION
+            mbr_cc_asset_version('assets/css/banner.css')
         );
         
         wp_enqueue_script(
             'mbr-cc-banner',
             MBR_CC_PLUGIN_URL . 'assets/js/banner.js',
             array('jquery'),
-            MBR_CC_VERSION,
+            mbr_cc_asset_version('assets/js/banner.js'),
             true
         );
         
         // Pass settings to JavaScript.
+        //
+        // Everything here derives from site settings and is identical for every
+        // visitor, which is what makes it safe to cache alongside the page. The
+        // visitor's region is deliberately absent: it is fetched separately, at
+        // the URL below, because it is the one thing that legitimately differs
+        // between two people reading the same cached document.
+        $geo_active = class_exists('MBR_CC_Region_Config') && MBR_CC_Region_Config::is_enabled();
+        
         wp_localize_script('mbr-cc-banner', 'mbrCcBanner', array(
             'categories' => MBR_CC_Consent_Manager::get_instance()->get_categories(),
             'revisitEnabled' => (bool) get_option('mbr_cc_revisit_consent_enabled', true),
             'revisitText' => get_option('mbr_cc_revisit_consent_text', 'Cookie Settings'),
+            'geoEnabled' => $geo_active,
+            'regionUrl'  => $geo_active
+                ? esc_url_raw(rest_url(MBR_CC_Region_Config::REST_NAMESPACE . MBR_CC_Region_Config::REST_ROUTE))
+                : '',
+            /**
+             * Filter how long the browser waits for the region lookup.
+             *
+             * The banner is held back until this resolves, so the number is a
+             * direct trade between showing the wrong regional banner briefly
+             * and showing the right one late. Past this point the site's own
+             * settings are used and the banner is shown regardless — a visitor
+             * who never sees a banner is worse than one who sees a generic.
+             *
+             * @since 2.3.4
+             *
+             * @param int $timeout Milliseconds.
+             */
+            'regionTimeout' => (int) apply_filters('mbr_cc_region_timeout', 1500),
         ));
         
         // Blocked content overlay assets.
@@ -86,13 +112,13 @@ class MBR_CC_Banner {
                 'mbr-cc-blocked-content',
                 MBR_CC_PLUGIN_URL . 'assets/css/blocked-content.css',
                 array( 'mbr-cc-banner' ),
-                MBR_CC_VERSION
+                mbr_cc_asset_version('assets/css/blocked-content.css')
             );
             wp_enqueue_script(
                 'mbr-cc-blocked-content',
                 MBR_CC_PLUGIN_URL . 'assets/js/blocked-content.js',
                 array( 'jquery', 'mbr-cc-banner' ),
-                MBR_CC_VERSION,
+                mbr_cc_asset_version('assets/js/blocked-content.js'),
                 true
             );
         }
@@ -105,7 +131,7 @@ class MBR_CC_Banner {
                 'mbr-cc-elementor-video-blocker',
                 MBR_CC_PLUGIN_URL . 'assets/js/elementor-video-blocker.js',
                 array(), // No jQuery dependency — pure JS runs earlier.
-                MBR_CC_VERSION,
+                mbr_cc_asset_version('assets/js/elementor-video-blocker.js'),
                 false    // Load in <head> so it runs before Elementor's DOMContentLoaded.
             );
         }
@@ -207,6 +233,12 @@ class MBR_CC_Banner {
 
             /* Banner close X — inherits banner text colour */
             .mbr-cc-banner .mbr-cc-close {
+                color: {$text_color} !important;
+            }
+
+            /* Author credit — inherits banner text colour, heart stays red */
+            .mbr-cc-banner .mbr-cc-banner__credit,
+            .mbr-cc-banner .mbr-cc-banner__credit a {
                 color: {$text_color} !important;
             }
 
@@ -401,7 +433,9 @@ class MBR_CC_Banner {
             }
             
             .mbr-cc-ccpa-link,
-            .mbr-cc-banner a {
+            .mbr-cc-banner a,
+            .mbr-cc-banner .mbr-cc-banner__credit,
+            .mbr-cc-banner .mbr-cc-banner__credit a {
                 color: {$text} !important;
             }
             
@@ -422,8 +456,21 @@ class MBR_CC_Banner {
             return;
         }
         
-        // Check if banner should be shown on this page.
-        if (!$preview && !MBR_CC_Enhanced_Customization::should_show_banner()) {
+        // Two separate questions, and they have separate answers.
+        //
+        // A page can be excluded from the banner while still having its scripts
+        // held back — that is the default, and it is the correct outcome: the
+        // visitor has given no consent, so nothing tracks them. What that page
+        // must not be is a dead end, so the preference modal and the floating
+        // Cookie Settings button are still rendered. A visitor on checkout who
+        // wants their embedded map back can get it; they simply are not
+        // interrupted by a banner while paying.
+        //
+        // When neither applies there is nothing to render at all.
+        $show_banner = $preview || MBR_CC_Enhanced_Customization::should_show_banner();
+        $enforcing   = $preview || MBR_CC_Enhanced_Customization::should_enforce_consent();
+        
+        if (!$show_banner && !$enforcing) {
             return;
         }
         
@@ -445,26 +492,57 @@ class MBR_CC_Banner {
         $customize_text = $i18n::get_translated_string('customize',
             get_option('mbr_cc_customize_button_text', 'Customize'));
         
-        // Get base configuration from options
+        // Get base configuration from options.
         $base_config = array(
             'show_reject_button' => get_option('mbr_cc_show_reject_button', true),
             'show_customize_button' => get_option('mbr_cc_show_customize_button', true),
             'enable_ccpa' => get_option('mbr_cc_enable_ccpa', false),
         );
         
-        // Apply geolocation-based regional overrides
+        /**
+         * Filter the banner configuration.
+         *
+         * IMPORTANT: this output is cached. Anything returned here is baked
+         * into a document that a page cache may serve to every other visitor,
+         * so a callback must not vary on the visitor — no IP, no request
+         * headers, no cookies. Regional and GPC behaviour used to be applied
+         * through this filter and is now applied in the browser precisely
+         * because it cannot satisfy that rule.
+         *
+         * @param array $base_config Banner configuration.
+         */
         $config = apply_filters('mbr_cc_banner_config', $base_config);
         
-        // Use filtered values
-        $show_reject = $config['show_reject_button'];
-        $show_customize = $config['show_customize_button'];
-        $enable_ccpa = $config['enable_ccpa'];
+        $show_reject    = !empty($config['show_reject_button']);
+        $show_customize = !empty($config['show_customize_button']);
+        $enable_ccpa    = !empty($config['enable_ccpa']);
+        
+        // With regional behaviour switched on, the browser decides which of
+        // these three the visitor sees. They must therefore all exist in the
+        // markup, because a cached document is the same document for a visitor
+        // in Hamburg and a visitor in Houston, and JavaScript can reveal an
+        // element that is present but cannot conjure one that is not.
+        //
+        // Each starts in the state this site's own settings ask for, so a
+        // visitor whose region never resolves — request blocked, fetch failed,
+        // JavaScript disabled — sees exactly what they would have seen with
+        // geolocation switched off. The fallback is the site owner's own
+        // configuration, not an empty banner.
+        $geo_active = class_exists('MBR_CC_Region_Config') && MBR_CC_Region_Config::is_enabled();
+        
+        $render_reject    = $show_reject    || $geo_active;
+        $render_customize = $show_customize || $geo_active;
+        $render_ccpa      = $enable_ccpa    || $geo_active;
+        
+        $hidden_attr = ' style="display: none;"';
         
         $ccpa_text = $i18n::get_translated_string('ccpa_link_text',
             get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information'));
         
         $classes = array('mbr-cc-banner', 'mbr-cc-banner--' . $position, 'mbr-cc-banner--' . $layout);
         ?>
+        
+        <?php if ($show_banner) : ?>
         
         <!-- Popup Overlay (for popup layout) -->
         <?php if ($layout === 'popup') : ?>
@@ -494,8 +572,8 @@ class MBR_CC_Banner {
                 <?php endif; ?>
                 
                 <div class="mbr-cc-banner__content">
-                    <h3 id="mbr-cc-banner-heading" class="mbr-cc-banner__heading" data-mbr-cc-i18n="banner_heading"><?php echo esc_html($heading); ?></h3>
-                    <p id="mbr-cc-banner-description" class="mbr-cc-banner__description" data-mbr-cc-i18n="banner_description"><?php echo esc_html($description); ?></p>
+                    <h3 id="mbr-cc-banner-heading" class="mbr-cc-banner__heading" data-mbr-cc-i18n="banner_heading" data-mbr-cc-region="banner_heading"><?php echo esc_html($heading); ?></h3>
+                    <p id="mbr-cc-banner-description" class="mbr-cc-banner__description" data-mbr-cc-i18n="banner_description" data-mbr-cc-region="banner_description"><?php echo esc_html($description); ?></p>
                     
                     <?php if (get_option('mbr_cc_show_privacy_policy_link', false) || get_option('mbr_cc_show_cookie_policy_link', false)) : ?>
                         <p class="mbr-cc-banner__policy-links">
@@ -517,8 +595,9 @@ class MBR_CC_Banner {
                         </p>
                     <?php endif; ?>
                     
-                    <?php if ($enable_ccpa) : ?>
-                        <p class="mbr-cc-banner__ccpa">
+                    <?php if ($render_ccpa) : ?>
+                        <p class="mbr-cc-banner__ccpa"
+                           data-mbr-cc-region="enable_ccpa"<?php echo $enable_ccpa ? '' : $hidden_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
                             <button type="button" class="mbr-cc-ccpa-link" id="mbr-cc-ccpa-optout" data-mbr-cc-i18n="ccpa_link_text">
                                 <?php echo esc_html($ccpa_text); ?>
                             </button>
@@ -526,27 +605,58 @@ class MBR_CC_Banner {
                     <?php endif; ?>
                 </div>
                 
-                <div class="mbr-cc-banner__buttons">
-                    <button type="button" class="mbr-cc-btn mbr-cc-btn-accept" id="mbr-cc-accept-all" data-mbr-cc-i18n="accept_all">
-                        <?php echo esc_html($accept_text); ?>
-                    </button>
-                    
-                    <?php if ($show_reject) : ?>
-                        <button type="button" class="mbr-cc-btn mbr-cc-btn-reject" id="mbr-cc-reject-all" data-mbr-cc-i18n="reject_all">
-                            <?php echo esc_html($reject_text); ?>
+                <div class="mbr-cc-banner__actions">
+                    <div class="mbr-cc-banner__buttons">
+                        <button type="button" class="mbr-cc-btn mbr-cc-btn-accept" id="mbr-cc-accept-all" data-mbr-cc-i18n="accept_all">
+                            <?php echo esc_html($accept_text); ?>
                         </button>
-                    <?php endif; ?>
+                        
+                        <?php if ($render_reject) : ?>
+                            <button type="button" class="mbr-cc-btn mbr-cc-btn-reject" id="mbr-cc-reject-all" data-mbr-cc-i18n="reject_all"
+                                    data-mbr-cc-region="show_reject_button"<?php echo $show_reject ? '' : $hidden_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+                                <?php echo esc_html($reject_text); ?>
+                            </button>
+                        <?php endif; ?>
+                        
+                        <?php if ($render_customize) : ?>
+                            <button type="button" class="mbr-cc-btn mbr-cc-btn-customize" id="mbr-cc-customize" data-mbr-cc-i18n="customize"
+                                    data-mbr-cc-region="show_customize_button"<?php echo $show_customize ? '' : $hidden_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+                                <?php echo esc_html($customize_text); ?>
+                            </button>
+                        <?php endif; ?>
+                    </div>
                     
-                    <?php if ($show_customize) : ?>
-                        <button type="button" class="mbr-cc-btn mbr-cc-btn-customize" id="mbr-cc-customize" data-mbr-cc-i18n="customize">
-                            <?php echo esc_html($customize_text); ?>
-                        </button>
+                    <?php
+                    /**
+                     * Filter whether the author credit shows beneath the banner buttons.
+                     *
+                     * Returning false removes it entirely — useful for white-label builds.
+                     *
+                     * @param bool $show Whether to render the credit.
+                     */
+                    if (apply_filters('mbr_cc_show_credit', true)) :
+                        ?>
+                        <p class="mbr-cc-banner__credit">
+                            <a href="https://littlewebshack.com/mbr-cookie-consent/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               aria-label="<?php esc_attr_e('Made with love by Robert — MBR Cookie Consent', 'mbr-cookie-consent'); ?>">
+                                <span><?php esc_html_e('Made with', 'mbr-cookie-consent'); ?></span>
+                                <svg class="mbr-cc-banner__credit-heart" width="12" height="12" viewBox="0 0 24 24" fill="#ff4d6d" aria-hidden="true" focusable="false"><path fill="#ff4d6d" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                                <span><?php esc_html_e('by Robert', 'mbr-cookie-consent'); ?></span>
+                            </a>
+                        </p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         
-        <!-- Preference Center Modal -->
+        <?php endif; // $show_banner ?>
+        
+        <!-- Preference Center Modal.
+             Rendered even where the banner is excluded: the floating Cookie
+             Settings button opens this, and without it that button would be a
+             dead control on every excluded page. -->
         <div id="mbr-cc-modal" 
              class="mbr-cc-modal" 
              style="display: none;"

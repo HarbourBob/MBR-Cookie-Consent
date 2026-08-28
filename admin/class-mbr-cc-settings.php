@@ -99,6 +99,7 @@ class MBR_CC_Settings {
         
         // Branding.
         register_setting('mbr_cc_settings', 'mbr_cc_banner_logo_url', $url);
+        register_setting('mbr_cc_settings', 'mbr_cc_banner_logo_id', $int);
         
         // Google Consent Mode v2.
         register_setting('mbr_cc_settings', 'mbr_cc_google_consent_mode', $bool);
@@ -112,7 +113,10 @@ class MBR_CC_Settings {
         
         // Internationalization & Accessibility.
         register_setting('mbr_cc_settings', 'mbr_cc_auto_translate', $bool);
-        register_setting('mbr_cc_settings', 'mbr_cc_wcag_compliance', $text);
+        // A checkbox, and it must be sanitised as one. Registered as text until
+        // 2.3.5, which stored the literal strings "true" and "false" — see the
+        // note on wcag_compliance in MBR_CC_Import_Export::scalar_map().
+        register_setting('mbr_cc_settings', 'mbr_cc_wcag_compliance', $bool);
         
         // Page-Specific Controls.
         register_setting('mbr_cc_settings', 'mbr_cc_excluded_pages', $area);
@@ -121,6 +125,7 @@ class MBR_CC_Settings {
         register_setting('mbr_cc_settings', 'mbr_cc_exclude_checkout', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_exclude_cart', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_exclude_account', $bool);
+        register_setting('mbr_cc_settings', 'mbr_cc_exclusions_skip_blocking', $bool);
         
         // Custom CSS.
         register_setting('mbr_cc_settings', 'mbr_cc_custom_css', $css);
@@ -133,8 +138,6 @@ class MBR_CC_Settings {
         register_setting('mbr_cc_settings', 'mbr_cc_purpose_one_treatment', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_gdpr_applies', $bool);
         
-        // Google ACM.
-        register_setting('mbr_cc_settings', 'mbr_cc_google_acm_enabled', $bool);
         
         // AI / LLM training disclosure (Connecticut SB 1295, effective 1 July 2026).
         register_setting('mbr_cc_settings', 'mbr_cc_ai_training_enabled', $bool);
@@ -149,6 +152,7 @@ class MBR_CC_Settings {
         register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_message', $area);
         register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_btn_text', $text);
         register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_logo_url', $url);
+        register_setting('mbr_cc_settings', 'mbr_cc_blocked_overlay_logo_id', $int);
     }
 
     /**
@@ -429,8 +433,15 @@ class MBR_CC_Settings {
         }
         
         // The preview is a static mock-up: consent must not be recorded, and
-        // regional overrides must not swap buttons out from under the admin
-        // who is trying to look at their own configuration.
+        // nothing may swap buttons out from under the admin who is trying to
+        // look at their own configuration.
+        //
+        // Since 2.3.4 regional overrides are applied in the browser and no
+        // longer reach this filter, so the preview shows this site's settings
+        // by construction. The call stays as a guard against a third-party
+        // callback doing something visitor-dependent here — which the filter
+        // docblock in class-mbr-cc-banner.php asks callers not to do, but a
+        // preview is the wrong place to find out someone ignored it.
         remove_all_filters('mbr_cc_banner_config');
         
         $banner = MBR_CC_Banner::get_instance();
@@ -447,7 +458,11 @@ class MBR_CC_Settings {
         }
         
         $stylesheet = MBR_CC_PLUGIN_URL . 'assets/css/banner.css';
-        $version = defined('MBR_CC_VERSION') ? MBR_CC_VERSION : '1.0.0';
+        // Must match the front end's cache-busting, or the preview renders
+        // new markup against a stale stylesheet and looks broken.
+        $version = function_exists('mbr_cc_asset_version')
+            ? mbr_cc_asset_version('assets/css/banner.css')
+            : (defined('MBR_CC_VERSION') ? MBR_CC_VERSION : '1.0.0');
         
         wp_send_json_success(array(
             'document' => $this->build_preview_document($markup, $css, $stylesheet, $version),
