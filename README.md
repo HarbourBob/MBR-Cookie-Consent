@@ -1,5 +1,7 @@
 <div align="center">
 
+![MBR Cookie Consent](head.jpg)
+
 # MBR Cookie Consent
 
 ### Enterprise-grade privacy compliance for WordPress. Genuinely free, forever.
