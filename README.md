@@ -1,6 +1,6 @@
 <div align="center">
 
-![MBR Cookie Consent](head.jpg)
+![MBR Cookie Consent](head.webp)
 
 # MBR Cookie Consent
 
@@ -12,7 +12,7 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-2.3.3-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
+[![Version](https://img.shields.io/badge/version-2.3.5-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
@@ -515,7 +515,11 @@ No Composer. No external packages. No CDN dependencies.
 - ✅ Cache-safe consent: blocking, Consent Mode, GPC and language all moved client-side *(v2.3.3)*
 - ✅ Click-to-play video facade blocking *(v2.3.3)*
 - ✅ Community translations that actually work, with per-language approval *(v2.3.3)*
-- Client-side region resolution, so page caches can never freeze a region into cached HTML — the last remaining place a cache and this plugin interact awkwardly
+- ✅ Client-side region resolution, so a page cache can never freeze one visitor's region into cached HTML *(v2.3.4)*
+- ✅ Regional wording that actually reaches the banner *(v2.3.4)*
+- ✅ Client-side A/B assignment — the last piece of the page that varied by visitor on the server *(v2.3.5)*
+- ✅ Salted consent-log fingerprint *(v2.3.5)*
+- Local / offline GeoIP database, so geolocation needs no third-party lookup at all
 - Selective / partial import (choose which sections to bring across)
 - Network-wide settings push for Multisite
 
@@ -523,6 +527,67 @@ No Composer. No external packages. No CDN dependencies.
 
 <details>
 <summary><h3>Changelog</h3></summary>
+
+### 2.3.5 — The accessibility switch, and the last cacheable variant
+
+**Accessibility**
+- **Fix:** the **Enable WCAG/ADA Compliance Features** switch would not stay on. Ticking it and saving returned a page with the box clear again, which looked exactly like the save had failed. The setting was registered with a text sanitiser rather than a boolean one, so the screen stored the word `"true"` rather than a real yes/no value, and `checked()` — which compares stringified values — never matched it on the way back in
+- **Fix:** the same fault meant the features could not be turned *off* either. The stored word `"false"` is a non-empty string and therefore truthy in PHP, so the front-end guard never fired and the screen-reader announcements carried on running while the screen reported them as off. The switch was reporting the opposite of the truth in both directions
+- **Note:** sites updating from an earlier version are set to **on**, which is what they were actually doing regardless of what the screen showed. Anyone who wants it off can now untick it and have it stick
+
+**A/B testing behind a page cache**
+- **Fix:** the variant was assigned on the server and changed the rendered markup, so whichever visitor happened to generate the cached copy had their variant stored in it and everyone served that copy afterwards saw the same one. This is the same fault class removed from consent, regional wording and GPC in 2.3.3 and 2.3.4 — A/B testing was simply the last piece of the page that still varied by visitor on the server
+- **Fix:** impressions were recorded against the cached variant rather than the visitor's, so existing figures measure the cache rather than the test. Reset your statistics before drawing conclusions from them
+- **Change:** variants are assigned in the browser and the document is now identical for every visitor. The `mbr_cc_ab_variant` cookie is consequently no longer HttpOnly — the script that assigns it has to read it back. It remains a session cookie holding one letter naming a banner layout, and no personal data
+- **Fix:** promoting a winner wrote a layout name into the banner *position* setting, a combination the appearance picker cannot represent, so it showed no layout selected and the next save on that screen quietly reset it. Promotion now writes a matching position and layout, and purges the page cache
+
+**Consent log**
+- **Security:** the visitor fingerprint stored with each consent record was an unsalted SHA-256 of the IP address and browser identification string. Both are drawn from a small enough range — the IPv4 space is 2³², user agent strings come from a short list — that anyone holding an exported log could recover the original address by exhausting it. That makes it a pseudonymous identifier rather than the anonymisation the surrounding code assumed. It is now keyed with a per-site salt that never leaves the server
+- **Note:** rows written before this release will not match rows written after it. Nothing queries or joins on the column, so the only cost is a discontinuity in the history
+- **Change:** the network export column is headed **Visitor Hash** rather than *Cookie Hash*. It has never been a hash of the consent cookie, and a compliance export should not mislabel its own columns
+
+**Geolocation**
+- **New:** the Geolocation screen now warns that IP lookup providers are third parties with their own licensing. Free tiers are generally offered for non-commercial, testing or development use, and those terms change without notice. The Cloudflare option sidesteps the question entirely by reading a header your CDN already sends, with no outbound request at all. This note previously existed only in the readme, where nobody configuring geolocation would see it
+
+**Privacy law — refreshed to August 2026**
+- **Fix:** the EU card gave the ePrivacy Regulation withdrawal as February 2026. It was announced on 11 February **2025**, approved on 16 July 2025 and published in the Official Journal on 6 October 2025
+- **Update:** Alabama's Personal Data Protection Act (HB 351) confirmed for **1 May 2027**, resolving a date previously reported two ways
+- **Update:** Maryland *(1 July 2026)* widened "precise geolocation" to a 1,750-foot radius covering a consumer, mobile device **or vehicle**. Virginia *(1 July 2026)* prohibits selling precise geolocation outright. New Jersey *(30 June 2026)* bans the sale of sensitive data by **any** entity with no consumer-volume threshold, so it reaches sites well below that state's own applicability thresholds
+- **Update:** Connecticut SB 4 *(1 October 2026)* expanded — facial recognition rules, a flat ban on selling precise geolocation, revised treatment of publicly available information and related deletion requests, and data broker registration from 1 January 2027
+- **Update:** Vermont's DPOSA carries the same **AI/LLM training disclosure** duty as Connecticut, from 1 January 2028. The disclosure this plugin generates now serves two states rather than one
+- **Update:** Oklahoma SB 546 treats pseudonymous data as personal data wherever it can reasonably be linked to a person, which brings cookie identifiers squarely into scope
+- **Update:** India DPDP clarified — from 13 November 2026 the Data Protection Board may hear complaints, conduct inquiries and levy penalties. Enforcement powers arrive six months *before* the 13 May 2027 full compliance deadline, not alongside it
+- **Update:** EU Digital Omnibus still in negotiation as of August 2026 with no agreed text; the Council's compromise text of 21 May 2026 dropped the move of cookie rules into GDPR Articles 88a and 88b. Final wording expected no earlier than late 2026. Nothing to reconfigure
+
+> **Note on the trend.** Across Maryland, Virginia, New Jersey and Connecticut, sensitive categories — precise location above all — are moving from *opt-out with consent* to *may not be sold at all*. An opt-out link does not satisfy a flat prohibition. If you sell location data, that is a question for your adviser rather than a banner setting.
+
+---
+
+### 2.3.4 — Regional banners that actually work
+
+**Regional behaviour**
+- **Fix:** regional settings did not reach the banner. Each region carried a dozen settings — its own wording, whether a Reject button was required, how categories behaved — and the banner read three of them. The rest were consulted by nothing on the front end, so a visitor in the UK saw the same banner as a visitor anywhere else apart from which buttons appeared. The geolocation test tool *did* read them, which made this hard to spot: it reported behaviour, confidently and in detail, that the banner had never implemented
+- **Fix:** regional detection could show visitors the wrong region's banner. The region was decided on the server and written into the page, so on a cached site the first visitor through decided what everyone else saw — a visitor in the United States could prime the cache with a banner carrying no Reject button, which was then served to visitors in the EU. The region is now resolved in the browser and the page is the same for everyone. Where the lookup cannot complete, the site's own settings are used
+- **Change:** your own banner text now always takes precedence over a region's suggested wording. Region text is used only where the heading and description have been left at their defaults. Text written for a specific region, on the Geolocation screen, still takes precedence over both
+- **Fix:** the "Do Not Sell or Share" link could be shown to everyone. It was switched on from the visitor's GPC header while the page was generated, so one visitor sending that signal wrote the link into the cached copy served to everybody afterwards. This was the last remaining piece of GPC handling that varied the page on the server
+
+**Page exclusions**
+- **Fix:** page exclusions did not exclude script blocking. The settings hid the banner but the script blocker ignored them entirely, so an excluded page still had its third-party scripts held with nothing on the page offering to release them. A first-time visitor landing straight on such a page had no way to consent at all. Excluded pages now show the floating Cookie Settings button
+- **Change:** hiding the banner on a page no longer means consent stops applying there. Scripts stay blocked until the visitor consents, which is what the law requires — what changes is that they are not interrupted by a banner. A new setting allows third-party scripts on excluded pages for sites that genuinely need it. Off by default, because it is a compliance decision rather than a display preference
+- **Change:** switching the banner off site-wide now switches script blocking off with it. Previously scripts were held with no banner and no settings button anywhere to release them, so the blocking was permanent and silent
+
+**Removed**
+- **Removed:** Google Additional Consent Mode. The option existed and the class existed, but nothing behind them worked: no AC String was ever generated, stored or sent to Google, the provider list was a placeholder described as a sample in the source, and the JavaScript file was never loaded. Enabling it added an empty callback to your pages and nothing else. Sites that had it on get a one-time notice. Google Consent Mode v2 is unaffected and remains fully implemented
+- **Removed:** Google Ad Manager from the generated privacy policy's service list, where it appeared purely because the ACM option was ticked. Regenerate your policy if you created one with ACM enabled
+
+**Other**
+- **Change:** the consent cookie is percent-encoded. It holds JSON, so it contained commas, braces and quotes — characters a cookie value is not supposed to carry. Browsers accepted them; a CDN or reverse proxy in front of the site is under no obligation to. Cookies written by earlier versions are still read correctly, so nobody is asked to consent again
+- **Fix:** geolocation could silently never run. The settings screen defaulted the provider to ipapi.co while the lookup defaulted to ip-api.com, so on any site where the geolocation settings had never been saved the two disagreed — and because ip-api.com's free endpoint is plaintext, which this plugin will not send a visitor's IP over without an explicit opt-in, no lookup happened at all. Every visitor fell back to the default country while the screen showed a provider that was not being used
+- **Fix:** an unrecognised provider value — from a hand-edited option or an old import — fell back to the plaintext provider. It now falls back to the HTTPS one
+- **Fix:** the Advanced Consent Management settings tab closed two levels too deep, a markup fault the removed ACM section had been concealing
+- **Fix:** corrected the readme, which still advertised IAB TCF and Google ACM, claimed no external requests when geolocation and the cookie scanner both make them, described the consent cookie as HttpOnly (it cannot be — the banner reads it in JavaScript), named two cookies that were never set, claimed exactly two external requests while omitting the GitHub update checker, and did not mention the A/B testing session cookie
+
+---
 
 ### 2.3.3 — Cache-safe consent, and a lot of honesty
 
