@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
  * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, Indonesia UU PDP, Nigeria NDPA, China PIPL, South Korea PIPA, Saudi PDPL, South Africa POPIA, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.3.3
+ * Version: 2.3.5
  * Author: Robert Palmer
  * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
@@ -46,10 +46,41 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.3.3');
+define('MBR_CC_VERSION', '2.3.5');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
+
+/**
+ * Cache-busting version string for a bundled asset.
+ *
+ * The plugin version alone is not enough. Assets get edited between releases —
+ * a CSS tweak, a JS fix — and if the version string has not moved, browsers and
+ * aggressive host CDNs keep serving the old file against the new markup. That
+ * failure is silent and looks like a rendering bug rather than a caching one.
+ *
+ * Falling back to the file's modification time fixes that: any change to the
+ * file changes the query string, whether or not the release version moved. If
+ * the file cannot be read (an odd deployment, a filter rewriting paths) the
+ * plugin version is used, which is no worse than before.
+ *
+ * @param string $relative_path Asset path relative to the plugin root,
+ *                              e.g. 'assets/css/banner.css'.
+ * @return string Version string for wp_enqueue_* and query args.
+ */
+function mbr_cc_asset_version($relative_path) {
+    $file = MBR_CC_PLUGIN_DIR . ltrim($relative_path, '/');
+
+    if (is_readable($file)) {
+        $mtime = filemtime($file);
+
+        if ($mtime) {
+            return MBR_CC_VERSION . '.' . $mtime;
+        }
+    }
+
+    return MBR_CC_VERSION;
+}
 
 /**
  * Self-hosted update delivery via Plugin Update Checker (PUC).
@@ -119,7 +150,6 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-i18n-accessibility.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-enhanced-customization.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-subdomain-consent.php';
-        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-google-acm.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-cookie-scanner.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-policy-generator.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-privacy-policy-generator.php';
@@ -188,9 +218,6 @@ class MBR_Cookie_Consent {
         // Initialize subdomain consent sharing.
         MBR_CC_Subdomain_Consent::get_instance();
         
-        
-        // Initialize Google ACM.
-        MBR_CC_Google_ACM::get_instance();
         
         // Initialize geolocation and regional config (must run before banner).
         MBR_CC_Geolocation::get_instance();
@@ -358,7 +385,83 @@ class MBR_Cookie_Consent {
             $this->upgrade_to_233();
         }
         
+        // 2.3.4 — retire the withdrawn Google ACM option.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.4', '<')) {
+            $this->upgrade_to_234();
+        }
+        
+        // 2.3.5 — repair the WCAG option, stored as a string by a bad sanitiser.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.5', '<')) {
+            $this->upgrade_to_235();
+        }
+        
         update_option('mbr_cc_version', MBR_CC_VERSION);
+    }
+    
+    /**
+     * Upgrade routine for 2.3.5.
+     *
+     * mbr_cc_wcag_compliance was registered with a text sanitiser, so the
+     * settings screen stored the literal strings "true" and "false" instead of
+     * a boolean. checked() compares stringified values, so "true" never matched
+     * "1" and the box rendered clear on every page load after a save; and
+     * "false" is truthy in PHP, so the front-end guard never fired and the
+     * accessibility layer ran whatever the screen showed.
+     *
+     * Any stored string is therefore rewritten to true rather than read
+     * literally. Two reasons:
+     *
+     *  - It is what these sites were actually doing. The guard never fired, so
+     *    the accessibility layer was on everywhere. Writing true changes no
+     *    behaviour on any existing site; reading "false" literally would switch
+     *    an accessibility feature off during a point release, which is not a
+     *    thing an update should do quietly.
+     *  - A stored "false" records no real intent. The settings screen gathers
+     *    every mbr_cc_ field on the page at save time, so an admin who saved
+     *    anything at all on that tab while the box was displaying its phantom
+     *    unticked state wrote "false" without ever having chosen it.
+     *
+     * The setting now saves and reads correctly, so anyone who does want it off
+     * can untick it and have it stay off.
+     */
+    private function upgrade_to_235() {
+        // No row at all: the code default (true) already applies, and writing
+        // one would only turn an inherited default into a pinned value.
+        if (get_option('mbr_cc_wcag_compliance', null) === null) {
+            return;
+        }
+        
+        update_option('mbr_cc_wcag_compliance', true);
+    }
+    
+    /**
+     * Upgrade routine for 2.3.4.
+     */
+    private function upgrade_to_234() {
+        // Google Additional Consent Mode has been withdrawn, for the same
+        // reason IAB TCF was in 2.3.3. The class existed and the setting
+        // existed, but the only thing switching it on ever did was print a
+        // googlefc callback queue into the page whose handlers wrote to the
+        // browser console. The AC String was
+        // never generated, never stored and never sent: generate_ac_string(),
+        // save_ac_string_to_cookie() and the rest had no callers anywhere in
+        // the plugin, the provider list was labelled a sample in the source,
+        // and assets/js/google-acm.js was never enqueued.
+        //
+        // Doing it properly means fetching Google's ATP list, generating a real
+        // AC String from the visitor's actual choices and feeding it to the
+        // Google tags — a genuine piece of work for a feature that matters to
+        // publishers running Google programmatic advertising and to nobody
+        // else. Shipping a switch that looks like it does that, and doesn't, is
+        // worse than not offering it.
+        if (get_option('mbr_cc_google_acm_enabled')) {
+            update_option('mbr_cc_234_acm_withdrawn', true);
+        }
+
+        delete_option('mbr_cc_google_acm_enabled');
+
+        // Written by the withdrawn feature, never read by anything else.
+        delete_option('mbr_cc_ac_string');
     }
     
     /**
@@ -439,6 +542,11 @@ class MBR_Cookie_Consent {
             return;
         }
         
+        // 'ip-api' here is the default this option had *before* 2.3.1, not
+        // the current one. It is what an unsaved option meant on the sites
+        // this migration exists to move, so it must stay a literal —
+        // swapping in DEFAULT_PROVIDER would make the check below always
+        // fail and the migration silently do nothing.
         $provider = get_option('mbr_cc_geolocation_provider', 'ip-api');
         $api_key  = trim((string) get_option('mbr_cc_ipapi_key', ''));
         
@@ -640,19 +748,21 @@ class MBR_Cookie_Consent {
             'exclude_checkout' => false,
             'exclude_cart' => false,
             'exclude_account' => false,
+            'exclusions_skip_blocking' => false,
+            'geolocation_provider' => MBR_CC_Geolocation::DEFAULT_PROVIDER,
             'custom_css' => '',
             'subdomain_sharing' => false,
             'subdomain_root_domain' => '',
             'publisher_country_code' => '',
             'purpose_one_treatment' => false,
             'gdpr_applies' => 'auto',
-            'google_acm_enabled' => false,
             // Blocked content overlay (v1.7.0).
             'blocked_overlay_enabled'  => false,
             'blocked_overlay_heading'  => '',
             'blocked_overlay_message'  => '',
             'blocked_overlay_btn_text' => '',
             'blocked_overlay_logo_url' => '',
+            'blocked_overlay_logo_id'  => 0,
         );
         
         foreach ($defaults as $key => $value) {
