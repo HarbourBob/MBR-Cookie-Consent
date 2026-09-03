@@ -1,6 +1,6 @@
 <div align="center">
 
-![MBR Cookie Consent](head.webp)
+![MBR Cookie Consent](head.jpg)
 
 # MBR Cookie Consent
 
