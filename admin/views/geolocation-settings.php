@@ -24,6 +24,20 @@ $region_config = mbr_cc_region_config();
 $current_country = $geo->get_country();
 $current_region = $geo->get_region();
 $region_name = $geo->get_region_name();
+
+// How that country was arrived at. A fallback must never be presented as a
+// detection: a site whose lookups all fail sits in the wrong privacy regime
+// indefinitely, and the only clue is a country that happens to look plausible.
+$detection_source = method_exists($geo, 'get_detection_source') ? $geo->get_detection_source() : 'provider';
+$is_fallback      = ($detection_source === 'default');
+
+// Is the request reaching us through Cloudflare, and is the country header on?
+$behind_cloudflare = function_exists('mbr_cc_request_is_cloudflare') && mbr_cc_request_is_cloudflare();
+$cf_country_header = !empty($_SERVER['HTTP_CF_IPCOUNTRY']);
+
+$provider_setting = get_option('mbr_cc_geolocation_provider', MBR_CC_Geolocation::DEFAULT_PROVIDER);
+$ipapi_key_set    = trim((string) get_option('mbr_cc_ipapi_key', '')) !== '';
+$insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false);
 ?>
 
 <div class="mbr-cc-settings-section">
@@ -41,14 +55,75 @@ $region_name = $geo->get_region_name();
     </div>
     
     <!-- Current Detection Status -->
-    <div class="mbr-cc-info-box" style="background: #e7f3e7; border-color: #46b450;">
+    <div class="mbr-cc-info-box" style="background: <?php echo $is_fallback ? '#fcf3e7' : '#e7f3e7'; ?>; border-color: <?php echo $is_fallback ? '#dba617' : '#46b450'; ?>;">
         <h3 style="margin-top: 0;"><?php esc_html_e('Current Detection', 'mbr-cookie-consent'); ?></h3>
         <p><strong><?php esc_html_e('Your Country:', 'mbr-cookie-consent'); ?></strong> <?php echo esc_html($current_country ? $current_country : 'Not Detected'); ?></p>
         <p><strong><?php esc_html_e('Privacy Region:', 'mbr-cookie-consent'); ?></strong> <?php echo esc_html($region_name); ?></p>
-        <p style="font-size: 12px; color: #666; margin-bottom: 0;">
+        <p style="margin-bottom: 0;">
+            <strong><?php esc_html_e('Source:', 'mbr-cookie-consent'); ?></strong>
+            <?php
+            switch ($detection_source) {
+                case 'cloudflare':
+                    esc_html_e('Cloudflare CF-IPCountry header — no outbound lookup, no visitor IP sent to a third party.', 'mbr-cookie-consent');
+                    break;
+                case 'ipapi_fallback':
+                    esc_html_e('ipapi.co. You have selected ip-api.com, but it is not usable as configured — see below.', 'mbr-cookie-consent');
+                    break;
+                case 'provider':
+                    esc_html_e('Your configured IP lookup provider.', 'mbr-cookie-consent');
+                    break;
+                default:
+                    esc_html_e('NOT DETECTED. This is your configured default region, not a lookup result.', 'mbr-cookie-consent');
+            }
+            ?>
+        </p>
+        <?php if ($is_fallback) : ?>
+            <p style="margin: 10px 0 0 0;">
+                <?php esc_html_e('Nothing above was detected. Every visitor whose location cannot be resolved is being shown this region, so if it is not the region you expect, your visitors are seeing the wrong banner. Common causes: outbound HTTP blocked by your host, the lookup provider rate-limiting you, or a provider that cannot answer as configured.', 'mbr-cookie-consent'); ?>
+            </p>
+        <?php endif; ?>
+        <p style="font-size: 12px; color: #666; margin: 10px 0 0 0;">
             <?php esc_html_e('This is what visitors from your current IP address would see.', 'mbr-cookie-consent'); ?>
         </p>
     </div>
+
+    <?php if ($provider_setting === 'ip-api' && !$ipapi_key_set && !$insecure_opt_in) : ?>
+        <div class="notice notice-warning inline" style="margin: 16px 0; padding: 10px 14px;">
+            <p style="margin: 0 0 6px 0;">
+                <strong><?php esc_html_e('ip-api.com cannot be used as configured.', 'mbr-cookie-consent'); ?></strong>
+                <?php esc_html_e('Its free endpoint is plain HTTP only, and this plugin will not send a visitor IP address over an unencrypted connection without an explicit opt-in — over plain HTTP anyone on the path can rewrite the country returned and silently change which privacy law your visitors get.', 'mbr-cookie-consent'); ?>
+            </p>
+            <p style="margin: 0;">
+                <?php esc_html_e('Lookups are being served by ipapi.co instead. To use ip-api.com, either add a pro key below or switch to ipapi.co to remove this notice.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($behind_cloudflare && !$cf_country_header) : ?>
+        <div class="notice notice-info inline" style="margin: 16px 0; padding: 10px 14px;">
+            <p style="margin: 0;">
+                <strong><?php esc_html_e('This request came through Cloudflare, but the country header is not switched on.', 'mbr-cookie-consent'); ?></strong>
+                <?php esc_html_e('Cloudflare can tell this plugin the visitor\'s country for free, with no outbound request and no visitor IP leaving your server — but CF-IPCountry is not sent by default. Switch it on in your Cloudflare dashboard, per domain, either way round:', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="margin: 8px 0 0 20px; list-style: disc;">
+                <li><?php esc_html_e('Network › IP Geolocation › On. This adds the country header only, which is all this plugin uses. It is the quicker option.', 'mbr-cookie-consent'); ?></li>
+                <li><?php esc_html_e('Or Rules › Settings › Managed Transforms tab › enable "Add visitor location headers", which adds city, region, continent and coordinates as well. On older dashboards this sits under Rules › Transform Rules › Managed Transforms.', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 8px 0 0 0;">
+                <?php esc_html_e('Either setting applies to one zone — a single domain or subdomain added to Cloudflare — so it has to be enabled per site. Geolocation will then use the header automatically, whichever provider is selected below.', 'mbr-cookie-consent'); ?>
+            </p>
+            <p style="margin: 8px 0 0 0; font-size: 12px; color: #555;">
+                <?php esc_html_e('If the header still does not arrive, check that the "Remove visitor IP headers" Managed Transform is not enabled — it strips visitor IP headers on the way to your server.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+    <?php elseif ($behind_cloudflare && $cf_country_header) : ?>
+        <div class="notice notice-success inline" style="margin: 16px 0; padding: 10px 14px;">
+            <p style="margin: 0;">
+                <strong><?php esc_html_e('Cloudflare detected.', 'mbr-cookie-consent'); ?></strong>
+                <?php esc_html_e('The CF-IPCountry header is present and trusted, so it is used automatically for every visitor. No outbound lookup is made and no visitor IP address is sent to a third party. The provider setting below is only a fallback for requests that do not arrive through Cloudflare.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+    <?php endif; ?>
     
     <!-- Enable Geolocation -->
     <div class="mbr-cc-form-row" style="margin-top: 25px;">
@@ -110,6 +185,22 @@ $region_name = $geo->get_region_name();
             </p>
         </div>
         
+        <div class="mbr-cc-form-field">
+            <label>
+                <input type="checkbox" name="mbr_cc_trust_cloudflare_headers" value="1"
+                       <?php checked(get_option('mbr_cc_trust_cloudflare_headers', false)); ?>>
+                <?php esc_html_e('My origin only accepts traffic from Cloudflare', 'mbr-cookie-consent'); ?>
+            </label>
+            <p class="description">
+                <?php esc_html_e('Leave this off unless it is true. Cloudflare headers are normally trusted only when the request provably came through Cloudflare — either it arrived from a published Cloudflare address, or your host has already restored the visitor IP from Cloudflare\'s own header. Between them those cover almost every Cloudflare site, so you should not need this.', 'mbr-cookie-consent'); ?>
+            </p>
+            <p class="description">
+                <?php esc_html_e('Tick it only if your origin is firewalled to Cloudflare\'s IP ranges or uses Authenticated Origin Pulls, so that no request can reach the site any other way. Neither is visible from PHP, which is why it has to be asserted. On a site that is reachable directly, this would let a visitor set their own country header and choose which privacy law they are shown.', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="mbr-cc-form-row">
         <div class="mbr-cc-form-field">
             <label>
                 <input type="checkbox" name="mbr_cc_allow_insecure_geo_lookup" value="1"

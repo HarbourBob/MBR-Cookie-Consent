@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
  * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, Indonesia UU PDP, Nigeria NDPA, China PIPL, South Korea PIPA, Saudi PDPL, South Africa POPIA, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.3.5
+ * Version: 2.3.6
  * Author: Robert Palmer
  * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
@@ -46,7 +46,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.3.5');
+define('MBR_CC_VERSION', '2.3.6');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));

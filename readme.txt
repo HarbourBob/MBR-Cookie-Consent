@@ -4,7 +4,7 @@ Tags: cookie consent, gdpr, ccpa, privacy, cookie banner
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.3.5
+Stable tag: 2.3.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -445,6 +445,17 @@ No. There is no pro/premium version. All features are included free forever.
 
 == Changelog ==
 
+= 2.3.6 =
+
+* Fix: geolocation could not work on a site behind Cloudflare. Cloudflare's country header was only trusted when the connecting address was one of Cloudflare's own, which is never true once your host restores original visitor IPs — the arrangement Cloudflare recommends and most managed hosts enable by default. On those sites the header was discarded and every visitor fell back to the default region, so a UK site could show the United States banner to everyone. The header is now also trusted when the connecting address matches the address Cloudflare reports, which is the signature of a restored-IP setup. A forged header naming somebody else's address is still rejected.
+* Fix: selecting ip-api.com without a pro key switched geolocation off entirely. Its free endpoint is plain HTTP only, and the plugin will not send a visitor IP over an unencrypted connection without an explicit opt-in — but instead of saying so it made no request at all, and quietly handed every visitor the default region. Lookups now fall through to ipapi.co over HTTPS, and the settings screen explains why.
+* New: Cloudflare's country header is now used automatically whichever lookup provider is selected. It costs no outbound request, cannot be rate-limited, adds no latency and sends no visitor IP to a third party, so there was never a good reason to make site owners find the right dropdown entry to benefit from it. Can be turned off with the mbr_cc_prefer_cloudflare_country filter.
+* New: the True-Client-IP header is now read. It is the Enterprise-plan equivalent of CF-Connecting-IP and was previously ignored.
+* Fix: Cloudflare's Pseudo IPv4 feature broke detection. With "Overwrite Headers" selected, Cloudflare replaces CF-Connecting-IP with a Class E address and preserves the real one in CF-Connecting-IPv6. Class E is a reserved range, so the plugin rejected it and those visitors fell back to the default region. The preserved address is now used.
+* New: the Geolocation screen reports how the country was actually arrived at — Cloudflare header, your configured provider, the ipapi.co fallback, or not detected at all. A fallback is now shown in amber and says plainly that it is your default region rather than a lookup result. Reporting a fallback as though it were a detection is how a site can sit in the wrong privacy regime indefinitely with nobody noticing.
+* New: where the plugin can see that a request came through Cloudflare but the country header is absent, the screen says which Cloudflare setting to enable and where to find it. CF-IPCountry is not sent by default.
+* New: an optional "My origin only accepts traffic from Cloudflare" setting, for origins firewalled to Cloudflare's ranges or using Authenticated Origin Pulls. Off by default, and deliberately excluded from settings export — it is a fact about one server's firewall, and importing it elsewhere would turn spoofable headers into trusted ones on a site that never made that guarantee.
+
 = 2.3.5 =
 
 * Fix: the "Enable WCAG/ADA Compliance Features" switch would not stay on. Ticking it and saving returned a page with the box clear again, which looked exactly like the save had failed. The setting was registered with a text sanitiser rather than a boolean one, so the screen stored the word "true" instead of a real yes/no value, and the checkbox never recognised it on the way back in.
@@ -736,6 +747,9 @@ Security and hardening release following a full audit of the plugin's own code. 
 * Feature: CCPA support
 
 == Upgrade Notice ==
+
+= 2.3.6 =
+Important if your site is behind Cloudflare. Geolocation could not work on a Cloudflare site whose host restores original visitor IPs — the setup Cloudflare recommends — so every visitor was handed the default region while the settings screen reported it as a detection. A UK site could be showing the United States banner to everyone. Also fixes ip-api.com silently disabling geolocation when selected without a pro key, and adds a Source line to the Geolocation screen so a fallback can no longer be mistaken for a detection.
 
 = 2.3.5 =
 Fixes the WCAG/ADA accessibility switch, which would not stay on when saved and could not be turned off at all — the screen showed one thing while the site did another. Also makes A/B testing work behind a page cache (variants were being served from the cache rather than assigned per visitor, and the statistics measured the cache), salts the consent log's visitor fingerprint so an exported log cannot be reversed to recover IP addresses, and refreshes the US, EU and India privacy law notes to August 2026. Recommended for all sites; essential if you run A/B testing or keep consent log exports.

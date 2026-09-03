@@ -39,6 +39,24 @@ class MBR_CC_Geolocation {
     const DEFAULT_PROVIDER = 'ipapi';
     
     /**
+     * How the current country was arrived at.
+     *
+     * 'cloudflare'     - from Cloudflare's CF-IPCountry header.
+     * 'provider'       - from the configured IP lookup provider.
+     * 'ipapi_fallback' - ip-api.com was selected but is not usable, so the
+     *                    HTTPS provider answered instead.
+     * 'default'        - nothing answered; this is the configured fallback
+     *                    region, NOT a detection.
+     *
+     * Exposed so the settings screen can say which of these happened. Reporting
+     * a fallback as though it were a detection is how a site can sit in the
+     * wrong privacy regime indefinitely without anyone noticing.
+     *
+     * @var string
+     */
+    private $detection_source = 'default';
+    
+    /**
      * Singleton instance
      */
     private static $instance = null;
@@ -156,6 +174,7 @@ class MBR_CC_Geolocation {
             $this->country_code = $cached['country'];
             $this->region_code  = isset($cached['region_code']) ? $cached['region_code'] : null;
             $this->region = $cached['region'];
+            $this->detection_source = isset($cached['source']) ? $cached['source'] : 'provider';
             return;
         }
         
@@ -225,6 +244,29 @@ class MBR_CC_Geolocation {
             return $result;
         }
         
+        // Cloudflare first, whatever provider is selected.
+        //
+        // When the site sits behind Cloudflare and the country header is
+        // present, it is the best answer available by every measure: it costs
+        // no outbound request, cannot be rate-limited, adds no latency, sends
+        // no visitor IP to a third party, and is not subject to anybody's free
+        // tier terms. Making the site owner find and select the Cloudflare
+        // option to get any of that served nobody — and if they had chosen a
+        // provider that could not answer, they got the default region instead
+        // of a country their own CDN was already telling us.
+        //
+        // Skipped when the header is absent or unverifiable, which falls
+        // through to the configured provider exactly as before.
+        if (apply_filters('mbr_cc_prefer_cloudflare_country', true)) {
+            $cf = $this->detect_via_cloudflare();
+            
+            if (is_array($cf) && !empty($cf['country'])) {
+                $cf['detected'] = true;
+                $this->detection_source = 'cloudflare';
+                return $cf;
+            }
+        }
+        
         // Skip local/private/reserved IPs. String prefix matching missed the
         // 172.16.0.0/12 block and every IPv6 private range, so a LAN visitor
         // could trigger a pointless outbound lookup on every request.
@@ -267,6 +309,10 @@ class MBR_CC_Geolocation {
             $detected = array('country' => $detected, 'region_code' => null);
         }
         
+        if (is_array($detected) && !empty($detected['country']) && $this->detection_source === 'default') {
+            $this->detection_source = 'provider';
+        }
+        
         // Fallback to default if detection fails.
         //
         // The 'detected' flag records whether this is a genuine provider
@@ -276,6 +322,7 @@ class MBR_CC_Geolocation {
         // visitor's IP all day, and if a page cache primes during that
         // window, for every visitor to that page.
         if (!is_array($detected) || empty($detected['country'])) {
+            $this->detection_source = 'default';
             $detected = array('country' => $this->get_default_country(), 'region_code' => null, 'detected' => false);
         } elseif (!isset($detected['detected'])) {
             $detected['detected'] = true;
@@ -312,7 +359,19 @@ class MBR_CC_Geolocation {
             );
         } else {
             if (!get_option('mbr_cc_allow_insecure_geo_lookup', false)) {
-                return false;
+                // No pro key and no plaintext opt-in, so there is no endpoint
+                // here we are willing to call.
+                //
+                // This used to return false, which meant geolocation was
+                // silently and completely dead: no request was made, detection
+                // "failed", and every visitor was handed the default region —
+                // reported on the settings screen as though it had been
+                // detected. A site in the UK showed United States to everyone,
+                // and nothing anywhere said why. Selecting a provider is not
+                // consent to having no geolocation at all, so we use the HTTPS
+                // provider instead and let the admin notice explain it.
+                $this->detection_source = 'ipapi_fallback';
+                return $this->detect_via_ipapi_com($ip);
             }
 
             $url = add_query_arg(
@@ -402,13 +461,19 @@ class MBR_CC_Geolocation {
             return false;
         }
         
-        // Only trust the header when the request actually arrived from a
-        // Cloudflare edge address. Otherwise any visitor could set it and pick
-        // their own privacy regime.
-        if (function_exists('mbr_cc_ip_in_ranges') && function_exists('mbr_cc_cloudflare_ranges')) {
-            $remote = isset($_SERVER['REMOTE_ADDR']) ? trim(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
-            
-            if (!filter_var($remote, FILTER_VALIDATE_IP) || !mbr_cc_ip_in_ranges($remote, mbr_cc_cloudflare_ranges())) {
+        // Only trust the header when the request demonstrably came through
+        // Cloudflare. Otherwise any visitor could set it and pick their own
+        // privacy regime.
+        //
+        // This used to test REMOTE_ADDR against the published Cloudflare ranges
+        // and nothing else, which meant the check could never pass on a site
+        // whose host restores original visitor IPs — the arrangement Cloudflare
+        // recommends and most managed hosts enable. REMOTE_ADDR is the
+        // visitor's address by then, so it is not a Cloudflare address, so the
+        // country header was discarded and every visitor fell back to the
+        // default region. See mbr_cc_request_is_cloudflare().
+        if (function_exists('mbr_cc_request_is_cloudflare')) {
+            if (!mbr_cc_request_is_cloudflare()) {
                 return false;
             }
         }
@@ -683,6 +748,7 @@ class MBR_CC_Geolocation {
                 'region'      => $region,
                 'region_code' => $region_code,
                 'detected'    => (bool) $was_detected,
+                'source'      => $this->detection_source,
                 'timestamp'   => time(),
             ),
             $cache_duration
@@ -699,6 +765,20 @@ class MBR_CC_Geolocation {
         }
         
         return get_transient('mbr_cc_geo_' . md5($ip));
+    }
+    
+    /**
+     * How the current country was arrived at.
+     *
+     * @since 2.3.6
+     * @return string One of 'cloudflare', 'provider', 'ipapi_fallback', 'default'.
+     */
+    public function get_detection_source() {
+        if ($this->country_code === null) {
+            $this->detect_location();
+        }
+        
+        return $this->detection_source;
     }
     
     /**

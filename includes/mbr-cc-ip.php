@@ -32,6 +32,123 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * The visitor IP as Cloudflare reports it, or '' when absent or unusable.
+ *
+ * True-Client-IP is the Enterprise-plan name for the same value and is
+ * preferred where present, because sites that enable it usually do so because
+ * something upstream rewrites CF-Connecting-IP.
+ *
+ * Pseudo IPv4 needs care. With "Overwrite Headers" selected, Cloudflare
+ * replaces CF-Connecting-IP with a Class E address (240.0.0.0/4) hashed from
+ * the visitor's real IPv6 address, and preserves the real one in
+ * CF-Connecting-IPv6. Class E is a reserved range, so the geolocation lookup
+ * rejects it and every such visitor falls back to the default region. Where the
+ * real address is still available we use it instead.
+ *
+ * @return string Validated IP address, or ''.
+ */
+function mbr_cc_cloudflare_client_ip() {
+    $candidates = array();
+
+    if (!empty($_SERVER['HTTP_TRUE_CLIENT_IP'])) {
+        $candidates[] = trim(wp_unslash($_SERVER['HTTP_TRUE_CLIENT_IP']));
+    }
+
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        $candidates[] = trim(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IP']));
+    }
+
+    foreach ($candidates as $candidate) {
+        if (!filter_var($candidate, FILTER_VALIDATE_IP)) {
+            continue;
+        }
+
+        // Class E pseudo-IPv4: swap in the preserved real address if we have it.
+        if (mbr_cc_ip_in_cidr($candidate, '240.0.0.0/4') && !empty($_SERVER['HTTP_CF_CONNECTING_IPV6'])) {
+            $real = trim(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IPV6']));
+
+            if (filter_var($real, FILTER_VALIDATE_IP)) {
+                return $real;
+            }
+        }
+
+        return $candidate;
+    }
+
+    return '';
+}
+
+/**
+ * Whether this request demonstrably arrived through Cloudflare.
+ *
+ * Two situations both count, and missing the second one is what made
+ * geolocation fail on correctly-configured Cloudflare sites before 2.3.6.
+ *
+ *   1. REMOTE_ADDR is a published Cloudflare edge address. This is the
+ *      untouched case: nothing on the origin has rewritten the connecting
+ *      address, so the edge address is still visible and the range check is a
+ *      complete proof.
+ *
+ *   2. REMOTE_ADDR is not a Cloudflare address, but it is byte-for-byte equal
+ *      to the address in CF-Connecting-IP (or True-Client-IP). That is the
+ *      signature of a host that has restored original visitor IPs — Apache
+ *      mod_remoteip, nginx ngx_http_realip_module, LiteSpeed's "Use Client IP
+ *      in Header", or the snippet Cloudflare publishes for sites that cannot
+ *      install a module. All of them do the same thing: overwrite REMOTE_ADDR
+ *      from Cloudflare's own header. Cloudflare recommends this setup, most
+ *      managed hosts ship it enabled, and it destroys the evidence that
+ *      case 1 depends on — the edge address is simply gone by the time PHP
+ *      runs, and no CGI variable preserves it.
+ *
+ * Case 2 is safe to accept because of the equality, not in spite of it. The
+ * concern behind the original check was a visitor nominating someone else's
+ * address: forging a header to poison the geolocation cache for a third party,
+ * or to pick a laxer privacy regime. Here the header must match the address the
+ * request actually came from, so a forger can only ever nominate themselves.
+ * They gain nothing they could not get by connecting from that address, and the
+ * per-IP cache entry they can influence is their own.
+ *
+ * @return bool
+ */
+function mbr_cc_request_is_cloudflare() {
+    $remote = isset($_SERVER['REMOTE_ADDR']) ? trim(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+
+    if (!filter_var($remote, FILTER_VALIDATE_IP)) {
+        return false;
+    }
+
+    // Case 1: the connection came from a Cloudflare edge address.
+    if (mbr_cc_ip_in_ranges($remote, mbr_cc_cloudflare_ranges())) {
+        return true;
+    }
+
+    // Case 2: the origin has already restored the visitor IP from Cloudflare's
+    // header, so REMOTE_ADDR and the header agree.
+    $cf_ip = mbr_cc_cloudflare_client_ip();
+
+    if ($cf_ip !== '' && $cf_ip === $remote) {
+        return true;
+    }
+
+    /**
+     * Force Cloudflare header trust on.
+     *
+     * For origins that are firewalled to Cloudflare ranges or use Authenticated
+     * Origin Pulls, where no request can reach the site except through
+     * Cloudflare and the headers are therefore trustworthy by construction.
+     * Neither of those is visible from PHP, so it has to be asserted.
+     *
+     * @since 2.3.6
+     *
+     * @param bool $trusted Whether to trust Cloudflare headers unconditionally.
+     */
+    return (bool) apply_filters(
+        'mbr_cc_trust_cloudflare_headers',
+        (bool) get_option('mbr_cc_trust_cloudflare_headers', false)
+    );
+}
+
+/**
  * Resolve the client IP address.
  *
  * @return string Validated IP address, or '' when none could be determined.
@@ -50,17 +167,16 @@ function mbr_cc_get_client_ip() {
     }
 
     if ($mode === 'auto') {
-        // Honour Cloudflare's header only when the connection actually came
-        // from Cloudflare. Otherwise the header is forged and we ignore it.
-        if (!mbr_cc_ip_in_ranges($remote, mbr_cc_cloudflare_ranges())) {
+        // Honour Cloudflare's header only when the request demonstrably came
+        // through Cloudflare. Otherwise the header is forged and we ignore it.
+        if (!mbr_cc_request_is_cloudflare()) {
             return $remote;
         }
 
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-            $candidate = trim(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IP']));
-            if (filter_var($candidate, FILTER_VALIDATE_IP)) {
-                return $candidate;
-            }
+        $candidate = mbr_cc_cloudflare_client_ip();
+
+        if ($candidate !== '') {
+            return $candidate;
         }
 
         return $remote;

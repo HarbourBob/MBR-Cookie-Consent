@@ -234,6 +234,13 @@ class MBR_CC_Import_Export {
             'proxy_mode'                 => 'key',
             'trusted_proxies'            => 'textarea',
 
+            // Cloudflare header trust (2.3.6). An assertion that the origin
+            // cannot be reached except through Cloudflare, which is a property
+            // of one server's firewall and must never travel in a settings
+            // file — importing it elsewhere would turn spoofable headers into
+            // trusted ones on a site that never made that guarantee.
+            'trust_cloudflare_headers'   => 'bool',
+
             // Geolocation transport (2.3.1).
             'ipapi_key'                  => 'text',
             'allow_insecure_geo_lookup'  => 'bool',
@@ -357,6 +364,7 @@ class MBR_CC_Import_Export {
             // Host infrastructure.
             'proxy_mode',
             'trusted_proxies',
+            'trust_cloudflare_headers',
             
             // Credential and security opt-in.
             'ipapi_key',
