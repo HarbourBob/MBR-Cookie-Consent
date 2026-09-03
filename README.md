@@ -1,6 +1,6 @@
 <div align="center">
 
-![MBR Cookie Consent](head.jpg)
+![MBR Cookie Consent](head.webp)
 
 # MBR Cookie Consent
 
@@ -12,7 +12,7 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-2.3.5-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
+[![Version](https://img.shields.io/badge/version-2.3.6-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
@@ -519,6 +519,7 @@ No Composer. No external packages. No CDN dependencies.
 - ✅ Regional wording that actually reaches the banner *(v2.3.4)*
 - ✅ Client-side A/B assignment — the last piece of the page that varied by visitor on the server *(v2.3.5)*
 - ✅ Salted consent-log fingerprint *(v2.3.5)*
+- ✅ Cloudflare country detection that works on restored-visitor-IP hosts *(v2.3.6)*
 - Local / offline GeoIP database, so geolocation needs no third-party lookup at all
 - Selective / partial import (choose which sections to bring across)
 - Network-wide settings push for Multisite
@@ -527,6 +528,29 @@ No Composer. No external packages. No CDN dependencies.
 
 <details>
 <summary><h3>Changelog</h3></summary>
+
+### 2.3.6 — Cloudflare geolocation
+
+A site behind Cloudflare could not geolocate anybody. Two independent faults,
+either enough on its own, and both silent — the settings screen reported a
+country that no lookup had produced.
+
+**Cloudflare**
+- **Fix:** the `CF-IPCountry` header was only trusted when `REMOTE_ADDR` fell inside a published Cloudflare range. That is never true once a host restores original visitor IPs with `mod_remoteip`, nginx `ngx_http_realip_module` or LiteSpeed's *Use Client IP in Header* — the arrangement Cloudflare recommends and most managed hosts ship enabled. `REMOTE_ADDR` is the visitor by then, so the check failed, the header was discarded, and every visitor fell back to the default region. The step that makes visitor IPs correct was the step that broke the check, and the original edge address is gone by the time PHP runs
+- **Fix:** the header is now also trusted when `REMOTE_ADDR` is byte-for-byte equal to `CF-Connecting-IP` or `True-Client-IP` — the signature of a restored-IP setup. This is safe *because of* the equality: the original concern was a visitor nominating someone else's address to poison their cache entry or pick a laxer regime, and here the header must match the address the request actually came from, so a forger can only ever nominate themselves. Forged headers naming a third party are still rejected
+- **New:** Cloudflare's country is now used automatically whichever provider is selected. No outbound request, no rate limit, no latency, no visitor IP sent to a third party, and outside anybody's free-tier terms. Filterable via `mbr_cc_prefer_cloudflare_country`
+- **New:** `True-Client-IP`, the Enterprise-plan equivalent of `CF-Connecting-IP`, is now read
+- **Fix:** Pseudo IPv4 broke detection. With *Overwrite Headers* selected, Cloudflare replaces `CF-Connecting-IP` with a Class E address (`240.0.0.0/4`) and preserves the real one in `CF-Connecting-IPv6`. Class E is reserved, so our own private-range guard rejected it and those visitors got the default region
+- **New:** optional **"My origin only accepts traffic from Cloudflare"** setting, for origins firewalled to Cloudflare's ranges or using Authenticated Origin Pulls — neither visible from PHP, so it has to be asserted. Off by default, and excluded from settings export: it describes one server's firewall, and importing it elsewhere would turn spoofable headers into trusted ones on a site that never made that guarantee
+
+**Providers**
+- **Fix:** selecting ip-api.com without a pro key switched geolocation off completely. Its free endpoint is plain HTTP only, and the plugin will not send a visitor IP unencrypted without an explicit opt-in — but rather than saying so it made no request at all and handed every visitor the default region. Choosing a provider is not consent to having no geolocation. Lookups now fall through to ipapi.co over HTTPS
+
+**Diagnostics**
+- **New:** the Geolocation screen shows a **Source** line — Cloudflare header, configured provider, ipapi.co fallback, or `NOT DETECTED`. A fallback renders amber and says plainly that it is your configured default region, not a lookup result. Presenting a fallback as a detection is how a site sits in the wrong privacy regime indefinitely with nobody noticing
+- **New:** where a request demonstrably came through Cloudflare but the country header is absent, the screen names the Cloudflare setting to enable and where to find it. `CF-IPCountry` is not sent by default, which is almost certainly why the Cloudflare provider option looked broken to anyone who tried it
+
+---
 
 ### 2.3.5 — The accessibility switch, and the last cacheable variant
 
