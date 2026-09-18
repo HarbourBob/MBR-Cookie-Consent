@@ -312,7 +312,17 @@ class MBR_CC_Consent_Manager {
      */
     public function ajax_revoke_consent() {
         check_ajax_referer('mbr_cc_consent_nonce', 'nonce');
-        
+
+        // Shares the same per-visitor budget as ajax_save_consent() — see
+        // can_log_consent() — since this writes to the same log table and is
+        // just as reachable by an unauthenticated, scripted caller.
+        if ( ! $this->can_log_consent() ) {
+            wp_send_json_success( array(
+                'message'   => 'Consent revoked successfully.',
+                'throttled' => true,
+            ) );
+        }
+
         // Log revocation.
         $db = MBR_CC_Database::get_instance();
         $db->log_consent(array(
@@ -320,7 +330,7 @@ class MBR_CC_Consent_Manager {
             'categories_accepted' => array(),
             'consent_method' => 'revoked',
         ));
-        
+
         wp_send_json_success(array('message' => 'Consent revoked successfully.'));
     }
     

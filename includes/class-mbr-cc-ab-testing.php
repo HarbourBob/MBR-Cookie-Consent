@@ -269,6 +269,15 @@ class MBR_CC_AB_Testing {
 
     /** AJAX: record a banner impression. */
     public function ajax_track_impression() {
+        // A failed check is treated the same as an unrecognised variant below —
+        // a silent no-op — rather than a fatal die(), since this is a
+        // fire-and-forget navigator.sendBeacon() call with nothing to recover
+        // from client-side. See enqueue_tracker() for why the nonce is safe to
+        // embed in a cached page.
+        if ( ! check_ajax_referer( 'mbr_cc_ab_track', 'nonce', false ) ) {
+            wp_send_json_success();
+        }
+
         $variant = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( $_POST['variant'] ) ) : '';
 
         if ( ! array_key_exists( $variant, self::VARIANTS ) ) {
@@ -287,6 +296,11 @@ class MBR_CC_AB_Testing {
 
     /** AJAX: record an accept-all conversion. */
     public function ajax_track_conversion() {
+        // See ajax_track_impression() for why a failed check is a silent no-op.
+        if ( ! check_ajax_referer( 'mbr_cc_ab_track', 'nonce', false ) ) {
+            wp_send_json_success();
+        }
+
         $variant = isset( $_POST['variant'] ) ? sanitize_key( wp_unslash( $_POST['variant'] ) ) : '';
 
         if ( ! array_key_exists( $variant, self::VARIANTS ) ) {
@@ -404,6 +418,11 @@ class MBR_CC_AB_Testing {
         // class, they share a prefix, and some variant values ('popup',
         // 'box-left') are also layout names. Naming the token to replace keeps
         // the swap exact, and identical to what the server-side filter did.
+        // wp_create_nonce() for a logged-out visitor (uid 0) ties the value to
+        // the current ~24-hour tick only, not to any individual visitor, so
+        // every anonymous visitor gets the same nonce and a cached copy of the
+        // page stays valid for that whole window — no per-visitor state is
+        // baked into the cached HTML.
         $data = array(
             'variants'     => self::VARIANTS,
             'cookie'       => self::ASSIGNMENT_COOKIE,
@@ -412,6 +431,7 @@ class MBR_CC_AB_Testing {
             'cookieDomain' => defined( 'COOKIE_DOMAIN' ) && COOKIE_DOMAIN ? COOKIE_DOMAIN : '',
             'secure'       => is_ssl(),
             'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+            'nonce'        => wp_create_nonce( 'mbr_cc_ab_track' ),
         );
 
         $script = '
@@ -469,6 +489,7 @@ class MBR_CC_AB_Testing {
         var fd = new FormData();
         fd.append("action", action);
         fd.append("variant", variant);
+        fd.append("nonce", cfg.nonce);
         navigator.sendBeacon ? navigator.sendBeacon(cfg.ajaxUrl, fd)
             : fetch(cfg.ajaxUrl, { method: "POST", body: fd });
     }
