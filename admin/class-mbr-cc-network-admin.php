@@ -248,10 +248,10 @@ class MBR_CC_Network_Admin {
         // submission.
         MBR_CC_Cache::flush('network_settings');
         
-        wp_redirect(add_query_arg(array(
+        wp_safe_redirect(esc_url_raw(add_query_arg(array(
             'page' => 'mbr-cc-network',
             'updated' => 'true'
-        ), network_admin_url('admin.php')));
+        ), network_admin_url('admin.php'))));
         exit;
     }
     
@@ -324,7 +324,8 @@ class MBR_CC_Network_Admin {
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="network-consent-logs-' . gmdate('Y-m-d') . '.csv"');
         
-        $output = fopen('php://output', 'w');
+        // Output stream (php://output) is used to stream the CSV download directly to the browser; WP_Filesystem operates on the local filesystem and cannot write to an output stream.
+        $output = fopen('php://output', 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         
         // Add headers
         fputcsv($output, array(

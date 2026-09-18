@@ -269,10 +269,10 @@ class MBR_CC_Admin {
         // Approving without ticking the confirmation is refused outright. The
         // checkbox is the whole point of the screen.
         if ($approve && empty($_POST['confirm'])) {
-            wp_safe_redirect(add_query_arg(
+            wp_safe_redirect(esc_url_raw(add_query_arg(
                 array('page' => 'mbr-cookie-consent-translations', 'review' => $lang, 'mbr_cc_msg' => 'confirm'),
                 admin_url('admin.php')
-            ));
+            )));
             exit;
         }
 
@@ -286,13 +286,13 @@ class MBR_CC_Admin {
 
         update_option('mbr_cc_approved_languages', array_values(array_unique($approved)));
 
-        wp_safe_redirect(add_query_arg(
+        wp_safe_redirect(esc_url_raw(add_query_arg(
             array(
                 'page'       => 'mbr-cookie-consent-translations',
                 'mbr_cc_msg' => $approve ? 'approved' : 'withdrawn',
             ),
             admin_url('admin.php')
-        ));
+        )));
         exit;
     }
 

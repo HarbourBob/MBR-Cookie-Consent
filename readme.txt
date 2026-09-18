@@ -2,7 +2,7 @@
 Contributors: Robert Palmer
 Tags: cookie consent, gdpr, ccpa, privacy, cookie banner
 Requires at least: 5.8
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 2.3.6
 License: GPLv2 or later

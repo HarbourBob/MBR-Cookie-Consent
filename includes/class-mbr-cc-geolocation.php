@@ -350,13 +350,13 @@ class MBR_CC_Geolocation {
         $api_key = trim((string) get_option('mbr_cc_ipapi_key', ''));
 
         if ($api_key !== '') {
-            $url = add_query_arg(
+            $url = esc_url_raw(add_query_arg(
                 array(
                     'fields' => 'countryCode,region',
                     'key'    => $api_key,
                 ),
                 'https://pro.ip-api.com/json/' . rawurlencode($ip)
-            );
+            ));
         } else {
             if (!get_option('mbr_cc_allow_insecure_geo_lookup', false)) {
                 // No pro key and no plaintext opt-in, so there is no endpoint
@@ -374,10 +374,10 @@ class MBR_CC_Geolocation {
                 return $this->detect_via_ipapi_com($ip);
             }
 
-            $url = add_query_arg(
+            $url = esc_url_raw(add_query_arg(
                 array('fields' => 'countryCode,region'),
                 'http://ip-api.com/json/' . rawurlencode($ip)
-            );
+            ));
         }
 
         $response = wp_remote_get($url, array(

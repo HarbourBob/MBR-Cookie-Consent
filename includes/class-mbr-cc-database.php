@@ -154,7 +154,7 @@ class MBR_CC_Database {
         
         // Serialize categories if array.
         if (is_array($data['categories_accepted'])) {
-            $data['categories_accepted'] = json_encode($data['categories_accepted']);
+            $data['categories_accepted'] = wp_json_encode($data['categories_accepted']);
         }
         
         $result = $wpdb->insert(
