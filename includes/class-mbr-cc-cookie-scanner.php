@@ -49,7 +49,7 @@ class MBR_CC_Cookie_Scanner {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $scan_type = isset($_POST['scan_type']) ? sanitize_text_field(wp_unslash($_POST['scan_type'])) : 'single';
@@ -340,7 +340,7 @@ class MBR_CC_Cookie_Scanner {
         $html = wp_remote_retrieve_body($response);
         
         if (empty($html)) {
-            return new WP_Error('empty_response', 'Failed to retrieve page content.');
+            return new WP_Error('empty_response', __('Failed to retrieve page content.', 'mbr-cookie-consent'));
         }
         
         // Parse HTML.

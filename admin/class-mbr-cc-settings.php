@@ -174,7 +174,7 @@ class MBR_CC_Settings {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         // WordPress slashes the whole of $_POST in wp_magic_quotes(), and none
@@ -185,7 +185,7 @@ class MBR_CC_Settings {
         $settings = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
         
         if (empty($settings)) {
-            wp_send_json_error(array('message' => 'No settings provided.'));
+            wp_send_json_error(array('message' => __('No settings provided.', 'mbr-cookie-consent')));
         }
         
         // Only keys the plugin recognises may be written. Previously any key
@@ -248,7 +248,7 @@ class MBR_CC_Settings {
         MBR_CC_Cache::flush('settings');
         
         wp_send_json_success(array(
-            'message' => 'Settings saved successfully.',
+            'message' => __('Settings saved successfully.', 'mbr-cookie-consent'),
             'applied' => $applied,
             'skipped' => $skipped,
         ));
@@ -261,7 +261,7 @@ class MBR_CC_Settings {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         // Unslash before sanitising, never after: the sanitisers leave
@@ -276,7 +276,7 @@ class MBR_CC_Settings {
         );
         
         if (empty($script['name']) || empty($script['identifier'])) {
-            wp_send_json_error(array('message' => 'Name and identifier are required.'));
+            wp_send_json_error(array('message' => __('Name and identifier are required.', 'mbr-cookie-consent')));
         }
         
         $blocker = MBR_CC_Script_Blocker::get_instance();
@@ -284,9 +284,9 @@ class MBR_CC_Settings {
         
         if ($result) {
             MBR_CC_Cache::flush('blocked_scripts');
-            wp_send_json_success(array('message' => 'Script added successfully.'));
+            wp_send_json_success(array('message' => __('Script added successfully.', 'mbr-cookie-consent')));
         } else {
-            wp_send_json_error(array('message' => 'Failed to add script.'));
+            wp_send_json_error(array('message' => __('Failed to add script.', 'mbr-cookie-consent')));
         }
     }
     
@@ -297,13 +297,13 @@ class MBR_CC_Settings {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $index = isset($_POST['index']) ? intval($_POST['index']) : -1;
         
         if ($index < 0) {
-            wp_send_json_error(array('message' => 'Invalid index.'));
+            wp_send_json_error(array('message' => __('Invalid index.', 'mbr-cookie-consent')));
         }
         
         $blocker = MBR_CC_Script_Blocker::get_instance();
@@ -311,9 +311,9 @@ class MBR_CC_Settings {
         
         if ($result) {
             MBR_CC_Cache::flush('blocked_scripts');
-            wp_send_json_success(array('message' => 'Script removed successfully.'));
+            wp_send_json_success(array('message' => __('Script removed successfully.', 'mbr-cookie-consent')));
         } else {
-            wp_send_json_error(array('message' => 'Failed to remove script.'));
+            wp_send_json_error(array('message' => __('Failed to remove script.', 'mbr-cookie-consent')));
         }
     }
     
@@ -324,13 +324,13 @@ class MBR_CC_Settings {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $categories = isset($_POST['categories']) ? wp_unslash($_POST['categories']) : array();
         
         if (empty($categories)) {
-            wp_send_json_error(array('message' => 'No categories provided.'));
+            wp_send_json_error(array('message' => __('No categories provided.', 'mbr-cookie-consent')));
         }
         
         // Sanitize categories.
@@ -356,9 +356,9 @@ class MBR_CC_Settings {
         
         if ($result) {
             MBR_CC_Cache::flush('categories');
-            wp_send_json_success(array('message' => 'Categories updated successfully.'));
+            wp_send_json_success(array('message' => __('Categories updated successfully.', 'mbr-cookie-consent')));
         } else {
-            wp_send_json_error(array('message' => 'Failed to update categories.'));
+            wp_send_json_error(array('message' => __('Failed to update categories.', 'mbr-cookie-consent')));
         }
     }
 
@@ -380,7 +380,7 @@ class MBR_CC_Settings {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized'));
+            wp_send_json_error(array('message' => __('Unauthorized', 'mbr-cookie-consent')));
         }
         
         $posted = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array();

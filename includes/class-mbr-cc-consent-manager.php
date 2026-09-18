@@ -103,7 +103,7 @@ class MBR_CC_Consent_Manager {
             // client-side and their experience is unaffected. Only the
             // duplicate log row is being declined.
             wp_send_json_success( array(
-                'message'   => 'Consent recorded.',
+                'message'   => __( 'Consent recorded.', 'mbr-cookie-consent' ),
                 'throttled' => true,
             ) );
         }
@@ -113,7 +113,7 @@ class MBR_CC_Consent_Manager {
         // A genuine consent payload is a small flat object. Anything larger is
         // not from our banner, and decoding it just wastes memory.
         if (!is_string($raw_consent) || strlen($raw_consent) > 2048) {
-            wp_send_json_error(array('message' => 'Invalid consent data.'));
+            wp_send_json_error(array('message' => __('Invalid consent data.', 'mbr-cookie-consent')));
         }
         
         $consent_data = json_decode($raw_consent, true);
@@ -144,7 +144,7 @@ class MBR_CC_Consent_Manager {
         }
         
         if (empty($consent_data) || !is_array($consent_data)) {
-            wp_send_json_error(array('message' => 'Invalid consent data.'));
+            wp_send_json_error(array('message' => __('Invalid consent data.', 'mbr-cookie-consent')));
         }
         
         // Determine if consent was given.
@@ -189,11 +189,11 @@ class MBR_CC_Consent_Manager {
         
         if ($log_id) {
             wp_send_json_success(array(
-                'message' => 'Consent saved successfully.',
+                'message' => __( 'Consent saved successfully.', 'mbr-cookie-consent' ),
                 'log_id' => $log_id,
             ));
         } else {
-            wp_send_json_error(array('message' => 'Failed to save consent.'));
+            wp_send_json_error(array('message' => __('Failed to save consent.', 'mbr-cookie-consent')));
         }
     }
     
@@ -321,7 +321,7 @@ class MBR_CC_Consent_Manager {
             'consent_method' => 'revoked',
         ));
         
-        wp_send_json_success(array('message' => 'Consent revoked successfully.'));
+        wp_send_json_success(array('message' => __('Consent revoked successfully.', 'mbr-cookie-consent')));
     }
     
     /**

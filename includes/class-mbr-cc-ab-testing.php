@@ -309,12 +309,12 @@ class MBR_CC_AB_Testing {
     public function ajax_promote_winner() {
         check_ajax_referer( 'mbr_cc_admin_nonce', 'nonce' );
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+            wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'mbr-cookie-consent' ) ) );
         }
 
         $winner = self::get_winner();
         if ( ! $winner ) {
-            wp_send_json_error( array( 'message' => 'No winner determined yet — not enough data.' ) );
+            wp_send_json_error( array( 'message' => __( 'No winner determined yet — not enough data.', 'mbr-cookie-consent' ) ) );
         }
 
         $settings = isset( self::VARIANT_SETTINGS[ $winner ] )
@@ -347,7 +347,7 @@ class MBR_CC_AB_Testing {
     public function ajax_reset_stats() {
         check_ajax_referer( 'mbr_cc_admin_nonce', 'nonce' );
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( array( 'message' => 'Unauthorized.' ) );
+            wp_send_json_error( array( 'message' => __( 'Unauthorized.', 'mbr-cookie-consent' ) ) );
         }
         delete_option( self::STATS_OPTION );
 

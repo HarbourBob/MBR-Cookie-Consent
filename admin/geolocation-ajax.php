@@ -21,24 +21,24 @@ function mbr_cc_ajax_test_geolocation() {
     check_ajax_referer('mbr_cc_geo_test', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('Permission denied');
+        wp_send_json_error(esc_html__('Permission denied', 'mbr-cookie-consent'));
     }
-    
+
     $country = isset($_POST['country']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['country']))) : '';
     $region_code = isset($_POST['region']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['region']))) : '';
-    
+
     if (strlen($country) !== 2) {
-        wp_send_json_error('Invalid country code');
+        wp_send_json_error(esc_html__('Invalid country code', 'mbr-cookie-consent'));
     }
-    
+
     // Resolve region using the same logic as live detection so the test
     // always matches what real visitors would experience.
     if (!function_exists('mbr_cc_geolocation') || !function_exists('mbr_cc_region_config')) {
-        wp_send_json_error('Geolocation services not available');
+        wp_send_json_error(esc_html__('Geolocation services not available', 'mbr-cookie-consent'));
     }
-    
+
     $geo = mbr_cc_geolocation();
-    
+
     // Use reflection to invoke the private determine_region() method without
     // duplicating the country/region mapping table here.
     try {
@@ -46,7 +46,13 @@ function mbr_cc_ajax_test_geolocation() {
         $ref->setAccessible(true);
         $region = $ref->invoke($geo, $country, $region_code ?: null);
     } catch (Exception $e) {
-        wp_send_json_error('Region resolution failed: ' . $e->getMessage());
+        wp_send_json_error(
+            sprintf(
+                /* translators: %s: exception message. */
+                esc_html__('Region resolution failed: %s', 'mbr-cookie-consent'),
+                $e->getMessage()
+            )
+        );
     }
     
     // Pull the friendly name and behaviour flags from the canonical sources.
@@ -90,15 +96,15 @@ function mbr_cc_ajax_clear_geo_cache() {
     check_ajax_referer('mbr_cc_geo_cache', 'nonce');
     
     if (!current_user_can('manage_options')) {
-        wp_send_json_error('Permission denied');
+        wp_send_json_error(esc_html__('Permission denied', 'mbr-cookie-consent'));
     }
-    
+
     global $wpdb;
-    
+
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_mbr_cc_geo_%'");
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_mbr_cc_geo_%'");
-    
-    wp_send_json_success('Cache cleared');
+
+    wp_send_json_success(esc_html__('Cache cleared', 'mbr-cookie-consent'));
 }
 
 // Register AJAX handlers

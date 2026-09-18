@@ -296,7 +296,7 @@ class MBR_CC_Enhanced_Customization {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $custom_css = isset($_POST['custom_css']) ? wp_unslash($_POST['custom_css']) : '';
@@ -310,7 +310,7 @@ class MBR_CC_Enhanced_Customization {
             MBR_CC_Cache::flush('custom_css');
         }
         
-        wp_send_json_success(array('message' => 'Custom CSS saved successfully.'));
+        wp_send_json_success(array('message' => __('Custom CSS saved successfully.', 'mbr-cookie-consent')));
     }
     
     /**
