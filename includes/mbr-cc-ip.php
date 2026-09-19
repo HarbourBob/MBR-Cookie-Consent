@@ -27,8 +27,8 @@
  */
 
 // Exit if accessed directly.
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
@@ -48,34 +48,34 @@ if (!defined('ABSPATH')) {
  * @return string Validated IP address, or ''.
  */
 function mbr_cc_cloudflare_client_ip() {
-    $candidates = array();
+	$candidates = array();
 
-    if (!empty($_SERVER['HTTP_TRUE_CLIENT_IP'])) {
-        $candidates[] = trim(wp_unslash($_SERVER['HTTP_TRUE_CLIENT_IP']));
-    }
+	if ( ! empty( $_SERVER['HTTP_TRUE_CLIENT_IP'] ) ) {
+		$candidates[] = sanitize_text_field( wp_unslash( $_SERVER['HTTP_TRUE_CLIENT_IP'] ) );
+	}
 
-    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-        $candidates[] = trim(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IP']));
-    }
+	if ( ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
+		$candidates[] = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+	}
 
-    foreach ($candidates as $candidate) {
-        if (!filter_var($candidate, FILTER_VALIDATE_IP)) {
-            continue;
-        }
+	foreach ( $candidates as $candidate ) {
+		if ( ! filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+			continue;
+		}
 
-        // Class E pseudo-IPv4: swap in the preserved real address if we have it.
-        if (mbr_cc_ip_in_cidr($candidate, '240.0.0.0/4') && !empty($_SERVER['HTTP_CF_CONNECTING_IPV6'])) {
-            $real = trim(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IPV6']));
+		// Class E pseudo-IPv4: swap in the preserved real address if we have it.
+		if ( mbr_cc_ip_in_cidr( $candidate, '240.0.0.0/4' ) && ! empty( $_SERVER['HTTP_CF_CONNECTING_IPV6'] ) ) {
+			$real = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IPV6'] ) );
 
-            if (filter_var($real, FILTER_VALIDATE_IP)) {
-                return $real;
-            }
-        }
+			if ( filter_var( $real, FILTER_VALIDATE_IP ) ) {
+				return $real;
+			}
+		}
 
-        return $candidate;
-    }
+		return $candidate;
+	}
 
-    return '';
+	return '';
 }
 
 /**
@@ -111,41 +111,41 @@ function mbr_cc_cloudflare_client_ip() {
  * @return bool
  */
 function mbr_cc_request_is_cloudflare() {
-    $remote = isset($_SERVER['REMOTE_ADDR']) ? trim(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+	$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 
-    if (!filter_var($remote, FILTER_VALIDATE_IP)) {
-        return false;
-    }
+	if ( ! filter_var( $remote, FILTER_VALIDATE_IP ) ) {
+		return false;
+	}
 
-    // Case 1: the connection came from a Cloudflare edge address.
-    if (mbr_cc_ip_in_ranges($remote, mbr_cc_cloudflare_ranges())) {
-        return true;
-    }
+	// Case 1: the connection came from a Cloudflare edge address.
+	if ( mbr_cc_ip_in_ranges( $remote, mbr_cc_cloudflare_ranges() ) ) {
+		return true;
+	}
 
-    // Case 2: the origin has already restored the visitor IP from Cloudflare's
-    // header, so REMOTE_ADDR and the header agree.
-    $cf_ip = mbr_cc_cloudflare_client_ip();
+	// Case 2: the origin has already restored the visitor IP from Cloudflare's
+	// header, so REMOTE_ADDR and the header agree.
+	$cf_ip = mbr_cc_cloudflare_client_ip();
 
-    if ($cf_ip !== '' && $cf_ip === $remote) {
-        return true;
-    }
+	if ( '' !== $cf_ip && $cf_ip === $remote ) {
+		return true;
+	}
 
-    /**
-     * Force Cloudflare header trust on.
-     *
-     * For origins that are firewalled to Cloudflare ranges or use Authenticated
-     * Origin Pulls, where no request can reach the site except through
-     * Cloudflare and the headers are therefore trustworthy by construction.
-     * Neither of those is visible from PHP, so it has to be asserted.
-     *
-     * @since 2.3.6
-     *
-     * @param bool $trusted Whether to trust Cloudflare headers unconditionally.
-     */
-    return (bool) apply_filters(
-        'mbr_cc_trust_cloudflare_headers',
-        (bool) get_option('mbr_cc_trust_cloudflare_headers', false)
-    );
+	/**
+	 * Force Cloudflare header trust on.
+	 *
+	 * For origins that are firewalled to Cloudflare ranges or use Authenticated
+	 * Origin Pulls, where no request can reach the site except through
+	 * Cloudflare and the headers are therefore trustworthy by construction.
+	 * Neither of those is visible from PHP, so it has to be asserted.
+	 *
+	 * @since 2.3.6
+	 *
+	 * @param bool $trusted Whether to trust Cloudflare headers unconditionally.
+	 */
+	return (bool) apply_filters(
+		'mbr_cc_trust_cloudflare_headers',
+		(bool) get_option( 'mbr_cc_trust_cloudflare_headers', false )
+	);
 }
 
 /**
@@ -154,75 +154,75 @@ function mbr_cc_request_is_cloudflare() {
  * @return string Validated IP address, or '' when none could be determined.
  */
 function mbr_cc_get_client_ip() {
-    $remote = isset($_SERVER['REMOTE_ADDR']) ? trim(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+	$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 
-    if (!filter_var($remote, FILTER_VALIDATE_IP)) {
-        return '';
-    }
+	if ( ! filter_var( $remote, FILTER_VALIDATE_IP ) ) {
+		return '';
+	}
 
-    $mode = mbr_cc_get_proxy_mode();
+	$mode = mbr_cc_get_proxy_mode();
 
-    if ($mode === 'none') {
-        return $remote;
-    }
+	if ( 'none' === $mode ) {
+		return $remote;
+	}
 
-    if ($mode === 'auto') {
-        // Honour Cloudflare's header only when the request demonstrably came
-        // through Cloudflare. Otherwise the header is forged and we ignore it.
-        if (!mbr_cc_request_is_cloudflare()) {
-            return $remote;
-        }
+	if ( 'auto' === $mode ) {
+		// Honour Cloudflare's header only when the request demonstrably came
+		// through Cloudflare. Otherwise the header is forged and we ignore it.
+		if ( ! mbr_cc_request_is_cloudflare() ) {
+			return $remote;
+		}
 
-        $candidate = mbr_cc_cloudflare_client_ip();
+		$candidate = mbr_cc_cloudflare_client_ip();
 
-        if ($candidate !== '') {
-            return $candidate;
-        }
+		if ( '' !== $candidate ) {
+			return $candidate;
+		}
 
-        return $remote;
-    }
+		return $remote;
+	}
 
-    // 'proxy' mode.
-    $trusted = mbr_cc_trusted_proxies();
+	// 'proxy' mode.
+	$trusted = mbr_cc_trusted_proxies();
 
-    if (!mbr_cc_ip_in_ranges($remote, $trusted)) {
-        // The request did not come from a trusted proxy, so any forwarding
-        // header on it was set by the client.
-        return $remote;
-    }
+	if ( ! mbr_cc_ip_in_ranges( $remote, $trusted ) ) {
+		// The request did not come from a trusted proxy, so any forwarding
+		// header on it was set by the client.
+		return $remote;
+	}
 
-    $forwarded = '';
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $forwarded = wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']);
-    } elseif (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-        $forwarded = wp_unslash($_SERVER['HTTP_X_REAL_IP']);
-    }
+	$forwarded = '';
+	if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+		$forwarded = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+	} elseif ( ! empty( $_SERVER['HTTP_X_REAL_IP'] ) ) {
+		$forwarded = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_REAL_IP'] ) );
+	}
 
-    if ($forwarded === '') {
-        return $remote;
-    }
+	if ( '' === $forwarded ) {
+		return $remote;
+	}
 
-    // X-Forwarded-For is appended to left-to-right, so the rightmost entries
-    // are the ones added by infrastructure we control. Walk right to left and
-    // take the first address that is not itself a trusted proxy: everything
-    // to the left of it was supplied by the client and cannot be trusted.
-    $chain = array_map('trim', explode(',', $forwarded));
+	// X-Forwarded-For is appended to left-to-right, so the rightmost entries
+	// are the ones added by infrastructure we control. Walk right to left and
+	// take the first address that is not itself a trusted proxy: everything
+	// to the left of it was supplied by the client and cannot be trusted.
+	$chain = array_map( 'trim', explode( ',', $forwarded ) );
 
-    for ($i = count($chain) - 1; $i >= 0; $i--) {
-        $candidate = $chain[$i];
+	for ( $i = count( $chain ) - 1; $i >= 0; $i-- ) {
+		$candidate = $chain[ $i ];
 
-        if (!filter_var($candidate, FILTER_VALIDATE_IP)) {
-            continue;
-        }
+		if ( ! filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+			continue;
+		}
 
-        if (mbr_cc_ip_in_ranges($candidate, $trusted)) {
-            continue;
-        }
+		if ( mbr_cc_ip_in_ranges( $candidate, $trusted ) ) {
+			continue;
+		}
 
-        return $candidate;
-    }
+		return $candidate;
+	}
 
-    return $remote;
+	return $remote;
 }
 
 /**
@@ -231,22 +231,22 @@ function mbr_cc_get_client_ip() {
  * @return string One of 'auto', 'proxy', 'none'.
  */
 function mbr_cc_get_proxy_mode() {
-    $mode = get_option('mbr_cc_proxy_mode', 'auto');
+	$mode = get_option( 'mbr_cc_proxy_mode', 'auto' );
 
-    if (!in_array($mode, array('auto', 'proxy', 'none'), true)) {
-        $mode = 'auto';
-    }
+	if ( ! in_array( $mode, array( 'auto', 'proxy', 'none' ), true ) ) {
+		$mode = 'auto';
+	}
 
-    /**
-     * Filter the proxy trust mode.
-     *
-     * @since 2.3.1
-     *
-     * @param string $mode One of 'auto', 'proxy', 'none'.
-     */
-    $mode = apply_filters('mbr_cc_proxy_mode', $mode);
+	/**
+	 * Filter the proxy trust mode.
+	 *
+	 * @since 2.3.1
+	 *
+	 * @param string $mode One of 'auto', 'proxy', 'none'.
+	 */
+	$mode = apply_filters( 'mbr_cc_proxy_mode', $mode );
 
-    return in_array($mode, array('auto', 'proxy', 'none'), true) ? $mode : 'auto';
+	return in_array( $mode, array( 'auto', 'proxy', 'none' ), true ) ? $mode : 'auto';
 }
 
 /**
@@ -259,37 +259,37 @@ function mbr_cc_get_proxy_mode() {
  * @return array List of CIDR strings.
  */
 function mbr_cc_trusted_proxies() {
-    $configured = get_option('mbr_cc_trusted_proxies', '');
+	$configured = get_option( 'mbr_cc_trusted_proxies', '' );
 
-    $ranges = array();
+	$ranges = array();
 
-    if (is_string($configured) && $configured !== '') {
-        $ranges = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $configured)));
-    } elseif (is_array($configured)) {
-        $ranges = array_filter(array_map('trim', $configured));
-    }
+	if ( is_string( $configured ) && '' !== $configured ) {
+		$ranges = array_filter( array_map( 'trim', preg_split( '/[\r\n,]+/', $configured ) ) );
+	} elseif ( is_array( $configured ) ) {
+		$ranges = array_filter( array_map( 'trim', $configured ) );
+	}
 
-    if (empty($ranges)) {
-        $ranges = array(
-            '127.0.0.0/8',
-            '10.0.0.0/8',
-            '172.16.0.0/12',
-            '192.168.0.0/16',
-            '169.254.0.0/16',
-            '::1/128',
-            'fc00::/7',
-            'fe80::/10',
-        );
-    }
+	if ( empty( $ranges ) ) {
+		$ranges = array(
+			'127.0.0.0/8',
+			'10.0.0.0/8',
+			'172.16.0.0/12',
+			'192.168.0.0/16',
+			'169.254.0.0/16',
+			'::1/128',
+			'fc00::/7',
+			'fe80::/10',
+		);
+	}
 
-    /**
-     * Filter the list of trusted proxy CIDR ranges.
-     *
-     * @since 2.3.1
-     *
-     * @param array $ranges List of CIDR strings.
-     */
-    return (array) apply_filters('mbr_cc_trusted_proxies', $ranges);
+	/**
+	 * Filter the list of trusted proxy CIDR ranges.
+	 *
+	 * @since 2.3.1
+	 *
+	 * @param array $ranges List of CIDR strings.
+	 */
+	return (array) apply_filters( 'mbr_cc_trusted_proxies', $ranges );
 }
 
 /**
@@ -302,41 +302,41 @@ function mbr_cc_trusted_proxies() {
  * @return array List of CIDR strings.
  */
 function mbr_cc_cloudflare_ranges() {
-    $ranges = array(
-        // IPv4.
-        '173.245.48.0/20',
-        '103.21.244.0/22',
-        '103.22.200.0/22',
-        '103.31.4.0/22',
-        '141.101.64.0/18',
-        '108.162.192.0/18',
-        '190.93.240.0/20',
-        '188.114.96.0/20',
-        '197.234.240.0/22',
-        '198.41.128.0/17',
-        '162.158.0.0/15',
-        '104.16.0.0/13',
-        '104.24.0.0/14',
-        '172.64.0.0/13',
-        '131.0.72.0/22',
-        // IPv6.
-        '2400:cb00::/32',
-        '2606:4700::/32',
-        '2803:f800::/32',
-        '2405:b500::/32',
-        '2405:8100::/32',
-        '2a06:98c0::/29',
-        '2c0f:f248::/32',
-    );
+	$ranges = array(
+		// IPv4.
+		'173.245.48.0/20',
+		'103.21.244.0/22',
+		'103.22.200.0/22',
+		'103.31.4.0/22',
+		'141.101.64.0/18',
+		'108.162.192.0/18',
+		'190.93.240.0/20',
+		'188.114.96.0/20',
+		'197.234.240.0/22',
+		'198.41.128.0/17',
+		'162.158.0.0/15',
+		'104.16.0.0/13',
+		'104.24.0.0/14',
+		'172.64.0.0/13',
+		'131.0.72.0/22',
+		// IPv6.
+		'2400:cb00::/32',
+		'2606:4700::/32',
+		'2803:f800::/32',
+		'2405:b500::/32',
+		'2405:8100::/32',
+		'2a06:98c0::/29',
+		'2c0f:f248::/32',
+	);
 
-    /**
-     * Filter the Cloudflare edge ranges used to validate CF-Connecting-IP.
-     *
-     * @since 2.3.1
-     *
-     * @param array $ranges List of CIDR strings.
-     */
-    return (array) apply_filters('mbr_cc_cloudflare_ranges', $ranges);
+	/**
+	 * Filter the Cloudflare edge ranges used to validate CF-Connecting-IP.
+	 *
+	 * @since 2.3.1
+	 *
+	 * @param array $ranges List of CIDR strings.
+	 */
+	return (array) apply_filters( 'mbr_cc_cloudflare_ranges', $ranges );
 }
 
 /**
@@ -346,14 +346,14 @@ function mbr_cc_cloudflare_ranges() {
  * @param array  $ranges List of CIDR strings.
  * @return bool
  */
-function mbr_cc_ip_in_ranges($ip, $ranges) {
-    foreach ((array) $ranges as $range) {
-        if (mbr_cc_ip_in_cidr($ip, $range)) {
-            return true;
-        }
-    }
+function mbr_cc_ip_in_ranges( $ip, $ranges ) {
+	foreach ( (array) $ranges as $range ) {
+		if ( mbr_cc_ip_in_cidr( $ip, $range ) ) {
+			return true;
+		}
+	}
 
-    return false;
+	return false;
 }
 
 /**
@@ -366,61 +366,69 @@ function mbr_cc_ip_in_ranges($ip, $ranges) {
  * @param string $cidr CIDR string, e.g. '192.168.0.0/16'.
  * @return bool
  */
-function mbr_cc_ip_in_cidr($ip, $cidr) {
-    if (!is_string($cidr) || $cidr === '') {
-        return false;
-    }
+function mbr_cc_ip_in_cidr( $ip, $cidr ) {
+	if ( ! is_string( $cidr ) || '' === $cidr ) {
+		return false;
+	}
 
-    if (strpos($cidr, '/') === false) {
-        $subnet = $cidr;
-        $bits   = null;
-    } else {
-        list($subnet, $bits) = explode('/', $cidr, 2);
-        $bits = (int) $bits;
-    }
+	if ( strpos( $cidr, '/' ) === false ) {
+		$subnet = $cidr;
+		$bits   = null;
+	} else {
+		list($subnet, $bits) = explode( '/', $cidr, 2 );
+		$bits                = (int) $bits;
+	}
 
-    $ip_bin     = @inet_pton($ip);
-    $subnet_bin = @inet_pton(trim($subnet));
+	$subnet = trim( $subnet );
 
-    if ($ip_bin === false || $subnet_bin === false) {
-        return false;
-    }
+	// inet_pton() emits a warning on malformed input, so both addresses are
+	// validated first rather than silencing the call with @.
+	if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) || ! filter_var( $subnet, FILTER_VALIDATE_IP ) ) {
+		return false;
+	}
 
-    // Different address families never match.
-    if (strlen($ip_bin) !== strlen($subnet_bin)) {
-        return false;
-    }
+	$ip_bin     = inet_pton( $ip );
+	$subnet_bin = inet_pton( $subnet );
 
-    $max_bits = strlen($ip_bin) * 8;
+	if ( false === $ip_bin || false === $subnet_bin ) {
+		return false;
+	}
 
-    if ($bits === null) {
-        $bits = $max_bits;
-    }
+	// Different address families never match.
+	if ( strlen( $ip_bin ) !== strlen( $subnet_bin ) ) {
+		return false;
+	}
 
-    if ($bits < 0 || $bits > $max_bits) {
-        return false;
-    }
+	$max_bits = strlen( $ip_bin ) * 8;
 
-    if ($bits === 0) {
-        return true;
-    }
+	if ( null === $bits ) {
+		$bits = $max_bits;
+	}
 
-    $whole_bytes = intdiv($bits, 8);
-    $rem_bits    = $bits % 8;
+	if ( $bits < 0 || $bits > $max_bits ) {
+		return false;
+	}
 
-    if ($whole_bytes > 0 && strncmp($ip_bin, $subnet_bin, $whole_bytes) !== 0) {
-        return false;
-    }
+	if ( 0 === $bits ) {
+		return true;
+	}
 
-    if ($rem_bits > 0) {
-        $mask = chr((0xFF << (8 - $rem_bits)) & 0xFF);
+	$whole_bytes = intdiv( $bits, 8 );
+	$rem_bits    = $bits % 8;
 
-        if ((($ip_bin[$whole_bytes] ^ $subnet_bin[$whole_bytes]) & $mask) !== "\0") {
-            return false;
-        }
-    }
+	if ( $whole_bytes > 0 && strncmp( $ip_bin, $subnet_bin, $whole_bytes ) !== 0 ) {
+		return false;
+	}
 
-    return true;
+	if ( $rem_bits > 0 ) {
+		$mask = chr( ( 0xFF << ( 8 - $rem_bits ) ) & 0xFF );
+
+		if ( ( ( $ip_bin[ $whole_bytes ] ^ $subnet_bin[ $whole_bytes ] ) & $mask ) !== "\0" ) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 /**
@@ -429,29 +437,30 @@ function mbr_cc_ip_in_cidr($ip, $cidr) {
  * @param string $ip IP address.
  * @return string Anonymised IP address.
  */
-function mbr_cc_anonymize_ip($ip) {
-    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-        $parts    = explode('.', $ip);
-        $parts[3] = '0';
-        return implode('.', $parts);
-    }
+function mbr_cc_anonymize_ip( $ip ) {
+	if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+		$parts    = explode( '.', $ip );
+		$parts[3] = '0';
+		return implode( '.', $parts );
+	}
 
-    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-        // Zero the final 80 bits, which is what the EDPB treats as adequate
-        // truncation for IPv6 — dropping only the last group is not enough.
-        $bin = @inet_pton($ip);
+	if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+		// Zero the final 80 bits, which is what the EDPB treats as adequate
+		// truncation for IPv6 — dropping only the last group is not enough.
+		// $ip is already validated above, so inet_pton() will not warn here.
+		$bin = inet_pton( $ip );
 
-        if ($bin !== false) {
-            $bin = substr($bin, 0, 6) . str_repeat("\0", 10);
-            $out = @inet_ntop($bin);
+		if ( false !== $bin ) {
+			$bin = substr( $bin, 0, 6 ) . str_repeat( "\0", 10 );
+			$out = inet_ntop( $bin );
 
-            if ($out !== false) {
-                return $out;
-            }
-        }
+			if ( false !== $out ) {
+				return $out;
+			}
+		}
 
-        return $ip;
-    }
+		return $ip;
+	}
 
-    return $ip;
+	return $ip;
 }

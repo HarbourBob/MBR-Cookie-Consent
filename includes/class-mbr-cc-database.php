@@ -6,70 +6,70 @@
  */
 
 // Exit if accessed directly.
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
 /**
  * Database class.
  */
 class MBR_CC_Database {
-    
-    /**
-     * Single instance.
-     *
-     * @var MBR_CC_Database
-     */
-    private static $instance = null;
-    
-    /**
-     * Consent logs table name.
-     *
-     * @var string
-     */
-    private $consent_table;
-    
-    /**
-     * Get instance.
-     *
-     * @return MBR_CC_Database
-     */
-    public static function get_instance() {
-        if (null === self::$instance) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-    
-    /**
-     * Constructor.
-     */
-    private function __construct() {
-        global $wpdb;
-        // Use base_prefix for multisite, regular prefix for single-site
-        if (is_multisite()) {
-            $this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
-        } else {
-            $this->consent_table = $wpdb->prefix . 'mbr_cc_consent_logs';
-        }
-    }
-    
-    /**
-     * Create database tables.
-     */
-    public static function create_tables() {
-        global $wpdb;
-        
-        $charset_collate = $wpdb->get_charset_collate();
-        
-        // Use base_prefix for multisite, regular prefix for single-site
-        if (is_multisite()) {
-            $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
-        } else {
-            $table_name = $wpdb->prefix . 'mbr_cc_consent_logs';
-        }
-        
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+
+	/**
+	 * Single instance.
+	 *
+	 * @var MBR_CC_Database
+	 */
+	private static $instance = null;
+
+	/**
+	 * Consent logs table name.
+	 *
+	 * @var string
+	 */
+	private $consent_table;
+
+	/**
+	 * Get instance.
+	 *
+	 * @return MBR_CC_Database
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Constructor.
+	 */
+	private function __construct() {
+		global $wpdb;
+		// Use base_prefix for multisite, regular prefix for single-site.
+		if ( is_multisite() ) {
+			$this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+		} else {
+			$this->consent_table = $wpdb->prefix . 'mbr_cc_consent_logs';
+		}
+	}
+
+	/**
+	 * Create database tables.
+	 */
+	public static function create_tables() {
+		global $wpdb;
+
+		$charset_collate = $wpdb->get_charset_collate();
+
+		// Use base_prefix for multisite, regular prefix for single-site.
+		if ( is_multisite() ) {
+			$table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
+		} else {
+			$table_name = $wpdb->prefix . 'mbr_cc_consent_logs';
+		}
+
+		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             blog_id bigint(20) UNSIGNED NOT NULL DEFAULT 1,
             user_id bigint(20) UNSIGNED DEFAULT NULL,
@@ -86,353 +86,362 @@ class MBR_CC_Database {
             KEY timestamp (timestamp),
             KEY cookie_hash (cookie_hash)
         ) $charset_collate;";
-        
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta($sql);
-        
-        // Store database version.
-        if (is_multisite()) {
-            update_site_option('mbr_cc_db_version', '1.5.1');
-        } else {
-            update_option('mbr_cc_db_version', '1.5.1');
-        }
-    }
-    
-    /**
-     * Log consent action.
-     *
-     * @param array $data Consent data.
-     * @return int|false Insert ID or false on failure.
-     */
-    public function log_consent($data) {
-        global $wpdb;
-        
-        $defaults = array(
-            'blog_id' => get_current_blog_id(),
-            'user_id' => get_current_user_id(),
-            'ip_address' => $this->get_client_ip(),
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            'consent_given' => false,
-            'categories_accepted' => '',
-            'consent_method' => 'banner',
-            'timestamp' => current_time('mysql'),
-            'cookie_hash' => '',
-        );
-        
-        $data = wp_parse_args($data, $defaults);
-        
-        // Fingerprint the request so repeat interactions from the same visitor
-        // can be grouped without keeping the raw address.
-        //
-        // The column is named cookie_hash for historical reasons and the name is
-        // wrong: this has never been a hash of the consent cookie, it is a hash
-        // of the IP address and user agent. Renaming a populated column is a
-        // migration, and it is not worth one for a label — but see the note on
-        // the export heading, which now says what this actually is.
-        //
-        // The salt matters more than the name. Unsalted, this was SHA-256 over
-        // a value with very little entropy: the whole IPv4 space is 2^32, user
-        // agent strings are drawn from a short list, and an attacker holding an
-        // exported log could recover the original address by exhausting it in
-        // minutes on ordinary hardware. That makes an unsalted digest a
-        // pseudonymous identifier rather than an anonymised one, and it is not
-        // the protection the surrounding code assumes it is. wp_salt() is
-        // per-site and never leaves the server, so the digest is no longer
-        // reversible by brute force.
-        //
-        // Rows written before 2.3.5 used the unsalted digest and will not match
-        // rows written after it. Nothing queries or joins on this column, so
-        // that costs nothing beyond a discontinuity in the history.
-        $data['cookie_hash'] = hash_hmac(
-            'sha256',
-            $data['ip_address'] . '|' . $data['user_agent'],
-            wp_salt('auth')
-        );
-        
-        // Anonymize IP (GDPR requirement).
-        $data['ip_address'] = $this->anonymize_ip($data['ip_address']);
-        
-        // Serialize categories if array.
-        if (is_array($data['categories_accepted'])) {
-            $data['categories_accepted'] = json_encode($data['categories_accepted']);
-        }
-        
-        $result = $wpdb->insert(
-            $this->consent_table,
-            array(
-                'blog_id' => $data['blog_id'],
-                'user_id' => $data['user_id'],
-                'ip_address' => $data['ip_address'],
-                'user_agent' => $data['user_agent'],
-                'consent_given' => $data['consent_given'] ? 1 : 0,
-                'categories_accepted' => $data['categories_accepted'],
-                'consent_method' => $data['consent_method'],
-                'timestamp' => $data['timestamp'],
-                'cookie_hash' => $data['cookie_hash'],
-            ),
-            array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s')
-        );
-        
-        return $result ? $wpdb->insert_id : false;
-    }
-    
-    /**
-     * Get consent logs.
-     *
-     * @param array $args Query arguments.
-     * @return array Consent logs.
-     */
-    public function get_consent_logs($args = array()) {
-        global $wpdb;
-        
-        $defaults = array(
-            'limit' => 100,
-            'offset' => 0,
-            'orderby' => 'timestamp',
-            'order' => 'DESC',
-            'user_id' => null,
-            'date_from' => null,
-            'date_to' => null,
-            'blog_id' => get_current_blog_id(), // Filter by current site
-        );
-        
-        $args = wp_parse_args($args, $defaults);
-        
-        $where  = array('1=1');
-        $values = array();
-        
-        // Always filter by blog_id (critical for multisite)
-        if (!is_null($args['blog_id'])) {
-            $where[]  = 'blog_id = %d';
-            $values[] = $args['blog_id'];
-        }
-        
-        if (!is_null($args['user_id'])) {
-            $where[]  = 'user_id = %d';
-            $values[] = $args['user_id'];
-        }
-        
-        if (!is_null($args['date_from'])) {
-            $where[]  = 'timestamp >= %s';
-            $values[] = $args['date_from'];
-        }
-        
-        if (!is_null($args['date_to'])) {
-            $where[]  = 'timestamp <= %s';
-            $values[] = $args['date_to'];
-        }
-        
-        $where_clause = implode(' AND ', $where);
-        
-        // Whitelist orderby/order: these are SQL identifiers and cannot be bound as prepared values.
-        $allowed_orderby = array('id', 'blog_id', 'user_id', 'consent_given', 'consent_method', 'timestamp', 'cookie_hash');
-        $orderby = in_array($args['orderby'], $allowed_orderby, true) ? $args['orderby'] : 'timestamp';
-        $order   = strtoupper((string) $args['order']) === 'ASC' ? 'ASC' : 'DESC';
-        
-        $values[] = (int) $args['limit'];
-        $values[] = (int) $args['offset'];
-        
-        $query = "SELECT * FROM {$this->consent_table}
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
+
+		// Store database version.
+		if ( is_multisite() ) {
+			update_site_option( 'mbr_cc_db_version', '1.5.1' );
+		} else {
+			update_option( 'mbr_cc_db_version', '1.5.1' );
+		}
+	}
+
+	/**
+	 * Log consent action.
+	 *
+	 * @param array $data Consent data.
+	 * @return int|false Insert ID or false on failure.
+	 */
+	public function log_consent( $data ) {
+		global $wpdb;
+
+		$defaults = array(
+			'blog_id'             => get_current_blog_id(),
+			'user_id'             => get_current_user_id(),
+			'ip_address'          => $this->get_client_ip(),
+			// Stored verbatim (only unslashed, not further sanitized) for audit
+			// fidelity; escape_csv_field() and esc_html() escape it wherever it
+			// is later displayed or exported, and it is written via a %s
+			// placeholder, so nothing here reaches SQL or HTML unescaped.
+			'user_agent'          => isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '', // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			'consent_given'       => false,
+			'categories_accepted' => '',
+			'consent_method'      => 'banner',
+			'timestamp'           => current_time( 'mysql' ),
+			'cookie_hash'         => '',
+		);
+
+		$data = wp_parse_args( $data, $defaults );
+
+		// Fingerprint the request so repeat interactions from the same visitor
+		// can be grouped without keeping the raw address.
+		//
+		// The column is named cookie_hash for historical reasons and the name is
+		// wrong: this has never been a hash of the consent cookie, it is a hash
+		// of the IP address and user agent. Renaming a populated column is a
+		// migration, and it is not worth one for a label — but see the note on
+		// the export heading, which now says what this actually is.
+		//
+		// The salt matters more than the name. Unsalted, this was SHA-256 over
+		// a value with very little entropy: the whole IPv4 space is 2^32, user
+		// agent strings are drawn from a short list, and an attacker holding an
+		// exported log could recover the original address by exhausting it in
+		// minutes on ordinary hardware. That makes an unsalted digest a
+		// pseudonymous identifier rather than an anonymised one, and it is not
+		// the protection the surrounding code assumes it is. wp_salt() is
+		// per-site and never leaves the server, so the digest is no longer
+		// reversible by brute force.
+		//
+		// Rows written before 2.3.5 used the unsalted digest and will not match
+		// rows written after it. Nothing queries or joins on this column, so
+		// that costs nothing beyond a discontinuity in the history.
+		$data['cookie_hash'] = hash_hmac(
+			'sha256',
+			$data['ip_address'] . '|' . $data['user_agent'],
+			wp_salt( 'auth' )
+		);
+
+		// Anonymize IP (GDPR requirement).
+		$data['ip_address'] = $this->anonymize_ip( $data['ip_address'] );
+
+		// Serialize categories if array.
+		if ( is_array( $data['categories_accepted'] ) ) {
+			$data['categories_accepted'] = json_encode( $data['categories_accepted'] );
+		}
+
+		// $wpdb->insert() is the standard write path for this custom table; no
+		// caching applies to a write-once audit-log row.
+		$result = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$this->consent_table,
+			array(
+				'blog_id'             => $data['blog_id'],
+				'user_id'             => $data['user_id'],
+				'ip_address'          => $data['ip_address'],
+				'user_agent'          => $data['user_agent'],
+				'consent_given'       => $data['consent_given'] ? 1 : 0,
+				'categories_accepted' => $data['categories_accepted'],
+				'consent_method'      => $data['consent_method'],
+				'timestamp'           => $data['timestamp'],
+				'cookie_hash'         => $data['cookie_hash'],
+			),
+			array( '%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
+		);
+
+		return $result ? $wpdb->insert_id : false;
+	}
+
+	/**
+	 * Get consent logs.
+	 *
+	 * @param array $args Query arguments.
+	 * @return array Consent logs.
+	 */
+	public function get_consent_logs( $args = array() ) {
+		global $wpdb;
+
+		$defaults = array(
+			'limit'     => 100,
+			'offset'    => 0,
+			'orderby'   => 'timestamp',
+			'order'     => 'DESC',
+			'user_id'   => null,
+			'date_from' => null,
+			'date_to'   => null,
+			'blog_id'   => get_current_blog_id(), // Filter by current site.
+		);
+
+		$args = wp_parse_args( $args, $defaults );
+
+		$where  = array( '1=1' );
+		$values = array();
+
+		// Always filter by blog_id (critical for multisite).
+		if ( ! is_null( $args['blog_id'] ) ) {
+			$where[]  = 'blog_id = %d';
+			$values[] = $args['blog_id'];
+		}
+
+		if ( ! is_null( $args['user_id'] ) ) {
+			$where[]  = 'user_id = %d';
+			$values[] = $args['user_id'];
+		}
+
+		if ( ! is_null( $args['date_from'] ) ) {
+			$where[]  = 'timestamp >= %s';
+			$values[] = $args['date_from'];
+		}
+
+		if ( ! is_null( $args['date_to'] ) ) {
+			$where[]  = 'timestamp <= %s';
+			$values[] = $args['date_to'];
+		}
+
+		$where_clause = implode( ' AND ', $where );
+
+		// Whitelist orderby/order: these are SQL identifiers and cannot be bound as prepared values.
+		$allowed_orderby = array( 'id', 'blog_id', 'user_id', 'consent_given', 'consent_method', 'timestamp', 'cookie_hash' );
+		$orderby         = in_array( $args['orderby'], $allowed_orderby, true ) ? $args['orderby'] : 'timestamp';
+		$order           = strtoupper( (string) $args['order'] ) === 'ASC' ? 'ASC' : 'DESC';
+
+		$values[] = (int) $args['limit'];
+		$values[] = (int) $args['offset'];
+
+		$query = "SELECT * FROM {$this->consent_table}
                   WHERE {$where_clause}
                   ORDER BY {$orderby} {$order}
                   LIMIT %d OFFSET %d";
-        
-        // The interpolated parts are a constant internal table name and whitelisted orderby/order identifiers; every user-supplied value is bound through prepare().
-        $results = $wpdb->get_results(
-            $wpdb->prepare( $query, $values ), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-            ARRAY_A
-        );
-        
-        return $results;
-    }
-    
-    /**
-     * Get total consent log count.
-     *
-     * @param array $args Query arguments.
-     * @return int Count.
-     */
-    public function get_consent_count($args = array()) {
-        global $wpdb;
-        
-        $defaults = array(
-            'blog_id' => get_current_blog_id(), // Filter by current site
-        );
-        
-        $args = wp_parse_args($args, $defaults);
-        
-        $where = array('1=1');
-        
-        // Always filter by blog_id (critical for multisite)
-        if (!empty($args['blog_id'])) {
-            $where[] = $wpdb->prepare('blog_id = %d', $args['blog_id']);
-        }
-        
-        if (!empty($args['user_id'])) {
-            $where[] = $wpdb->prepare('user_id = %d', $args['user_id']);
-        }
-        
-        if (!empty($args['date_from'])) {
-            $where[] = $wpdb->prepare('timestamp >= %s', $args['date_from']);
-        }
-        
-        if (!empty($args['date_to'])) {
-            $where[] = $wpdb->prepare('timestamp <= %s', $args['date_to']);
-        }
-        
-        $where_clause = implode(' AND ', $where);
-        
-        $count = $wpdb->get_var("SELECT COUNT(*) FROM {$this->consent_table} WHERE {$where_clause}");
-        
-        return (int) $count;
-    }
-    
-    /**
-     * Delete old consent logs.
-     *
-     * @param int $days Delete logs older than X days.
-     * @return int|false Number of rows deleted or false on failure.
-     */
-    public function delete_old_logs($days = 365) {
-        global $wpdb;
-        
-        // Defence in depth: never allow a cutoff of "now or later", which
-        // would wipe the entire table. Callers should validate too.
-        $days = (int) $days;
-        if ($days < 1) {
-            return false;
-        }
-        
-        $date = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
-        
-        return $wpdb->query(
-            $wpdb->prepare("DELETE FROM {$this->consent_table} WHERE timestamp < %s", $date)
-        );
-    }
-    
-    /**
-     * Export consent logs to CSV.
-     *
-     * @param array $args Query arguments.
-     * @return string CSV content.
-     */
-    public function export_to_csv($args = array()) {
-        $logs = $this->get_consent_logs($args);
-        
-        if (empty($logs)) {
-            return '';
-        }
-        
-        // Create CSV header.
-        $csv = array();
-        if (is_multisite()) {
-            $csv[] = array('ID', 'Blog ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
-        } else {
-            $csv[] = array('ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
-        }
-        
-        // Add data rows.
-        foreach ($logs as $log) {
-            $categories = json_decode($log['categories_accepted'], true);
-            if (is_array($categories)) {
-                $categories = implode(', ', $categories);
-            }
-            
-            if (is_multisite()) {
-                $csv[] = array(
-                    $log['id'],
-                    $log['blog_id'],
-                    $log['user_id'] ?: 'Guest',
-                    $log['ip_address'],
-                    $log['consent_given'] ? 'Yes' : 'No',
-                    $categories,
-                    $log['consent_method'],
-                    $log['timestamp'],
-                );
-            } else {
-                $csv[] = array(
-                    $log['id'],
-                    $log['user_id'] ?: 'Guest',
-                    $log['ip_address'],
-                    $log['consent_given'] ? 'Yes' : 'No',
-                    $categories,
-                    $log['consent_method'],
-                    $log['timestamp'],
-                );
-            }
-        }
-        
-        // Convert to CSV string.
-        // Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
-        $output = fopen('php://temp', 'r+'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-        foreach ($csv as $row) {
-            fputcsv($output, array_map(array(__CLASS__, 'escape_csv_field'), $row));
-        }
-        rewind($output);
-        $csv_content = stream_get_contents($output);
-        fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-        
-        return $csv_content;
-    }
-    
-    /**
-     * Neutralise spreadsheet formula injection in an exported CSV field.
-     *
-     * Consent logs contain values supplied by unauthenticated visitors. Excel,
-     * LibreOffice and Sheets all evaluate a cell beginning with =, +, - or @
-     * as a formula, so a category name of =HYPERLINK("https://evil.tld","Hi")
-     * would execute in the admin's spreadsheet on open. Prefixing with a
-     * single quote forces the cell to be read as text.
-     *
-     * @param mixed $value Field value.
-     * @return mixed Escaped field value.
-     */
-    public static function escape_csv_field($value) {
-        if (!is_string($value) || $value === '') {
-            return $value;
-        }
 
-        // Leading whitespace and control characters are stripped by
-        // spreadsheet parsers before the formula test, so test past them.
-        $trimmed = ltrim($value, " \t\r\n");
+		// The interpolated parts are a constant internal table name and whitelisted orderby/order identifiers; every user-supplied value is bound through prepare(). Admin logs screen, not a runtime/hot-path lookup.
+		$results = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare( $query, $values ), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+			ARRAY_A
+		);
 
-        if ($trimmed !== '' && strpos("=+-@\t\r", $trimmed[0]) !== false) {
-            return "'" . $value;
-        }
+		return $results;
+	}
 
-        return $value;
-    }
+	/**
+	 * Get total consent log count.
+	 *
+	 * @param array $args Query arguments.
+	 * @return int Count.
+	 */
+	public function get_consent_count( $args = array() ) {
+		global $wpdb;
 
-    /**
-     * Get client IP address.
-     *
-     * @return string IP address.
-     */
-    private function get_client_ip() {
-        // Proxy headers are only honoured when the request demonstrably came
-        // through a proxy we trust. See includes/mbr-cc-ip.php.
-        $ip = function_exists('mbr_cc_get_client_ip') ? mbr_cc_get_client_ip() : '';
+		$defaults = array(
+			'blog_id' => get_current_blog_id(), // Filter by current site.
+		);
 
-        return $ip !== '' ? $ip : '0.0.0.0';
-    }
-    
-    /**
-     * Anonymize IP address for GDPR compliance.
-     *
-     * @param string $ip IP address.
-     * @return string Anonymized IP.
-     */
-    private function anonymize_ip($ip) {
-        if (function_exists('mbr_cc_anonymize_ip')) {
-            return mbr_cc_anonymize_ip($ip);
-        }
+		$args = wp_parse_args( $args, $defaults );
 
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $parts = explode('.', $ip);
-            $parts[3] = '0';
-            return implode('.', $parts);
-        }
+		$where = array( '1=1' );
 
-        return $ip;
-    }
+		// Always filter by blog_id (critical for multisite).
+		if ( ! empty( $args['blog_id'] ) ) {
+			$where[] = $wpdb->prepare( 'blog_id = %d', $args['blog_id'] );
+		}
+
+		if ( ! empty( $args['user_id'] ) ) {
+			$where[] = $wpdb->prepare( 'user_id = %d', $args['user_id'] );
+		}
+
+		if ( ! empty( $args['date_from'] ) ) {
+			$where[] = $wpdb->prepare( 'timestamp >= %s', $args['date_from'] );
+		}
+
+		if ( ! empty( $args['date_to'] ) ) {
+			$where[] = $wpdb->prepare( 'timestamp <= %s', $args['date_to'] );
+		}
+
+		$where_clause = implode( ' AND ', $where );
+
+		// Each $where[] fragment above is already individually bound via
+		// prepare(); $where_clause is their concatenation, not raw user input.
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$this->consent_table} WHERE {$where_clause}" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+		return (int) $count;
+	}
+
+	/**
+	 * Delete old consent logs.
+	 *
+	 * @param int $days Delete logs older than X days.
+	 * @return int|false Number of rows deleted or false on failure.
+	 */
+	public function delete_old_logs( $days = 365 ) {
+		global $wpdb;
+
+		// Defence in depth: never allow a cutoff of "now or later", which
+		// would wipe the entire table. Callers should validate too.
+		$days = (int) $days;
+		if ( $days < 1 ) {
+			return false;
+		}
+
+		$date = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+
+		// $this->consent_table is a static-prefixed literal, not attacker input.
+		return $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->prepare( "DELETE FROM {$this->consent_table} WHERE timestamp < %s", $date ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		);
+	}
+
+	/**
+	 * Export consent logs to CSV.
+	 *
+	 * @param array $args Query arguments.
+	 * @return string CSV content.
+	 */
+	public function export_to_csv( $args = array() ) {
+		$logs = $this->get_consent_logs( $args );
+
+		if ( empty( $logs ) ) {
+			return '';
+		}
+
+		// Create CSV header.
+		$csv = array();
+		if ( is_multisite() ) {
+			$csv[] = array( 'ID', 'Blog ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp' );
+		} else {
+			$csv[] = array( 'ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp' );
+		}
+
+		// Add data rows.
+		foreach ( $logs as $log ) {
+			$categories = json_decode( $log['categories_accepted'], true );
+			if ( is_array( $categories ) ) {
+				$categories = implode( ', ', $categories );
+			}
+
+			if ( is_multisite() ) {
+				$csv[] = array(
+					$log['id'],
+					$log['blog_id'],
+					$log['user_id'] ? $log['user_id'] : 'Guest',
+					$log['ip_address'],
+					$log['consent_given'] ? 'Yes' : 'No',
+					$categories,
+					$log['consent_method'],
+					$log['timestamp'],
+				);
+			} else {
+				$csv[] = array(
+					$log['id'],
+					$log['user_id'] ? $log['user_id'] : 'Guest',
+					$log['ip_address'],
+					$log['consent_given'] ? 'Yes' : 'No',
+					$categories,
+					$log['consent_method'],
+					$log['timestamp'],
+				);
+			}
+		}
+
+		// Convert to CSV string.
+		// Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
+		$output = fopen( 'php://temp', 'r+' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		foreach ( $csv as $row ) {
+			fputcsv( $output, array_map( array( __CLASS__, 'escape_csv_field' ), $row ) );
+		}
+		rewind( $output );
+		$csv_content = stream_get_contents( $output );
+		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
+		return $csv_content;
+	}
+
+	/**
+	 * Neutralise spreadsheet formula injection in an exported CSV field.
+	 *
+	 * Consent logs contain values supplied by unauthenticated visitors. Excel,
+	 * LibreOffice and Sheets all evaluate a cell beginning with =, +, - or @
+	 * as a formula, so a category name of =HYPERLINK("https://evil.tld","Hi")
+	 * would execute in the admin's spreadsheet on open. Prefixing with a
+	 * single quote forces the cell to be read as text.
+	 *
+	 * @param mixed $value Field value.
+	 * @return mixed Escaped field value.
+	 */
+	public static function escape_csv_field( $value ) {
+		if ( ! is_string( $value ) || '' === $value ) {
+			return $value;
+		}
+
+		// Leading whitespace and control characters are stripped by
+		// spreadsheet parsers before the formula test, so test past them.
+		$trimmed = ltrim( $value, " \t\r\n" );
+
+		if ( '' !== $trimmed && false !== strpos( "=+-@\t\r", $trimmed[0] ) ) {
+			return "'" . $value;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Get client IP address.
+	 *
+	 * @return string IP address.
+	 */
+	private function get_client_ip() {
+		// Proxy headers are only honoured when the request demonstrably came
+		// through a proxy we trust. See includes/mbr-cc-ip.php.
+		$ip = function_exists( 'mbr_cc_get_client_ip' ) ? mbr_cc_get_client_ip() : '';
+
+		return '' !== $ip ? $ip : '0.0.0.0';
+	}
+
+	/**
+	 * Anonymize IP address for GDPR compliance.
+	 *
+	 * @param string $ip IP address.
+	 * @return string Anonymized IP.
+	 */
+	private function anonymize_ip( $ip ) {
+		if ( function_exists( 'mbr_cc_anonymize_ip' ) ) {
+			return mbr_cc_anonymize_ip( $ip );
+		}
+
+		if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ) {
+			$parts    = explode( '.', $ip );
+			$parts[3] = '0';
+			return implode( '.', $parts );
+		}
+
+		return $ip;
+	}
 }
