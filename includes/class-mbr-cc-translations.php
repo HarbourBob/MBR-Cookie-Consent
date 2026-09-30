@@ -149,7 +149,9 @@ class MBR_CC_Translations {
             return array();
         }
 
-        $raw = file_get_contents($real);
+        // Local, plugin-bundled JSON read via a validated path (checked against
+        // $base above), not a remote URL — no wp_remote_get() equivalent applies.
+        $raw = file_get_contents($real); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
         if (false === $raw) {
             return array();
         }
@@ -172,7 +174,8 @@ class MBR_CC_Translations {
             return array('total_keys' => 0, 'languages' => array());
         }
 
-        $data = json_decode((string) file_get_contents($file), true);
+        // Local, plugin-bundled JSON file, not a remote URL — no wp_remote_get() equivalent applies.
+        $data = json_decode((string) file_get_contents($file), true); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
         return is_array($data) ? $data : array('total_keys' => 0, 'languages' => array());
     }
 
