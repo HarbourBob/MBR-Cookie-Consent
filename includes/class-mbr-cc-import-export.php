@@ -104,6 +104,7 @@ class MBR_CC_Import_Export {
             'reject_button_color'        => 'color',
             'text_color'                 => 'color',
             'revisit_button_text_color'  => 'color',
+            'revisit_button_text_color_mode' => 'key',
             'banner_glassmorphism'       => 'bool',
             'glass_opacity'              => 'int',
             'glass_blur'                 => 'int',

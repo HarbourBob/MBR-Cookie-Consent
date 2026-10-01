@@ -208,6 +208,10 @@
         checkConsent: function() {
             var self = this;
             var consent = this.getCookie('mbr_cc_consent');
+            var storedChoice = this.parseConsent(consent);
+            if (storedChoice) {
+                window.MbrCcConsent.cleanupDenied(window.MbrCcConsent.normalise(storedChoice));
+            }
             
             // Check for Global Privacy Control (GPC) signal.
             // Required by 12+ US states as of January 2026.
@@ -302,6 +306,16 @@
             }
             
             // Apply the GPC-modified consent
+            // Persist a changed existing choice through the same withdrawal
+            // lifecycle. Avoid logging/reloading on every GPC page view.
+            var previous = this.parseConsent(existingConsent);
+            if (previous && suppressedCategories.some(function(category) {
+                return previous[category] === true || previous.all === true;
+            })) {
+                this.saveConsent(consent, 'gpc');
+            } else if (window.MbrCcConsentModes) {
+                window.MbrCcConsentModes.updateAllConsent(consent);
+            }
             this.unblockScripts(consent);
             this.showRevisitButton();
             
@@ -521,6 +535,9 @@
         
         saveConsent: function(consent, method) {
             var self = this;
+            var lifecycle = window.MbrCcConsent;
+            var previous = lifecycle.readConsent();
+            consent = lifecycle.normalise(consent);
 
             // Mark consent as saved immediately. This prevents showBanner() from
             // firing again if anything re-triggers checkConsent() before the cookie
@@ -534,6 +551,9 @@
             // while the cookie is already correctly set. If we waited for AJAX
             // success to hide the banner it would reappear every time that happened.
             var consentJson = JSON.stringify(consent);
+            // Remove visible older host/domain/path variants before writing a
+            // new choice; otherwise an old broader grant can win cookie reads.
+            lifecycle.clearConsentCookie();
             this.setCookie('mbr_cc_consent', consentJson, mbrCcConsent.cookieExpiry);
 
             // Verify the cookie was actually written correctly. If an explicit
@@ -554,6 +574,11 @@
                 window.MbrCcConsentModes.updateAllConsent(consent);
             }
 
+            // Queue evidence before any third-party listener can navigate.
+            lifecycle.logConsent(consent, method || 'api');
+            var withdrew = lifecycle.applyWithdrawal(previous, consent, method === 'revoked');
+            if (withdrew) { lifecycle.requestReload(); }
+
             // Hide banner and modal immediately — do not wait for AJAX.
             this.hideBanner();
             this.hidePreferences();
@@ -561,7 +586,7 @@
             // Public event. Our Elementor blocker listens for this, and it is
             // the documented hook for third-party code that needs to react to
             // a consent decision.
-            $(document).trigger('mbr_cc_consent_saved', [consent]);
+            $(document).trigger('mbr_cc_consent_saved', [consent, method]);
 
             // Unblock scripts immediately.
             this.unblockScripts(consent);
@@ -569,26 +594,8 @@
             // Reload page if enabled (e.g. to restore Elementor videos).
             // Suppressed when the form consent modal is handling a re-submit.
             if (mbrCcConsent.reloadOnConsent && !window._mbrCcSuppressReload) {
-                location.reload();
-                return; // No point doing anything else if we're reloading.
+                lifecycle.requestReload();
             }
-
-            // Fire-and-forget AJAX to log consent to the database.
-            // The outcome does NOT affect the UI — if this fails (stale nonce,
-            // security plugin blocking admin-ajax.php, slow server) the user
-            // still has their consent cookie and the banner stays hidden.
-            $.ajax({
-                url: mbrCcConsent.ajaxUrl,
-                type: 'POST',
-                data: {
-                    action: 'mbr_cc_save_consent',
-                    nonce: mbrCcConsent.nonce,
-                    consent: JSON.stringify(consent),
-                    method: method
-                }
-                // No success or error handlers — fire and forget.
-                // Consent is already saved in the cookie regardless of outcome.
-            });
         },
         
         unblockScripts: function(consent) {
@@ -597,8 +604,10 @@
             // Find all blocked scripts and unblock per-category.
             $('script[data-mbr-cc-blocked="true"]').each(function() {
                 var $script = $(this);
-                var src      = $script.data('mbr-cc-src');
-                var category = $script.data('mbr-cc-category') || 'marketing';
+                // attr(), not data(): jQuery's data() coerces values that look
+                // like numbers or JSON, which a URL can.
+                var src      = $script.attr('data-mbr-cc-src');
+                var category = $script.attr('data-mbr-cc-category') || 'marketing';
                 
                 if (consent.all || consent[category] === true) {
                     self.unblockScript($script, src);
@@ -608,14 +617,21 @@
             // Unblock iframes per-category.
             $('iframe[data-mbr-cc-blocked="true"]').each(function() {
                 var $iframe  = $(this);
-                var src      = $iframe.data('mbr-cc-src');
-                var category = $iframe.data('mbr-cc-category') || 'marketing';
+                var src      = $iframe.attr('data-mbr-cc-src');
+                var category = $iframe.attr('data-mbr-cc-category') || 'marketing';
                 
                 if (consent.all || consent[category] === true) {
+                    // Put back any style the iframe had before it was held
+                    // (recorded since 2.6.0), rather than discarding it.
+                    var originalStyle = $iframe.attr('data-mbr-cc-style');
                     $iframe.attr('src', src)
                            .removeAttr('style')
                            .removeAttr('aria-hidden')
+                           .removeAttr('data-mbr-cc-style')
                            .removeAttr('data-mbr-cc-blocked');
+                    if (originalStyle) {
+                        $iframe.attr('style', originalStyle);
+                    }
                     // Hide the placeholder overlay that sits before this iframe.
                     $iframe.prev('.mbr-cc-blocked-wrapper').remove();
                 } else {
@@ -642,7 +658,6 @@
                            .removeAttr('data-mbr-cc-blocked')
                            .removeAttr('data-mbr-cc-facade')
                            .removeAttr('data-mbr-cc-attr')
-                           .removeAttr('data-mbr-cc-category')
                            .removeAttr('data-mbr-cc-src')
                            .removeAttr('data-mbr-cc-hidden');
 
@@ -659,19 +674,98 @@
                 }
             });
 
-            // Restore poster images withheld along with their embeds.
-            $('[data-mbr-cc-image="true"]').each(function() {
-                var $img     = $(this);
-                var category = $img.attr('data-mbr-cc-category') || 'marketing';
+            // Stylesheets held by moving their href aside. Same per-category
+            // test as everything else here: hasConsent() takes the whole
+            // consent object, not a category name, so it is the wrong tool.
+            $('link[data-mbr-cc-stylesheet="true"]').each(function() {
+                var $link    = $(this);
+                var href     = $link.attr('data-mbr-cc-href');
+                var category = $link.attr('data-mbr-cc-category') || 'preferences';
 
-                if (consent.all || consent[category] === true) {
-                    $img.attr('src', $img.attr('data-mbr-cc-src'))
-                        .removeAttr('data-mbr-cc-blocked')
-                        .removeAttr('data-mbr-cc-image')
-                        .removeAttr('data-mbr-cc-category')
-                        .removeAttr('data-mbr-cc-src');
+                if (href && (consent.all || consent[category] === true)) {
+                    $link.attr('href', href)
+                         .removeAttr('data-mbr-cc-blocked')
+                         .removeAttr('data-mbr-cc-stylesheet')
+                         .removeAttr('data-mbr-cc-href');
                 }
             });
+
+            // Restore held images and <source> elements. <source> first, so a
+            // <picture> re-selects with its alternatives already in place when
+            // its <img> gets a real source back.
+            var images = $('source[data-mbr-cc-image="true"]').get()
+                .concat($('img[data-mbr-cc-image="true"], [data-mbr-cc-image="true"]:not(img):not(source)').get());
+
+            $.each(images, function() {
+                var el       = this;
+                var category = el.getAttribute('data-mbr-cc-category') || 'marketing';
+
+                if (!(consent.all || consent[category] === true)) {
+                    return;
+                }
+
+                self.restoreHeldSources(el);
+
+                el.removeAttribute('data-mbr-cc-blocked');
+                el.removeAttribute('data-mbr-cc-image');
+            });
+        },
+
+        /**
+         * Put back every source attribute held on an image or <source>.
+         *
+         * Since 2.6.0 the blocker moves each source attribute — src, srcset,
+         * and the data-src family lazy-loaders use — to
+         * data-mbr-cc-held-{name}. Pages cached by an earlier version carry
+         * only data-mbr-cc-src, which is still honoured.
+         *
+         * @param {Element} el
+         */
+        restoreHeldSources: function(el) {
+            var prefix = 'data-mbr-cc-held-';
+            var held   = {};
+            var i, attr, name;
+
+            for (i = el.attributes.length - 1; i >= 0; i--) {
+                attr = el.attributes[i];
+                if (attr.name.indexOf(prefix) === 0) {
+                    held[attr.name.substring(prefix.length)] = attr.value;
+                }
+            }
+
+            // srcset before src: setting src first can start a fetch the
+            // browser then abandons for a srcset candidate.
+            for (name in held) {
+                if (Object.prototype.hasOwnProperty.call(held, name) && name !== 'src') {
+                    el.setAttribute(name, held[name]);
+                    el.removeAttribute(prefix + name);
+                }
+            }
+
+            var legacy = el.getAttribute('data-mbr-cc-src');
+            var src    = Object.prototype.hasOwnProperty.call(held, 'src') ? held.src : legacy;
+
+            if (src !== null && src !== undefined) {
+                el.setAttribute('src', src);
+            }
+            el.removeAttribute(prefix + 'src');
+            el.removeAttribute('data-mbr-cc-src');
+
+            // A lazy-loader keeps the real URL in data-src until its own
+            // script swaps it in. That script has usually already run over
+            // this element and given up, so the image would stay a
+            // placeholder. If src is still empty or a data: URI — ours or the
+            // lazy-loader's own — finish the swap here.
+            if (el.tagName === 'IMG' && /^(data:|$)/.test(el.getAttribute('src') || '')) {
+                var lazySrc    = held['data-lazy-src'] || held['data-src'] || held['data-original'];
+                var lazySrcset = held['data-lazy-srcset'] || held['data-srcset'] || held['data-original-set'];
+                if (lazySrcset) {
+                    el.setAttribute('srcset', lazySrcset);
+                }
+                if (lazySrc) {
+                    el.setAttribute('src', lazySrc);
+                }
+            }
         },
 
         /**
@@ -701,11 +795,24 @@
         },
         
         unblockScript: function($script, src) {
+            // The type the script had before it was held. Since 2.6.0 the
+            // blocker records anything that is not classic JavaScript —
+            // module, importmap, a JSON data block — in data-mbr-cc-type.
+            // Restoring everything as text/javascript turned a module into a
+            // classic script, and its import/export statements then threw.
+            var originalType = $script.attr('data-mbr-cc-type') || 'text/javascript';
+            var skip = {
+                'type': true,
+                'data-mbr-cc-blocked': true,
+                'data-mbr-cc-src': true,
+                'data-mbr-cc-type': true
+            };
+
             if (src) {
                 // External script - create new script tag
                 var newScript = document.createElement('script');
+                newScript.type = originalType;
                 newScript.src = src;
-                newScript.type = 'text/javascript';
 
                 // Dynamically created scripts default to async, which would let
                 // restored scripts execute in download order rather than the
@@ -716,7 +823,7 @@
                 newScript.async = false;
                 // Copy attributes
                 $.each($script[0].attributes, function() {
-                    if (this.name !== 'type' && this.name !== 'data-mbr-cc-blocked' && this.name !== 'data-mbr-cc-src') {
+                    if (!skip[this.name]) {
                         newScript.setAttribute(this.name, this.value);
                     }
                 });
@@ -728,10 +835,10 @@
                 // works under a Content-Security-Policy without 'unsafe-eval',
                 // matching how the external branch above restores scripts.
                 var inlineScript = document.createElement('script');
-                inlineScript.type = 'text/javascript';
+                inlineScript.type = originalType;
 
                 $.each($script[0].attributes, function() {
-                    if (this.name !== 'type' && this.name !== 'data-mbr-cc-blocked' && this.name !== 'data-mbr-cc-src') {
+                    if (!skip[this.name]) {
                         inlineScript.setAttribute(this.name, this.value);
                     }
                 });

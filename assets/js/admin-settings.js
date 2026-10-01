@@ -8,6 +8,24 @@
     
     
     $(document).ready(function() {
+        // Mark the policy URL as expected when its checkbox is on, for screen
+        // readers only. The hard `required` attribute is deliberately not set:
+        // these fields live on a tab that is display:none most of the time, and
+        // a required control inside a hidden part of a form blocks the whole
+        // form from submitting with "not focusable" and no visible bubble.
+        // The server declines just this field and saves everything else.
+        ['privacy', 'cookie'].forEach(function(policy) {
+            var $checkbox = $('[name="mbr_cc_show_' + policy + '_policy_link"]');
+            var $url = $('#' + policy + '_policy_url');
+            function syncRequirement() {
+                var expected = $checkbox.is(':checked');
+                $url.prop('required', false).attr('aria-required', expected ? 'true' : 'false');
+                if ($url[0]) { $url[0].setCustomValidity(''); }
+            }
+            $checkbox.on('change', syncRequirement);
+            $url.on('input', function() { this.setCustomValidity(''); });
+            syncRequirement();
+        });
         
         
         // Tab switching
@@ -311,3 +329,22 @@
     });
     
 })(jQuery);
+
+/**
+ * Show the floating button's colour field only when it is being overridden.
+ *
+ * Appended rather than folded into the block above so the existing behaviour is
+ * untouched.
+ */
+jQuery(function ($) {
+    var $mode = $('#revisit_button_text_color_mode');
+    var $field = $('#revisit_button_text_color_field');
+
+    if (!$mode.length || !$field.length) {
+        return;
+    }
+
+    $mode.on('change', function () {
+        $field.toggle($mode.val() === 'custom');
+    });
+});

@@ -60,7 +60,7 @@ class MBR_CC_Banner {
         wp_enqueue_script(
             'mbr-cc-banner',
             MBR_CC_PLUGIN_URL . 'assets/js/banner.js',
-            array('jquery'),
+            array('jquery', 'mbr-cc-consent'),
             mbr_cc_asset_version('assets/js/banner.js'),
             true
         );
@@ -180,12 +180,53 @@ class MBR_CC_Banner {
      *
      * @return string CSS.
      */
+    /**
+     * Read a colour option, guaranteeing something a browser will accept.
+     *
+     * get_option()'s default only applies when the option does not exist. A
+     * stored empty string is a value, so it is returned as-is — and it reaches
+     * the CSS below as "color: !important;", which is not a declaration. The
+     * browser discards the whole line and the stylesheet's fallback applies,
+     * so the button silently renders in the fallback colour while the settings
+     * screen shows an empty field and no error anywhere explains it.
+     *
+     * An option ends up empty easily: the colour sanitiser accepts hex only, so
+     * anything else a picker can produce — rgb(), rgba(), a named colour, or a
+     * cleared field — sanitises to an empty string and overwrites whatever was
+     * there before.
+     *
+     * @param  string $option   Option name.
+     * @param  string $fallback Colour to use when the stored value is unusable.
+     * @return string A valid hex colour.
+     */
+    /**
+     * The floating button's text colour.
+     *
+     * Inherits the banner's text colour unless the site owner has explicitly
+     * chosen otherwise. Two colour settings on one screen with opposite
+     * defaults and near-identical labels is a trap, and one setting doing the
+     * obvious thing is better than two that have to be kept in step.
+     *
+     * @return string Hex colour.
+     */
+    public static function revisit_text_colour() {
+        if (get_option('mbr_cc_revisit_button_text_color_mode', 'inherit') === 'custom') {
+            return self::colour('mbr_cc_revisit_button_text_color', '#000000');
+        }
+
+        return self::colour('mbr_cc_text_color', '#ffffff');
+    }
+
+    public static function colour($option, $fallback) {
+        return mbr_cc_colour_or(get_option($option, $fallback), $fallback);
+    }
+
     public static function build_custom_css() {
-        $primary_color = get_option('mbr_cc_primary_color', '#0073aa');
-        $accept_color = get_option('mbr_cc_accept_button_color', '#00a32a');
-        $reject_color = get_option('mbr_cc_reject_button_color', '#d63638');
-        $text_color = get_option('mbr_cc_text_color', '#ffffff');
-        $revisit_text_color = get_option('mbr_cc_revisit_button_text_color', '#000000');
+        $primary_color = self::colour('mbr_cc_primary_color', '#0073aa');
+        $accept_color = self::colour('mbr_cc_accept_button_color', '#00a32a');
+        $reject_color = self::colour('mbr_cc_reject_button_color', '#d63638');
+        $text_color = self::colour('mbr_cc_text_color', '#ffffff');
+        $revisit_text_color = self::revisit_text_colour();
         
         $glass = (bool) get_option('mbr_cc_banner_glassmorphism', false);
         $dark_mode = get_option('mbr_cc_banner_dark_mode', 'off');
@@ -252,6 +293,7 @@ class MBR_CC_Banner {
             }
             .mbr-cc-revisit-consent svg {
                 stroke: {$revisit_text_color} !important;
+                color: {$revisit_text_color} !important;
             }
         ";
         
@@ -696,8 +738,31 @@ class MBR_CC_Banner {
         
         <!-- Revisit Consent Button -->
         <?php if (get_option('mbr_cc_revisit_consent_enabled', true)) : ?>
-            <button type="button" class="mbr-cc-revisit-consent" id="mbr-cc-revisit" style="display: none;" data-version="1.0.3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <?php
+            /*
+             * Colours are written onto the element itself, not left to the
+             * stylesheet.
+             *
+             * The inline <style> block this used to rely on can simply not
+             * arrive: asset-combining plugins routinely gather linked
+             * stylesheets and discard inline blocks, and a stale combined file
+             * survives an ordinary cache purge. When that happens the button
+             * falls back to whatever the stylesheet or the theme says, the
+             * setting appears to do nothing, and no amount of flushing fixes it
+             * because nothing is wrong with the cache.
+             *
+             * A style attribute travels in the HTML, so it cannot be separated
+             * from the markup it belongs to, and it outranks any normal
+             * stylesheet rule including the theme's own button styling.
+             */
+            $mbr_cc_revisit_style = sprintf(
+                'display: none; background-color: %1$s; color: %2$s;',
+                esc_attr(self::colour('mbr_cc_primary_color', '#0073aa')),
+                esc_attr(self::revisit_text_colour())
+            );
+            ?>
+            <button type="button" class="mbr-cc-revisit-consent" id="mbr-cc-revisit" style="<?php echo esc_attr($mbr_cc_revisit_style); ?>" data-version="1.0.3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color: inherit; stroke: currentColor;">
                     <!-- Cookie icon - outer circle -->
                     <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
                     <!-- Chocolate chips -->
@@ -708,7 +773,7 @@ class MBR_CC_Banner {
                     <circle cx="16" cy="16" r="1" fill="currentColor"/>
                     <circle cx="10" cy="18" r="0.8" fill="currentColor"/>
                 </svg>
-                <span><?php echo esc_html(get_option('mbr_cc_revisit_consent_text', 'Cookie Settings')); ?></span>
+                <span style="color: inherit;"><?php echo esc_html(get_option('mbr_cc_revisit_consent_text', 'Cookie Settings')); ?></span>
             </button>
         <?php endif; ?>
         

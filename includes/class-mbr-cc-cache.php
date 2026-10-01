@@ -88,6 +88,8 @@ class MBR_CC_Cache {
         $ignore = array(
             'mbr_cc_version',
             'mbr_cc_db_version',
+            'mbr_cc_log_last_success',
+            'mbr_cc_log_last_failure',
             'mbr_cc_import_backup',
             'mbr_cc_privacy_policy_regenerated',
             'mbr_cc_230_default_region_preserved',

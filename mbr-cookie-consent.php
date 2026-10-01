@@ -3,7 +3,7 @@
  * Plugin Name: MBR Cookie Consent
  * Plugin URI: https://littlewebshack.com/mbr-cookie-consent/
  * Description: GDPR/EEA, UK DUAA, CCPA/US multi-state, LGPD, PIPEDA, Quebec Law 25, Swiss nFADP, Australia Privacy Act, India DPDP, Vietnam PDPL, Indonesia UU PDP, Nigeria NDPA, China PIPL, South Korea PIPA, Saudi PDPL, South Africa POPIA, and global privacy law compliant cookie consent management with GPC signal support, automatic script blocking, and consent logging.
- * Version: 2.3.6
+ * Version: 2.6.0
  * Author: Robert Palmer
  * Author URI: https://littlewebshack.com
  * License: GPL v2 or later
@@ -46,7 +46,7 @@ add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
 }, 10, 3 );
 
 // Define plugin constants.
-define('MBR_CC_VERSION', '2.3.6');
+define('MBR_CC_VERSION', '2.6.0');
 define('MBR_CC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MBR_CC_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -68,6 +68,34 @@ define('MBR_CC_PLUGIN_BASENAME', plugin_basename(__FILE__));
  *                              e.g. 'assets/css/banner.css'.
  * @return string Version string for wp_enqueue_* and query args.
  */
+/**
+ * A colour value that is safe to put in a stylesheet or an input field.
+ *
+ * A stored empty string is a value, so get_option()'s default never applies to
+ * it. Emitted into CSS it produces "color: !important;" — not a declaration,
+ * so the browser drops the line and the stylesheet fallback silently wins.
+ * Shown in the settings screen it produces an empty field with no explanation.
+ *
+ * @param  mixed  $value    Stored value.
+ * @param  string $fallback Colour to use when the value is unusable.
+ * @return string A valid hex colour.
+ */
+function mbr_cc_colour_or($value, $fallback) {
+    if (!is_string($value)) {
+        return $fallback;
+    }
+
+    $value = trim($value);
+
+    if ($value === '') {
+        return $fallback;
+    }
+
+    $clean = function_exists('sanitize_hex_color') ? sanitize_hex_color($value) : $value;
+
+    return $clean ? $clean : $fallback;
+}
+
 function mbr_cc_asset_version($relative_path) {
     $file = MBR_CC_PLUGIN_DIR . ltrim($relative_path, '/');
 
@@ -137,6 +165,8 @@ class MBR_Cookie_Consent {
         // geolocation classes, both of which depend on it.
         require_once MBR_CC_PLUGIN_DIR . 'includes/mbr-cc-ip.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-cache.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-doctor.php';
+        require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-doctor-probe.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-translations.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-database.php';
         require_once MBR_CC_PLUGIN_DIR . 'includes/class-mbr-cc-geolocation.php';
@@ -198,6 +228,7 @@ class MBR_Cookie_Consent {
         
         // Watch for settings changes so page caches are purged on save.
         MBR_CC_Cache::init();
+        MBR_CC_Doctor_Probe::get_instance();
         MBR_CC_Translations::get_instance();
         
         // Initialize script blocker (must run early).
@@ -395,7 +426,69 @@ class MBR_Cookie_Consent {
             $this->upgrade_to_235();
         }
         
+        // 2.3.7 — nullable event keys preserve historical rows while making
+        // consent-log retries idempotent.
+        //
+        // The $stored_version !== '' guard matches every step since 2.3.1: an
+        // empty marker means a brand-new install, where activate_single_site()
+        // has already built the current schema and there is nothing to migrate.
+        if ($stored_version !== '' && version_compare($stored_version, '2.3.7', '<')) {
+            MBR_CC_Database::create_tables();
+            
+            if (!MBR_CC_Database::get_instance()->has_event_key()) {
+                // The schema change did not take. Record the attempt so the
+                // site is not left running dbDelta on every single admin
+                // request — including every admin-ajax call — for the rest of
+                // its life, which is what an unconditional early return here
+                // produced. Consent logging still works without the index; it
+                // just loses retry de-duplication, and the notice below tells
+                // an administrator rather than failing silently.
+                update_option('mbr_cc_schema_237_failed', time(), false);
+                update_option('mbr_cc_version', MBR_CC_VERSION);
+                return;
+            }
+            
+            delete_option('mbr_cc_schema_237_failed');
+        }
+        
+        // 2.5.0 — the floating button's text colour now follows the banner's
+        // unless the site owner has chosen otherwise.
+        if ($stored_version !== '' && version_compare($stored_version, '2.5.0', '<')) {
+            $this->upgrade_to_250();
+        }
+        
         update_option('mbr_cc_version', MBR_CC_VERSION);
+    }
+    
+    /**
+     * Upgrade routine for 2.5.0.
+     *
+     * Decides whether an existing site's floating button colour was a choice or
+     * simply the shipped default, because only a choice should be preserved.
+     *
+     * The shipped default was #000000. A site still holding it is
+     * indistinguishable from one that never touched the field, so it inherits
+     * from now on — which is the behaviour anybody in that position was trying
+     * to get. Anything else was typed deliberately and is kept as a custom
+     * colour.
+     *
+     * The one case this gets wrong is a site that deliberately chose black and
+     * has light banner text: its button follows the banner and turns light.
+     * That is visible immediately and one setting puts it back, which is a
+     * better trade than leaving every untouched site with a black button it
+     * cannot explain.
+     */
+    private function upgrade_to_250() {
+        if (get_option('mbr_cc_revisit_button_text_color_mode', '') !== '') {
+            return;
+        }
+        
+        $stored = get_option('mbr_cc_revisit_button_text_color', '');
+        $stored = is_string($stored) ? strtolower(trim($stored)) : '';
+        
+        $was_default = ($stored === '' || $stored === '#000000' || $stored === '#000');
+        
+        update_option('mbr_cc_revisit_button_text_color_mode', $was_default ? 'inherit' : 'custom');
     }
     
     /**
@@ -708,6 +801,7 @@ class MBR_Cookie_Consent {
             'reject_button_color' => '#d63638',
             'text_color' => '#ffffff',
             'revisit_button_text_color' => '#000000',
+            'revisit_button_text_color_mode' => 'inherit',
             'banner_glassmorphism' => false,
             'glass_opacity' => 82,
             'glass_blur' => 14,
@@ -802,6 +896,18 @@ class MBR_Cookie_Consent {
         add_option('mbr_cc_ai_training_detail', '');
         
         // Record the version so maybe_upgrade() knows this site is current.
+        //
+        // Always written. Gating it on the schema check left a site whose index
+        // could not be created with an empty version marker, which made every
+        // subsequent admin request re-enter the migration path. The schema
+        // result is recorded separately so it can be surfaced without turning
+        // a one-off migration into a permanent per-request dbDelta.
+        if (MBR_CC_Database::get_instance()->has_event_key()) {
+            delete_option('mbr_cc_schema_237_failed');
+        } else {
+            update_option('mbr_cc_schema_237_failed', time(), false);
+        }
+        
         update_option('mbr_cc_version', MBR_CC_VERSION);
         
         // Create default cookie categories if they don't exist.

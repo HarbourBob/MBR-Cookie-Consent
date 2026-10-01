@@ -513,8 +513,8 @@ class MBR_CC_AB_Testing {
     });
     // jQuery event fallback.
     if (window.jQuery) {
-        jQuery(document).on("mbr_cc_consent_saved", function(e, consent) {
-            if (consent && consent.all === true) {
+        jQuery(document).on("mbr_cc_consent_saved", function(e, consent, method) {
+            if (consent && (consent.all === true || (method === "accept_all" && Object.keys(consent).every(function(key) { return consent[key] === true; })))) {
                 post("mbr_cc_ab_conversion");
             }
         });
