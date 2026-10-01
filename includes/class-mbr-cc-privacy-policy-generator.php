@@ -50,7 +50,7 @@ class MBR_CC_Privacy_Policy_Generator {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $page_id = $this->regenerate_privacy_policy_page();
@@ -133,7 +133,7 @@ class MBR_CC_Privacy_Policy_Generator {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $page_id = $this->create_privacy_policy_page();
@@ -158,7 +158,7 @@ class MBR_CC_Privacy_Policy_Generator {
         // Check if page already exists.
         $existing_page_id = get_option('mbr_cc_privacy_policy_page_id');
         if ($existing_page_id && get_post_status($existing_page_id) !== false) {
-            return new WP_Error('page_exists', 'Privacy policy page already exists.');
+            return new WP_Error('page_exists', __('Privacy policy page already exists.', 'mbr-cookie-consent'));
         }
         
         $content = $this->generate_privacy_policy_content();

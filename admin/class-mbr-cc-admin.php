@@ -437,7 +437,7 @@ class MBR_CC_Admin {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die('Unauthorized');
+            wp_die(esc_html__('Unauthorized', 'mbr-cookie-consent'));
         }
         
         $db = MBR_CC_Database::get_instance();
@@ -476,7 +476,7 @@ class MBR_CC_Admin {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         
         $days = isset($_POST['days']) ? absint($_POST['days']) : 365;
@@ -491,7 +491,7 @@ class MBR_CC_Admin {
         $deleted = $db->delete_old_logs($days);
         
         if ($deleted === false) {
-            wp_send_json_error(array('message' => 'Failed to delete logs.'));
+            wp_send_json_error(array('message' => __('Failed to delete logs.', 'mbr-cookie-consent')));
         }
         
         wp_send_json_success(array(
@@ -507,7 +507,7 @@ class MBR_CC_Admin {
     public function ajax_save_form_settings() {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         update_option('mbr_cc_form_integration_enabled', !empty($_POST['enabled']));
         update_option('mbr_cc_form_integration_message', sanitize_text_field(wp_unslash($_POST['message'] ?? '')));
@@ -526,7 +526,7 @@ class MBR_CC_Admin {
     public function ajax_save_ab_enabled() {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Unauthorized.'));
+            wp_send_json_error(array('message' => __('Unauthorized.', 'mbr-cookie-consent')));
         }
         update_option('mbr_cc_ab_testing_enabled', !empty($_POST['enabled']));
 

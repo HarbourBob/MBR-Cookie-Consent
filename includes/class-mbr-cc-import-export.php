@@ -498,7 +498,7 @@ class MBR_CC_Import_Export {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
 
         if (!current_user_can('manage_options')) {
-            wp_die('Unauthorized');
+            wp_die(esc_html__('Unauthorized', 'mbr-cookie-consent'));
         }
 
         $json = $this->build_export_json();

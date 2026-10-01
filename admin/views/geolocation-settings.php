@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 
 // Check if geolocation is available
 if (!function_exists('mbr_cc_geolocation')) {
-    echo '<div class="notice notice-error"><p>Geolocation feature not loaded. Please refresh the page.</p></div>';
+    echo '<div class="notice notice-error"><p>' . esc_html__('Geolocation feature not loaded. Please refresh the page.', 'mbr-cookie-consent') . '</p></div>';
     return;
 }
 
@@ -682,18 +682,37 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
 </div>
 
 <script>
+var mbrCcGeoI18n = {
+    invalidCountry: '<?php echo esc_js(__('Please enter a valid 2-letter country code', 'mbr-cookie-consent')); ?>',
+    testing: '<?php echo esc_js(__('Testing...', 'mbr-cookie-consent')); ?>',
+    resultsFor: '<?php echo esc_js(__('Results for', 'mbr-cookie-consent')); ?>',
+    region: '<?php echo esc_js(__('Region:', 'mbr-cookie-consent')); ?>',
+    showReject: '<?php echo esc_js(__('Show Reject Button:', 'mbr-cookie-consent')); ?>',
+    showCustomize: '<?php echo esc_js(__('Show Customize Button:', 'mbr-cookie-consent')); ?>',
+    enableCcpa: '<?php echo esc_js(__('Enable CCPA Link:', 'mbr-cookie-consent')); ?>',
+    yes: '<?php echo esc_js(__('Yes', 'mbr-cookie-consent')); ?>',
+    no: '<?php echo esc_js(__('No', 'mbr-cookie-consent')); ?>',
+    bannerHeading: '<?php echo esc_js(__('Banner Heading:', 'mbr-cookie-consent')); ?>',
+    note: '<?php echo esc_js(__('Note:', 'mbr-cookie-consent')); ?>',
+    detectionOffNotice: '<?php echo esc_js(__('regional detection is currently switched off, so live visitors see this site\'s own banner settings regardless of where they are. This test shows what they would see if you enabled it.', 'mbr-cookie-consent')); ?>',
+    error: '<?php echo esc_js(__('Error:', 'mbr-cookie-consent')); ?>',
+    confirmClearCache: '<?php echo esc_js(__('Clear all geolocation cache data?', 'mbr-cookie-consent')); ?>',
+    cacheCleared: '<?php echo esc_js(__('Geolocation cache cleared successfully!', 'mbr-cookie-consent')); ?>',
+    errorClearingCache: '<?php echo esc_js(__('Error clearing cache:', 'mbr-cookie-consent')); ?>'
+};
+
 jQuery(document).ready(function($) {
     // Test geolocation
     $('#test-geolocation').on('click', function() {
         var country = $('#test_country').val().toUpperCase();
         var region  = $('#test_region').val().toUpperCase();
         if (country.length !== 2) {
-            alert('Please enter a valid 2-letter country code');
+            alert(mbrCcGeoI18n.invalidCountry);
             return;
         }
-        
-        $('#test-results').html('<p>Testing...</p>').show();
-        
+
+        $('#test-results').html('<p>' + mbrCcGeoI18n.testing + '</p>').show();
+
         $.post(ajaxurl, {
             action: 'mbr_cc_test_geolocation',
             country: country,
@@ -703,42 +722,40 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 var html = '<div style="padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">';
                 var heading = country + (region ? ' / ' + region : '');
-                html += '<h4 style="margin: 0 0 10px 0;">Results for ' + heading + ':</h4>';
-                html += '<p><strong>Region:</strong> ' + response.data.region_name + '</p>';
-                html += '<p><strong>Show Reject Button:</strong> ' + (response.data.show_reject ? 'Yes' : 'No') + '</p>';
-                html += '<p><strong>Show Customize Button:</strong> ' + (response.data.show_customize ? 'Yes' : 'No') + '</p>';
-                html += '<p><strong>Enable CCPA Link:</strong> ' + (response.data.enable_ccpa ? 'Yes' : 'No') + '</p>';
+                html += '<h4 style="margin: 0 0 10px 0;">' + mbrCcGeoI18n.resultsFor + ' ' + heading + ':</h4>';
+                html += '<p><strong>' + mbrCcGeoI18n.region + '</strong> ' + response.data.region_name + '</p>';
+                html += '<p><strong>' + mbrCcGeoI18n.showReject + '</strong> ' + (response.data.show_reject ? mbrCcGeoI18n.yes : mbrCcGeoI18n.no) + '</p>';
+                html += '<p><strong>' + mbrCcGeoI18n.showCustomize + '</strong> ' + (response.data.show_customize ? mbrCcGeoI18n.yes : mbrCcGeoI18n.no) + '</p>';
+                html += '<p><strong>' + mbrCcGeoI18n.enableCcpa + '</strong> ' + (response.data.enable_ccpa ? mbrCcGeoI18n.yes : mbrCcGeoI18n.no) + '</p>';
                 if (response.data.banner_heading) {
-                    html += '<p><strong>Banner Heading:</strong> ' + $('<div/>').text(response.data.banner_heading).html() + '</p>';
+                    html += '<p><strong>' + mbrCcGeoI18n.bannerHeading + '</strong> ' + $('<div/>').text(response.data.banner_heading).html() + '</p>';
                 }
                 if (!response.data.geo_enabled) {
                     html += '<p style="margin-top:12px;padding:8px;background:#fcf3cd;border-left:3px solid #dba617;">'
-                          + '<strong>Note:</strong> regional detection is currently switched off, so live visitors '
-                          + 'see this site\'s own banner settings regardless of where they are. '
-                          + 'This test shows what they <em>would</em> see if you enabled it.</p>';
+                          + '<strong>' + mbrCcGeoI18n.note + '</strong> ' + mbrCcGeoI18n.detectionOffNotice + '</p>';
                 }
                 html += '</div>';
                 $('#test-results').html(html);
             } else {
-                $('#test-results').html('<p style="color: red;">Error: ' + response.data + '</p>');
+                $('#test-results').html('<p style="color: red;">' + mbrCcGeoI18n.error + ' ' + response.data + '</p>');
             }
         });
     });
-    
+
     // Clear cache
     $('#clear-geo-cache').on('click', function() {
-        if (!confirm('Clear all geolocation cache data?')) {
+        if (!confirm(mbrCcGeoI18n.confirmClearCache)) {
             return;
         }
-        
+
         $.post(ajaxurl, {
             action: 'mbr_cc_clear_geo_cache',
             nonce: '<?php echo esc_js(wp_create_nonce("mbr_cc_geo_cache")); ?>'
         }, function(response) {
             if (response.success) {
-                alert('Geolocation cache cleared successfully!');
+                alert(mbrCcGeoI18n.cacheCleared);
             } else {
-                alert('Error clearing cache: ' + response.data);
+                alert(mbrCcGeoI18n.errorClearingCache + ' ' + response.data);
             }
         });
     });

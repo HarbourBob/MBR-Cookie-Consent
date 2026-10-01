@@ -212,7 +212,7 @@ class MBR_CC_Subdomain_Consent {
         if (!$enabled) {
             return array(
                 'enabled' => false,
-                'message' => 'Subdomain sharing is not enabled.',
+                'message' => __('Subdomain sharing is not enabled.', 'mbr-cookie-consent'),
             );
         }
         
@@ -224,7 +224,8 @@ class MBR_CC_Subdomain_Consent {
             'cookie_domain' => $domain,
             'current_host' => $current_host,
             'message' => sprintf(
-                'Consent cookies will be shared across all subdomains of %s',
+                /* translators: %s: cookie domain. */
+                __('Consent cookies will be shared across all subdomains of %s', 'mbr-cookie-consent'),
                 $domain
             ),
         );
