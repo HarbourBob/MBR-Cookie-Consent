@@ -229,6 +229,28 @@ class MBR_CC_Admin {
             'mbr-cookie-consent-import-export',
             array($this, 'render_import_export_page')
         );
+
+        add_submenu_page(
+            'mbr-cookie-consent',
+            __('Consent Doctor', 'mbr-cookie-consent'),
+            __('Consent Doctor', 'mbr-cookie-consent'),
+            'manage_options',
+            'mbr-cookie-consent-doctor',
+            array($this, 'render_doctor_page')
+        );
+    }
+
+    /**
+     * Render the Consent Doctor diagnostics panel.
+     *
+     * @return void
+     */
+    public function render_doctor_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to view this page.', 'mbr-cookie-consent'));
+        }
+
+        require_once MBR_CC_PLUGIN_DIR . 'admin/views/doctor.php';
     }
     
     /**
@@ -430,19 +452,20 @@ class MBR_CC_Admin {
             $args['date_to'] = sanitize_text_field(wp_unslash($_GET['date_to']));
         }
         
-        $csv = $db->export_to_csv($args);
-        
-        if (empty($csv)) {
-            wp_die('No logs to export');
+        if (0 === (int) $db->get_consent_count($args)) {
+            wp_die(esc_html__('No logs to export', 'mbr-cookie-consent'));
         }
         
-        header('Content-Type: text/csv');
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="cookie-consent-logs-' . gmdate('Y-m-d') . '.csv"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
         
-        // CSV is generated internally from sanitized log data and streamed as a file attachment, not rendered as HTML; standard output escaping functions are not applicable to CSV content.
-        echo $csv; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        // Streamed in batches rather than built as one string, so a large log
+        // neither truncates (the pre-2.6.0 export stopped at 100 rows) nor
+        // exhausts memory. Every field is formula-escaped in write_csv().
+        $out = fopen('php://output', 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+        $db->write_csv($out, $args);
+        fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         exit;
     }
     

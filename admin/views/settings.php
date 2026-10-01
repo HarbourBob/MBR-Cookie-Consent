@@ -99,29 +99,24 @@ if (!defined('ABSPATH')) {
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field">
                     <label for="primary_color"><?php esc_html_e('Primary Color', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_primary_color" id="primary_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_primary_color', '#0073aa')); ?>">
+                    <input type="text" name="mbr_cc_primary_color" id="primary_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(mbr_cc_colour_or(get_option('mbr_cc_primary_color', '#0073aa'), '#0073aa')); ?>">
                 </div>
                 
                 <div class="mbr-cc-form-field">
                     <label for="text_color"><?php esc_html_e('Text Color', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_text_color" id="text_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_text_color', '#ffffff')); ?>">
-                </div>
-                
-                <div class="mbr-cc-form-field">
-                    <label for="revisit_button_text_color"><?php esc_html_e('Floating Button Text Color', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_revisit_button_text_color" id="revisit_button_text_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_revisit_button_text_color', '#000000')); ?>">
+                    <input type="text" name="mbr_cc_text_color" id="text_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(mbr_cc_colour_or(get_option('mbr_cc_text_color', '#ffffff'), '#ffffff')); ?>">
                 </div>
             </div>
             
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field">
                     <label for="accept_button_color"><?php esc_html_e('Accept Button Color', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_accept_button_color" id="accept_button_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_accept_button_color', '#00a32a')); ?>">
+                    <input type="text" name="mbr_cc_accept_button_color" id="accept_button_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(mbr_cc_colour_or(get_option('mbr_cc_accept_button_color', '#00a32a'), '#00a32a')); ?>">
                 </div>
                 
                 <div class="mbr-cc-form-field">
                     <label for="reject_button_color"><?php esc_html_e('Reject Button Color', 'mbr-cookie-consent'); ?></label>
-                    <input type="text" name="mbr_cc_reject_button_color" id="reject_button_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(get_option('mbr_cc_reject_button_color', '#d63638')); ?>">
+                    <input type="text" name="mbr_cc_reject_button_color" id="reject_button_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(mbr_cc_colour_or(get_option('mbr_cc_reject_button_color', '#d63638'), '#d63638')); ?>">
                 </div>
             </div>
             
@@ -245,11 +240,51 @@ if (!defined('ABSPATH')) {
                     <input type="text" name="mbr_cc_revisit_consent_text" id="revisit_consent_text" value="<?php echo esc_attr(get_option('mbr_cc_revisit_consent_text', 'Cookie Settings')); ?>">
                 </div>
             </div>
+
+            <?php
+            /*
+             * The button's text colour lives here, with the button, rather than
+             * in the Colors block three fields along from "Text Color".
+             *
+             * It sat there until 2.5.0, as the only three-wide row on the
+             * screen, with a near-identical label and the opposite default:
+             * banner text defaulted to white, this to black. Setting "Text
+             * Color" to white and expecting the button to follow is the obvious
+             * reading, and the button then stayed black with nothing to explain
+             * why. It caught the plugin's own author.
+             */
+            $mbr_cc_revisit_colour_mode = get_option('mbr_cc_revisit_button_text_color_mode', 'inherit');
+            $mbr_cc_revisit_custom = $mbr_cc_revisit_colour_mode === 'custom';
+            ?>
+            <div class="mbr-cc-form-row">
+                <div class="mbr-cc-form-field">
+                    <label for="revisit_button_text_color_mode"><?php esc_html_e('Button Text Colour', 'mbr-cookie-consent'); ?></label>
+                    <select name="mbr_cc_revisit_button_text_color_mode" id="revisit_button_text_color_mode">
+                        <option value="inherit" <?php selected(!$mbr_cc_revisit_custom); ?>>
+                            <?php esc_html_e('Match the banner Text Color', 'mbr-cookie-consent'); ?>
+                        </option>
+                        <option value="custom" <?php selected($mbr_cc_revisit_custom); ?>>
+                            <?php esc_html_e('Use a different colour', 'mbr-cookie-consent'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php esc_html_e('By default the floating button uses the same text colour as the banner, so setting one colour is enough.', 'mbr-cookie-consent'); ?>
+                    </p>
+                </div>
+
+                <div class="mbr-cc-form-field" id="revisit_button_text_color_field"
+                     style="<?php echo $mbr_cc_revisit_custom ? '' : 'display: none;'; ?>">
+                    <label for="revisit_button_text_color"><?php esc_html_e('Floating Button Text Colour', 'mbr-cookie-consent'); ?></label>
+                    <input type="text" name="mbr_cc_revisit_button_text_color" id="revisit_button_text_color" class="mbr-cc-color-picker" value="<?php echo esc_attr(mbr_cc_colour_or(get_option('mbr_cc_revisit_button_text_color', '#000000'), '#000000')); ?>">
+                </div>
+            </div>
         </div>
         <!-- Policy Links -->
         <div class="mbr-cc-settings-section">
             <h2><?php esc_html_e('Policy Links', 'mbr-cookie-consent'); ?></h2>
             <p><?php esc_html_e('Add links to your privacy and cookie policies in the banner.', 'mbr-cookie-consent'); ?></p>
+            <p><?php esc_html_e('A link appears once its checkbox is ticked and its URL is filled in — both are needed, and the link is silently omitted if the URL is blank. Links open in a new tab.', 'mbr-cookie-consent'); ?></p>
+            <p><?php esc_html_e('They work before any consent is given, and that is deliberate: a visitor has to be able to read your policies in order to make an informed choice about them. Consent is never required to follow these links.', 'mbr-cookie-consent'); ?></p>
             
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field" style="width: 100%;">
@@ -263,7 +298,7 @@ if (!defined('ABSPATH')) {
                     <input type="text" name="mbr_cc_privacy_policy_text" id="privacy_policy_text" value="<?php echo esc_attr(get_option('mbr_cc_privacy_policy_text', 'Privacy Policy')); ?>">
                     <br><br>
                     <label for="privacy_policy_url"><?php esc_html_e('URL', 'mbr-cookie-consent'); ?></label>
-                    <input type="url" name="mbr_cc_privacy_policy_url" id="privacy_policy_url" value="<?php echo esc_url(get_option('mbr_cc_privacy_policy_url', '')); ?>" placeholder="https://example.com/privacy-policy" style="width: 100%;">
+                    <input type="url" name="mbr_cc_privacy_policy_url" id="privacy_policy_url" value="<?php echo esc_url(get_option('mbr_cc_privacy_policy_url', '')); ?>" placeholder="https://example.com/privacy-policy" style="width: 100%;" <?php echo get_option('mbr_cc_show_privacy_policy_link', false) ? 'aria-required="true"' : 'aria-required="false"'; ?>>
                 </div>
             </div>
             
@@ -279,7 +314,7 @@ if (!defined('ABSPATH')) {
                     <input type="text" name="mbr_cc_cookie_policy_text" id="cookie_policy_text" value="<?php echo esc_attr(get_option('mbr_cc_cookie_policy_text', 'Cookie Policy')); ?>">
                     <br><br>
                     <label for="cookie_policy_url"><?php esc_html_e('URL', 'mbr-cookie-consent'); ?></label>
-                    <input type="url" name="mbr_cc_cookie_policy_url" id="cookie_policy_url" value="<?php echo esc_url(get_option('mbr_cc_cookie_policy_url', '')); ?>" placeholder="https://example.com/cookie-policy" style="width: 100%;">
+                    <input type="url" name="mbr_cc_cookie_policy_url" id="cookie_policy_url" value="<?php echo esc_url(get_option('mbr_cc_cookie_policy_url', '')); ?>" placeholder="https://example.com/cookie-policy" style="width: 100%;" <?php echo get_option('mbr_cc_show_cookie_policy_link', false) ? 'aria-required="true"' : 'aria-required="false"'; ?>>
                 </div>
             </div>
         </div>

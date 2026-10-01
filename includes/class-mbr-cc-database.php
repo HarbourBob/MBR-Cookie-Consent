@@ -30,6 +30,12 @@ class MBR_CC_Database {
     private $consent_table;
     
     /**
+     * Pass as the $scope argument of delete_old_logs() to prune every site on
+     * a Multisite network. Requires manage_network_options.
+     */
+    const SCOPE_NETWORK = 'network';
+    
+    /**
      * Get instance.
      *
      * @return MBR_CC_Database
@@ -69,7 +75,9 @@ class MBR_CC_Database {
             $table_name = $wpdb->prefix . 'mbr_cc_consent_logs';
         }
         
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        // dbDelta needs CREATE TABLE without IF NOT EXISTS to recognise the
+        // table name and migrate an existing installation's columns/indexes.
+        $sql = "CREATE TABLE $table_name (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             blog_id bigint(20) UNSIGNED NOT NULL DEFAULT 1,
             user_id bigint(20) UNSIGNED DEFAULT NULL,
@@ -80,7 +88,9 @@ class MBR_CC_Database {
             consent_method varchar(50) NOT NULL,
             timestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             cookie_hash varchar(64) NOT NULL,
+            event_key varchar(64) DEFAULT NULL,
             PRIMARY KEY (id),
+            UNIQUE KEY blog_event (blog_id,event_key),
             KEY blog_id (blog_id),
             KEY user_id (user_id),
             KEY timestamp (timestamp),
@@ -92,9 +102,9 @@ class MBR_CC_Database {
         
         // Store database version.
         if (is_multisite()) {
-            update_site_option('mbr_cc_db_version', '1.5.1');
+            update_site_option('mbr_cc_db_version', '1.5.2');
         } else {
-            update_option('mbr_cc_db_version', '1.5.1');
+            update_option('mbr_cc_db_version', '1.5.2');
         }
     }
     
@@ -117,6 +127,7 @@ class MBR_CC_Database {
             'consent_method' => 'banner',
             'timestamp' => current_time('mysql'),
             'cookie_hash' => '',
+            'event_key' => null,
         );
         
         $data = wp_parse_args($data, $defaults);
@@ -169,11 +180,31 @@ class MBR_CC_Database {
                 'consent_method' => $data['consent_method'],
                 'timestamp' => $data['timestamp'],
                 'cookie_hash' => $data['cookie_hash'],
+                'event_key' => $data['event_key'],
             ),
-            array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s')
+            array('%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s')
         );
         
-        return $result ? $wpdb->insert_id : false;
+        // A concurrent retry may have won the unique-index race. Only an
+        // existing matching event counts as success; other DB errors do not.
+        return $result ? $wpdb->insert_id : ($data['event_key'] ? $this->find_event($data['event_key']) : false);
+    }
+
+    /** Verify the migration before storing the plugin version marker. */
+    public function has_event_key() {
+        global $wpdb;
+        $column = $wpdb->get_var("SHOW COLUMNS FROM {$this->consent_table} LIKE 'event_key'");
+        $index = $wpdb->get_row("SHOW INDEX FROM {$this->consent_table} WHERE Key_name = 'blog_event' AND Non_unique = 0");
+        return !empty($column) && !empty($index);
+    }
+
+    /** Event keys are opaque HMACs and always scoped to the current site. */
+    public function find_event($key) {
+        global $wpdb;
+        return $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$this->consent_table} WHERE blog_id = %d AND event_key = %s LIMIT 1",
+            get_current_blog_id(), $key
+        ));
     }
     
     /**
@@ -194,12 +225,18 @@ class MBR_CC_Database {
             'date_from' => null,
             'date_to' => null,
             'blog_id' => get_current_blog_id(), // Filter by current site
+            'id_after' => null, // Keyset pagination for exports.
         );
         
         $args = wp_parse_args($args, $defaults);
         
         $where  = array('1=1');
         $values = array();
+        
+        if (!is_null($args['id_after'])) {
+            $where[]  = 'id > %d';
+            $values[] = (int) $args['id_after'];
+        }
         
         // Always filter by blog_id (critical for multisite)
         if (!is_null($args['blog_id'])) {
@@ -293,7 +330,7 @@ class MBR_CC_Database {
      * @param int $days Delete logs older than X days.
      * @return int|false Number of rows deleted or false on failure.
      */
-    public function delete_old_logs($days = 365) {
+    public function delete_old_logs($days = 365, $scope = null) {
         global $wpdb;
         
         // Defence in depth: never allow a cutoff of "now or later", which
@@ -305,8 +342,31 @@ class MBR_CC_Database {
         
         $date = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
         
+        // On Multisite the log table is shared by every site on the network,
+        // so a DELETE without a blog_id condition removes other sites' consent
+        // records. Before 2.6.0 that is exactly what this did, and the AJAX
+        // handler only required manage_options — which a subsite administrator
+        // has. Deletion is now scoped to the current site unless the caller
+        // explicitly asks for the whole network AND the user is a network
+        // administrator. The capability is checked here as well as by any
+        // caller, because deleting evidence of consent is not something to get
+        // wrong by forgetting a check one level up.
+        if (self::SCOPE_NETWORK === $scope) {
+            if (!is_multisite() || !current_user_can('manage_network_options')) {
+                return false;
+            }
+            
+            return $wpdb->query(
+                $wpdb->prepare("DELETE FROM {$this->consent_table} WHERE timestamp < %s", $date)
+            );
+        }
+        
         return $wpdb->query(
-            $wpdb->prepare("DELETE FROM {$this->consent_table} WHERE timestamp < %s", $date)
+            $wpdb->prepare(
+                "DELETE FROM {$this->consent_table} WHERE blog_id = %d AND timestamp < %s",
+                get_current_blog_id(),
+                $date
+            )
         );
     }
     
@@ -317,62 +377,108 @@ class MBR_CC_Database {
      * @return string CSV content.
      */
     public function export_to_csv($args = array()) {
-        $logs = $this->get_consent_logs($args);
-        
-        if (empty($logs)) {
-            return '';
-        }
-        
-        // Create CSV header.
-        $csv = array();
-        if (is_multisite()) {
-            $csv[] = array('ID', 'Blog ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
-        } else {
-            $csv[] = array('ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
-        }
-        
-        // Add data rows.
-        foreach ($logs as $log) {
-            $categories = json_decode($log['categories_accepted'], true);
-            if (is_array($categories)) {
-                $categories = implode(', ', $categories);
-            }
-            
-            if (is_multisite()) {
-                $csv[] = array(
-                    $log['id'],
-                    $log['blog_id'],
-                    $log['user_id'] ?: 'Guest',
-                    $log['ip_address'],
-                    $log['consent_given'] ? 'Yes' : 'No',
-                    $categories,
-                    $log['consent_method'],
-                    $log['timestamp'],
-                );
-            } else {
-                $csv[] = array(
-                    $log['id'],
-                    $log['user_id'] ?: 'Guest',
-                    $log['ip_address'],
-                    $log['consent_given'] ? 'Yes' : 'No',
-                    $categories,
-                    $log['consent_method'],
-                    $log['timestamp'],
-                );
-            }
-        }
-        
-        // Convert to CSV string.
-        // Build the CSV string via an in-memory php://temp stream so fputcsv() handles correct field quoting/escaping. WP_Filesystem operates on real files and offers no CSV-encoding equivalent.
+        // Kept for callers that want a string. Builds through the streaming
+        // writer into php://temp, which spills to disk past 2 MB rather than
+        // holding a large log in memory.
         $output = fopen('php://temp', 'r+'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-        foreach ($csv as $row) {
-            fputcsv($output, array_map(array(__CLASS__, 'escape_csv_field'), $row));
-        }
+        $written = $this->write_csv($output, $args);
         rewind($output);
-        $csv_content = stream_get_contents($output);
+        $csv_content = $written > 0 ? stream_get_contents($output) : '';
         fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         
         return $csv_content;
+    }
+    
+    /**
+     * Rows fetched per query when exporting.
+     */
+    const EXPORT_BATCH = 1000;
+    
+    /**
+     * Write every matching consent log to an open stream as CSV.
+     *
+     * Before 2.6.0 the export reused get_consent_logs() with its defaults, and
+     * the default limit is 100 — the page size of the Logs screen. Any site
+     * with more than 100 records got a truncated export with nothing to say
+     * so, which is the worst possible failure for a document whose purpose is
+     * to demonstrate consent. This walks the whole result set in batches.
+     *
+     * Batches are keyed on id rather than OFFSET: consent keeps being logged
+     * while an export runs, and with offset paging a new row shifts every
+     * later page, so rows are duplicated or skipped. Ids only grow.
+     *
+     * @param resource $handle Writable stream.
+     * @param array    $args   Filters as for get_consent_logs(); limit, offset
+     *                         and ordering are controlled here.
+     * @return int Number of data rows written (header excluded).
+     */
+    public function write_csv($handle, $args = array()) {
+        $args = is_array($args) ? $args : array();
+        unset($args['limit'], $args['offset'], $args['orderby'], $args['order'], $args['id_after']);
+        
+        $multisite = is_multisite();
+        $header = $multisite
+            ? array('ID', 'Blog ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp')
+            : array('ID', 'User ID', 'IP Address', 'Consent Given', 'Categories', 'Method', 'Timestamp');
+        
+        $rows    = 0;
+        $last_id = 0;
+        
+        do {
+            $batch = $this->get_consent_logs(array_merge($args, array(
+                'limit'    => self::EXPORT_BATCH,
+                'offset'   => 0,
+                'orderby'  => 'id',
+                'order'    => 'ASC',
+                'id_after' => $last_id,
+            )));
+            
+            if (empty($batch)) {
+                break;
+            }
+            
+            if (0 === $rows) {
+                fputcsv($handle, $header);
+            }
+            
+            foreach ($batch as $log) {
+                $last_id = (int) $log['id'];
+                fputcsv($handle, array_map(array(__CLASS__, 'escape_csv_field'), $this->csv_row($log, $multisite)));
+                $rows++;
+            }
+        } while (count($batch) === self::EXPORT_BATCH);
+        
+        return $rows;
+    }
+    
+    /**
+     * One consent log as a CSV row.
+     *
+     * @param array $log       Row from the consent table.
+     * @param bool  $multisite Include the blog ID column.
+     * @return array
+     */
+    private function csv_row($log, $multisite) {
+        $categories = json_decode($log['categories_accepted'], true);
+        if (is_array($categories)) {
+            $categories = implode(', ', $categories);
+        }
+        
+        $row = array(
+            $log['id'],
+            $log['user_id'] ?: 'Guest',
+            $log['ip_address'],
+            $log['consent_given'] ? 'Yes' : 'No',
+            $categories,
+            $log['consent_method'],
+            $log['timestamp'],
+        );
+        
+        if ($multisite) {
+            array_splice($row, 1, 0, array($log['blog_id']));
+        }
+        
+        return $row;
     }
     
     /**

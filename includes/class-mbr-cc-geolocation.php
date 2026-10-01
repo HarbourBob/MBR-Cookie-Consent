@@ -57,6 +57,24 @@ class MBR_CC_Geolocation {
     private $detection_source = 'default';
     
     /**
+     * Whether the current answer was read from cache rather than resolved now.
+     *
+     * A successful detection is cached per visitor IP for 24 hours; a fallback
+     * for only five minutes. That asymmetry is right for serving visitors and
+     * badly misleading for diagnostics: once a good result is stored, every
+     * check for the next day reports success even if the provider has since
+     * become completely unreachable, while a real failure disappears from view
+     * in five minutes. Anything reporting on geolocation health has to be able
+     * to say which of the two it is looking at.
+     *
+     * @var bool
+     */
+    private $from_cache = false;
+    
+    /** @var int|null Unix time the cached answer was stored, when cached. */
+    private $cached_at = null;
+    
+    /**
      * Singleton instance
      */
     private static $instance = null;
@@ -171,6 +189,8 @@ class MBR_CC_Geolocation {
         // Check cache first
         $cached = $this->get_cached_location();
         if ($cached) {
+            $this->from_cache = true;
+            $this->cached_at  = isset($cached['timestamp']) ? (int) $cached['timestamp'] : null;
             $this->country_code = $cached['country'];
             $this->region_code  = isset($cached['region_code']) ? $cached['region_code'] : null;
             $this->region = $cached['region'];
@@ -691,13 +711,22 @@ class MBR_CC_Geolocation {
             return 'za_popia';
         }
         
+        // Chile — Law 21.719, in force 1 December 2026. GDPR-aligned: free,
+        // informed, specific, unequivocal consent; withdrawal as easy as
+        // giving it; extraterritorial. Behaves exactly like the opt-in
+        // default it replaces — the region exists for accurate wording.
+        if ($country_code === 'CL') {
+            return 'cl_lppd';
+        }
+        
         // Default for rest of world.
         // NOTE: as of 2.3.0 this is an opt-in posture for NEW installs — see
         // MBR_CC_Region_Config::get_default_config(). Countries that genuinely
         // require opt-in but are not mapped above (e.g. UAE, Thailand) are the
         // reason. Japan is knowingly over-served: notice or opt-out is
         // generally sufficient there under the APPI and the Telecommunications
-        // Business Act external transmission rules.
+        // Business Act external transmission rules, and the July 2026 APPI
+        // amendment did not change that.
         return 'default';
     }
     
@@ -724,7 +753,33 @@ class MBR_CC_Geolocation {
      * @param string|null $region_code  Optional ISO 3166-2 sub-national region code.
      * @param bool        $was_detected Whether this is a genuine provider answer.
      */
+    /**
+     * Note the outcome of a fresh lookup so intermittent failures stay visible.
+     *
+     * Without this, geolocation health can only ever be sampled at the instant
+     * something asks — and because success is cached for a day and failure for
+     * five minutes, that sample is biased heavily towards success. A site whose
+     * provider fails one request in three would look perfectly healthy every
+     * time anybody checked.
+     *
+     * Bounded the same way as the consent log health record: at most one write
+     * per minute per outcome, and failures are retained after a later success.
+     *
+     * @param bool   $detected Whether a real location was resolved.
+     * @param string $source   Detection source for this attempt.
+     */
+    private function record_geo_health($detected, $source) {
+        $key = $detected ? 'mbr_cc_geo_last_success' : 'mbr_cc_geo_last_fallback';
+        $previous = get_option($key, array());
+        
+        if (!is_array($previous) || empty($previous['time']) || time() - (int) $previous['time'] >= MINUTE_IN_SECONDS) {
+            update_option($key, array('time' => time(), 'source' => (string) $source), false);
+        }
+    }
+    
     private function cache_location($country, $region, $region_code = null, $was_detected = true) {
+        $this->record_geo_health($was_detected, $this->detection_source);
+        
         $ip = $this->get_user_ip();
         if (empty($ip)) {
             return;
@@ -779,6 +834,26 @@ class MBR_CC_Geolocation {
         }
         
         return $this->detection_source;
+    }
+    
+    /**
+     * Diagnostic detail about how the current answer was arrived at.
+     *
+     * @since 2.3.8
+     * @return array
+     */
+    public function get_detection_diagnostics() {
+        if ($this->country_code === null) {
+            $this->detect_location();
+        }
+        
+        return array(
+            'source'        => $this->detection_source,
+            'from_cache'    => (bool) $this->from_cache,
+            'cached_at'     => $this->cached_at,
+            'last_success'  => get_option('mbr_cc_geo_last_success', array()),
+            'last_fallback' => get_option('mbr_cc_geo_last_fallback', array()),
+        );
     }
     
     /**
@@ -916,6 +991,7 @@ class MBR_CC_Geolocation {
             'kr_pipa'    => 'South Korea (PIPA)',
             'sa_pdpl'    => 'Saudi Arabia (PDPL)',
             'za_popia'   => 'South Africa (POPIA)',
+            'cl_lppd'    => 'Chile (Law 21.719 — in force 1 Dec 2026)',
             'default'    => 'Rest of World (safe default — opt-in)',
             // Legacy keys for backwards compatibility with cached transients.
             'eu_uk'      => 'EU/UK (GDPR)',

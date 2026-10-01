@@ -124,7 +124,11 @@ class MBR_CC_Script_Blocker {
             array(
                 'name'    => 'Google Fonts',
                 'domains' => array( 'fonts.googleapis.com', 'fonts.gstatic.com' ),
-                'type'    => 'script',
+                // Arrives as <link rel="stylesheet">, never as a script. It was
+                // declared 'script' until 2.4.5 and therefore never blocked.
+                // Blocking the stylesheet also stops fonts.gstatic.com, which is
+                // fetched by the stylesheet rather than by the page.
+                'type'    => 'stylesheet',
             ),
             array(
                 'name'    => 'Spotify Embed',
@@ -292,6 +296,9 @@ class MBR_CC_Script_Blocker {
                     if ( 'script' === $service['type'] || 'both' === $service['type'] ) {
                         $html = $this->block_script_src( $html, $domain, $category );
                     }
+                    if ( 'stylesheet' === $service['type'] || 'both' === $service['type'] ) {
+                        $html = $this->block_stylesheet_href( $html, $domain, $category );
+                    }
                     if ( 'iframe' === $service['type'] || 'both' === $service['type'] ) {
                         $html = $this->block_iframe_src( $html, $domain, $service['name'], $category );
 
@@ -333,10 +340,236 @@ class MBR_CC_Script_Blocker {
             } elseif ( 'iframe' === $type ) {
                 $html = $this->block_iframe_src( $html, $id, $script['name'] ?? '', $category );
                 $html = $this->block_facade( $html, $id, $script['name'] ?? '', $category );
+            } elseif ( 'stylesheet' === $type ) {
+                $html = $this->block_stylesheet_href( $html, $id, $category );
+            } elseif ( 'image' === $type ) {
+                // Until 2.4.1 custom rules could only be 'src', 'inline' or
+                // 'iframe', all of which rewrite <script> or <iframe>. An <img>
+                // matched none of them, so a rule against an image host was
+                // accepted, displayed, and could never fire — the Consent
+                // Doctor reported the host as escaping a rule that was in fact
+                // incapable of holding it.
+                //
+                // This matters more than it sounds. WordPress core emits
+                // Gravatar avatars as plain <img> on any comment thread, which
+                // sends the visitor's IP address to a third party before
+                // consent, on a huge number of sites. Tracking pixels are the
+                // same shape.
+                $html = $this->block_image_src( $html, $id, $category );
             }
         }
 
         return $html;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Tag and attribute handling
+    // ─────────────────────────────────────────────────────────────────────
+    //
+    // Added in 2.6.0. Each primitive used to find its attribute with its own
+    // regular expression, and every one of them assumed the attribute was
+    // written name="value" with no spaces and a quote. HTML does not require
+    // either: <script src = "…"> and <script src=…> are both valid, both are
+    // what minifiers and hand-written templates produce, and both passed
+    // straight through unblocked. Appending type="text/plain" rather than
+    // replacing an existing type was the second fault — browsers keep the
+    // FIRST of two identical attributes, so a tag that already said
+    // type="text/javascript" stayed executable.
+    //
+    // The primitives now parse the opening tag into attributes, change the
+    // attributes themselves, and write the tag back. Values are carried in
+    // their original, still-encoded form, so nothing is decoded and
+    // re-encoded differently on the way through.
+
+    /**
+     * Script types a browser runs as classic JavaScript. A blocked script
+     * with any other type (module, importmap, a JSON data block…) has that
+     * type recorded so it is restored as what it was.
+     *
+     * @var string[]
+     */
+    private static $classic_script_types = array(
+        '', 'text/javascript', 'application/javascript', 'text/ecmascript',
+        'application/ecmascript', 'application/x-javascript', 'text/x-javascript',
+        'text/jscript', 'text/livescript', 'application/x-ecmascript',
+        'text/x-ecmascript', 'text/javascript1.0', 'text/javascript1.1',
+        'text/javascript1.2', 'text/javascript1.3', 'text/javascript1.4',
+        'text/javascript1.5',
+    );
+
+    /**
+     * Attributes through which an <img> or <source> can make a request.
+     * srcset matters most: WordPress core's get_avatar() emits a 2x srcset,
+     * and on a high-density screen the browser fetches that candidate
+     * whatever src says. The data-* entries are where lazy-loading plugins
+     * park the real URL until their script swaps it in.
+     *
+     * @var string[]
+     */
+    private static $image_source_attrs = array(
+        'src', 'srcset', 'data-src', 'data-srcset', 'data-lazy-src',
+        'data-lazy-srcset', 'data-original', 'data-original-set',
+    );
+
+    /**
+     * Rewrite every opening tag of the given names through a callback.
+     *
+     * The callback receives the parsed attribute list and returns a new list,
+     * a complete replacement string, or null to leave the tag exactly as it was.
+     *
+     * @param string   $html      Page HTML.
+     * @param string   $names     Tag names as a regex alternation, e.g. 'img|source'.
+     * @param string   $needle    Cheap pre-filter: tags not containing it are skipped.
+     * @param callable $callback  function( array $attrs, string $tag_name ): ?array
+     * @return string
+     */
+    private function rewrite_tags( $html, $names, $needle, $callback ) {
+        // A quoted value may legitimately contain ">", so the tag body is
+        // matched as runs of non-quote characters or whole quoted strings.
+        $regex = '/<(' . $names . ')(?=[\s\/>])((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>/i';
+
+        return preg_replace_callback(
+            $regex,
+            function ( $m ) use ( $needle, $callback ) {
+                if ( '' !== $needle && false === stripos( $m[2], $needle ) ) {
+                    return $m[0];
+                }
+
+                $body         = $m[2];
+                $self_closing = (bool) preg_match( '/\/\s*$/', $body );
+                if ( $self_closing ) {
+                    $body = preg_replace( '/\/\s*$/', '', $body );
+                }
+
+                $attrs = self::parse_attributes( $body );
+                $new   = call_user_func( $callback, $attrs, strtolower( $m[1] ) );
+
+                if ( null === $new ) {
+                    return $m[0];
+                }
+
+                // A string is a complete replacement — used where markup has
+                // to be inserted before the tag, such as a placeholder.
+                if ( is_string( $new ) ) {
+                    return $new;
+                }
+
+                return self::build_tag( $m[1], $new, $self_closing );
+            },
+            $html
+        ) ?? $html;
+    }
+
+    /**
+     * Parse the attribute part of an opening tag.
+     *
+     * Handles double-quoted, single-quoted, unquoted and valueless attributes,
+     * with or without whitespace around "=". Returns a list of
+     * array( name, raw_value|null ) in document order; raw values are exactly
+     * as written, entities included.
+     *
+     * @param string $body Everything between the tag name and ">".
+     * @return array[]
+     */
+    private static function parse_attributes( $body ) {
+        $attrs = array();
+
+        preg_match_all(
+            '/([^\s"\'>\/=]+)(?:\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'=<>`]+)))?/',
+            $body,
+            $matches,
+            PREG_SET_ORDER
+        );
+
+        foreach ( $matches as $m ) {
+            $value = null;
+            if ( isset( $m[2] ) && '' !== $m[2] ) {
+                $value = $m[2];
+            } elseif ( isset( $m[3] ) && '' !== $m[3] ) {
+                $value = $m[3];
+            } elseif ( isset( $m[4] ) && '' !== $m[4] ) {
+                $value = $m[4];
+            } elseif ( preg_match( '/=\s*(""|\'\')$/', $m[0] ) ) {
+                $value = '';
+            }
+
+            $attrs[] = array( $m[1], $value );
+        }
+
+        return $attrs;
+    }
+
+    /**
+     * Write a tag back from its attribute list.
+     *
+     * @param string  $name         Tag name as it appeared.
+     * @param array[] $attrs        array( name, raw_value|null ) pairs.
+     * @param bool    $self_closing Whether to keep a trailing slash.
+     * @return string
+     */
+    private static function build_tag( $name, $attrs, $self_closing = false ) {
+        $out = '<' . $name;
+
+        foreach ( $attrs as $attr ) {
+            $out .= ' ' . $attr[0];
+            if ( null !== $attr[1] ) {
+                // Raw values from double quotes or unquoted positions cannot
+                // contain '"'; values from single quotes can, and are the only
+                // thing this changes.
+                $out .= '="' . str_replace( '"', '&quot;', $attr[1] ) . '"';
+            }
+        }
+
+        return $out . ( $self_closing ? ' />' : '>' );
+    }
+
+    /**
+     * First value of an attribute, as the browser would see it, or null.
+     * HTML keeps the first of duplicate attributes and ignores the rest.
+     */
+    private static function attr_get( $attrs, $name ) {
+        foreach ( $attrs as $attr ) {
+            if ( 0 === strcasecmp( $attr[0], $name ) ) {
+                return null === $attr[1] ? '' : $attr[1];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Remove every occurrence of the named attributes.
+     */
+    private static function attr_remove( $attrs, $names ) {
+        $names = array_map( 'strtolower', (array) $names );
+        return array_values( array_filter( $attrs, function ( $attr ) use ( $names ) {
+            return ! in_array( strtolower( $attr[0] ), $names, true );
+        } ) );
+    }
+
+    /**
+     * Does a raw attribute value contain the pattern, encoded or decoded?
+     */
+    private static function value_contains( $raw, $pattern ) {
+        if ( null === $raw || '' === $pattern ) {
+            return false;
+        }
+        return false !== stripos( $raw, $pattern )
+            || false !== stripos( html_entity_decode( $raw, ENT_QUOTES, 'UTF-8' ), $pattern );
+    }
+
+    /**
+     * Record a script's type if restoring it as classic JavaScript would be
+     * wrong. Returns the attributes to add.
+     */
+    private static function type_marker( $type ) {
+        if ( null === $type ) {
+            return array();
+        }
+        $normalised = strtolower( trim( html_entity_decode( $type, ENT_QUOTES, 'UTF-8' ) ) );
+        if ( in_array( $normalised, self::$classic_script_types, true ) ) {
+            return array();
+        }
+        return array( array( 'data-mbr-cc-type', esc_attr( $normalised ) ) );
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -356,29 +589,35 @@ class MBR_CC_Script_Blocker {
             return $html;
         }
 
-        $regex = '/<script(\s[^>]*)?src=(["\'])([^"\']*'
-               . preg_quote( $pattern, '/' )
-               . '[^"\']*)(\2)/i';
-
-        return preg_replace_callback( $regex, function ( $m ) use ( $category ) {
-            $attrs = isset( $m[1] ) ? $m[1] : '';
-
-            // Leave tags this method has already handled alone. The pattern
-            // looks for "src=", which also occurs inside the data-mbr-cc-src
-            // attribute written below — so without this guard a second pass
-            // over the same HTML wraps the tag again, nesting the markers and
-            // corrupting the stored source URL.
-            if ( false !== strpos( $attrs, 'data-mbr-cc-blocked' ) ) {
-                return $m[0];
+        return $this->rewrite_tags( $html, 'script', $pattern, function ( $attrs ) use ( $pattern, $category ) {
+            // Already handled by an earlier rule on this pass.
+            if ( null !== self::attr_get( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return null;
             }
 
-            $src   = $m[3];
-            return '<script' . $attrs
-                 . ' type="text/plain"'
-                 . ' data-mbr-cc-blocked="true"'
-                 . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
-                 . ' data-mbr-cc-src="' . esc_attr( $src ) . '"';
-        }, $html ) ?? $html;
+            $src = self::attr_get( $attrs, 'src' );
+            if ( null === $src || ! self::value_contains( $src, $pattern ) ) {
+                return null;
+            }
+
+            $type  = self::attr_get( $attrs, 'type' );
+            $attrs = self::attr_remove( $attrs, array( 'src', 'type' ) );
+
+            // Exactly one type, and it is inert. With src removed as well, a
+            // script body — some tags carry configuration inside the element —
+            // has nothing to execute as either.
+            array_unshift( $attrs, array( 'type', 'text/plain' ) );
+
+            return array_merge(
+                $attrs,
+                self::type_marker( $type ),
+                array(
+                    array( 'data-mbr-cc-blocked', 'true' ),
+                    array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                    array( 'data-mbr-cc-src', $src ),
+                )
+            );
+        } );
     }
 
     /**
@@ -413,7 +652,9 @@ class MBR_CC_Script_Blocker {
         $escaped = preg_quote( $pattern, '/' );
         $body    = '(?:(?!<\/script>)[\s\S])*';
 
-        $regex = '/<script(\s[^>]*)?>(' . $body . $escaped . $body . ')<\/script>/i';
+        // Attributes are matched as runs of non-quote characters or whole
+        // quoted strings, so a ">" inside an attribute value cannot end the tag.
+        $regex = '/<script((?:\s(?:[^>"\']|"[^"]*"|\'[^\']*\')*)?)>(' . $body . $escaped . $body . ')<\/script>/i';
 
         return preg_replace_callback(
             $regex,
@@ -434,12 +675,24 @@ class MBR_CC_Script_Blocker {
                 // to recover it, which was the same bug a second time.
                 $content = isset( $m[2] ) ? $m[2] : '';
 
-                // Strip any existing type attribute, then set to text/plain.
-                $attrs  = preg_replace( '/\s*type=["\'][^"\']*["\']/', '', $attrs );
-                $attrs .= ' type="text/plain" data-mbr-cc-blocked="true"'
-                       . ' data-mbr-cc-category="' . esc_attr( $category ) . '"';
+                // Replace every type attribute with exactly one inert one. The
+                // old expression only recognised type="…" with no spaces, so
+                // type = "module" or an unquoted type survived beside the new
+                // one — and browsers honour the first.
+                $parsed = self::parse_attributes( $attrs );
+                $type   = self::attr_get( $parsed, 'type' );
+                $parsed = self::attr_remove( $parsed, array( 'type' ) );
+                array_unshift( $parsed, array( 'type', 'text/plain' ) );
+                $parsed = array_merge(
+                    $parsed,
+                    self::type_marker( $type ),
+                    array(
+                        array( 'data-mbr-cc-blocked', 'true' ),
+                        array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                    )
+                );
 
-                return '<script' . $attrs . '>' . $content . '</script>';
+                return self::build_tag( 'script', $parsed ) . $content . '</script>';
             },
             $html
         ) ?? $html;
@@ -459,57 +712,60 @@ class MBR_CC_Script_Blocker {
      *   - Self-closing or paired iframes.
      */
     private function block_iframe_src( $html, $pattern, $service_name = '', $category = 'marketing' ) {
-        // Four regex passes per call, one per source attribute, so the early
-        // rejection matters more here than anywhere else.
         if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
             return $html;
         }
 
         $placeholder_class = 'MBR_CC_Blocked_Placeholder';
-        $escaped           = preg_quote( $pattern, '/' );
 
-        // Build per-attribute regexes. The 'src' pattern uses a negative
-        // lookbehind so it doesn't accidentally match 'data-lazy-src'.
-        $attr_patterns = array(
-            'src'            => '(?<![a-zA-Z0-9_-])src',
-            'data-lazy-src'  => 'data-lazy-src',
-            'data-src'       => 'data-src',
-            'data-rocket-src'=> 'data-rocket-src',
-        );
+        // Attributes an iframe's real URL may sit in: its own src, or the
+        // data attribute a lazy-loader moves it to.
+        $source_attrs = array( 'src', 'data-lazy-src', 'data-src', 'data-rocket-src' );
 
-        foreach ( $attr_patterns as $attr => $attr_regex ) {
-            $regex = '/<iframe(\s[^>]*?)?' . $attr_regex
-                   . '=(["\'])([^"\']*' . $escaped . '[^"\']*)(\2)([^>]*)>/i';
+        return $this->rewrite_tags( $html, 'iframe', $pattern, function ( $attrs ) use ( $pattern, $service_name, $category, $placeholder_class, $source_attrs ) {
+            if ( null !== self::attr_get( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return null;
+            }
 
-            $html = ( preg_replace_callback(
-                $regex,
-                function ( $m ) use ( $service_name, $category, $placeholder_class ) {
-                    $before = isset( $m[1] ) ? $m[1] : '';
-                    $src    = $m[3];
-                    $after  = isset( $m[5] ) ? $m[5] : '';
+            $url = null;
+            foreach ( $source_attrs as $name ) {
+                $value = self::attr_get( $attrs, $name );
+                if ( self::value_contains( $value, $pattern ) ) {
+                    $url = $value;
+                    break;
+                }
+            }
+            if ( null === $url ) {
+                return null;
+            }
 
-                    $blocked = '<iframe'
-                        . $before
-                        . ' data-mbr-cc-blocked="true"'
-                        . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
-                        . ' data-mbr-cc-src="' . esc_attr( $src ) . '"'
-                        . $after
-                        . ' style="display:none !important" aria-hidden="true">';
+            // An existing style attribute is kept aside and restored on
+            // consent. Appending a second one, as before 2.6.0, did nothing:
+            // the browser uses the first, so an iframe that already had a
+            // style was never hidden.
+            $style = self::attr_get( $attrs, 'style' );
+            $attrs = self::attr_remove( $attrs, array_merge( $source_attrs, array( 'style', 'aria-hidden' ) ) );
 
-                    // Always render a placeholder — silently hiding content with no
-                    // explanation is bad UX and leaves users with no way to unblock it.
-                    // The admin toggle controls customisation options, not visibility.
-                    $overlay = class_exists( $placeholder_class )
-                        ? $placeholder_class::render( array( 'service' => $service_name ) )
-                        : '';
+            $attrs = array_merge( $attrs, array(
+                array( 'data-mbr-cc-blocked', 'true' ),
+                array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                array( 'data-mbr-cc-src', $url ),
+            ) );
+            if ( null !== $style && '' !== $style ) {
+                $attrs[] = array( 'data-mbr-cc-style', $style );
+            }
+            $attrs[] = array( 'style', 'display:none !important' );
+            $attrs[] = array( 'aria-hidden', 'true' );
 
-                    return $overlay . $blocked;
-                },
-                $html
-            ) ?? $html );
-        }
+            // Always render a placeholder — silently hiding content with no
+            // explanation is bad UX and leaves users with no way to unblock it.
+            // The admin toggle controls customisation options, not visibility.
+            $overlay = class_exists( $placeholder_class )
+                ? $placeholder_class::render( array( 'service' => $service_name ) )
+                : '';
 
-        return $html;
+            return $overlay . self::build_tag( 'iframe', $attrs );
+        } );
     }
 
     /**
@@ -571,63 +827,118 @@ class MBR_CC_Script_Blocker {
         }
 
         $placeholder_class = 'MBR_CC_Blocked_Placeholder';
-        $escaped           = preg_quote( $pattern, '/' );
+        $facade_attrs      = self::$facade_attrs;
 
-        foreach ( self::$facade_attrs as $attr ) {
-            // Any element except an iframe — those are handled separately and
-            // matching them here would wrap them twice.
-            $regex = '/<(?!iframe\b)([a-z][a-z0-9]*)((?:\s[^>]*?)?)\s'
-                   . preg_quote( $attr, '/' )
-                   . '=(["\'])([^"\']*' . $escaped . '[^"\']*)\3((?:[^>]*?)?)>/i';
+        // Any container element. Iframes, images, sources, scripts and links
+        // have their own handlers: matching an iframe here would wrap it twice,
+        // and a lazy-loaded thumbnail with data-src="…img.youtube.com…" would
+        // otherwise be mistaken for a video facade and restored as an embed.
+        return $this->rewrite_tags( $html, '(?!(?:iframe|img|source|script|link)\b)[a-z][a-z0-9-]*', $pattern, function ( $attrs, $tag ) use ( $pattern, $service_name, $category, $placeholder_class, $facade_attrs ) {
+            if ( null !== self::attr_get( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return null;
+            }
 
-            $html = ( preg_replace_callback(
-                $regex,
-                function ( $m ) use ( $attr, $service_name, $category, $placeholder_class ) {
-                    $tag    = $m[1];
-                    $before = $m[2];
-                    $url    = $m[4];
-                    $after  = $m[5];
+            foreach ( $facade_attrs as $attr ) {
+                $url = self::attr_get( $attrs, $attr );
+                if ( ! self::value_contains( $url, $pattern ) ) {
+                    continue;
+                }
 
-                    if ( false !== strpos( $before . $after, 'data-mbr-cc-blocked' ) ) {
-                        return $m[0];
-                    }
+                // The original attribute name travels with the element so the
+                // browser can put the facade back exactly as it was.
+                $attrs = array_merge(
+                    self::attr_remove( $attrs, array( $attr ) ),
+                    array(
+                        array( 'data-mbr-cc-blocked', 'true' ),
+                        array( 'data-mbr-cc-facade', 'true' ),
+                        array( 'data-mbr-cc-attr', esc_attr( $attr ) ),
+                        array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                        array( 'data-mbr-cc-src', $url ),
+                        array( 'data-mbr-cc-hidden', 'true' ),
+                    )
+                );
 
-                    // The original attribute name travels with the element so
-                    // the browser can put the facade back exactly as it was.
-                    $blocked = '<' . $tag
-                        . $before
-                        . ' data-mbr-cc-blocked="true"'
-                        . ' data-mbr-cc-facade="true"'
-                        . ' data-mbr-cc-attr="' . esc_attr( $attr ) . '"'
-                        . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
-                        . ' data-mbr-cc-src="' . esc_attr( $url ) . '"'
-                        . ' data-mbr-cc-hidden="true"'
-                        . $after
-                        . '>';
+                $overlay = class_exists( $placeholder_class )
+                    ? $placeholder_class::render( array( 'service' => $service_name ) )
+                    : '';
 
-                    $overlay = class_exists( $placeholder_class )
-                        ? $placeholder_class::render( array( 'service' => $service_name ) )
-                        : '';
+                return $overlay . self::build_tag( $tag, $attrs );
+            }
 
-                    return $overlay . $blocked;
-                },
-                $html
-            ) ?? $html );
-        }
-
-        return $html;
+            return null;
+        } );
     }
 
     /**
-     * Block poster images served by video providers.
+     * Block <link rel="stylesheet" href="…"> whose href contains $pattern.
      *
-     * Replaces the source with a transparent pixel so the layout does not
-     * collapse, keeping the real URL for the browser to restore on consent.
+     * There was no stylesheet handling at all before 2.4.5, which meant the
+     * built-in Google Fonts rule — declared as type 'script' — could never fire.
+     * Google Fonts arrives as a stylesheet link, so the rule was listed, shown
+     * in the UI, and matched nothing. Loading it discloses the visitor's IP
+     * address to Google before consent, which a German court has held unlawful
+     * under the GDPR, so this was not a cosmetic gap.
+     *
+     * The href is moved to a data attribute rather than pointed somewhere
+     * harmless. A <link rel="stylesheet"> with no href fetches nothing, whereas
+     * media="not all" and similar tricks still fetch at low priority in most
+     * browsers.
      *
      * @param string $html     Page HTML.
      * @param string $pattern  Host fragment to match.
      * @param string $category Consent category.
      * @return string
+     */
+    private function block_stylesheet_href( $html, $pattern, $category = 'preferences' ) {
+        if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
+            return $html;
+        }
+
+        return $this->rewrite_tags( $html, 'link', $pattern, function ( $attrs ) use ( $pattern, $category ) {
+            if ( null !== self::attr_get( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return null;
+            }
+
+            $href = self::attr_get( $attrs, 'href' );
+            if ( null === $href || ! self::value_contains( $href, $pattern ) ) {
+                return null;
+            }
+
+            // Only links that fetch or connect. A <link rel="canonical"> or an
+            // alternate carrying a matching host must be left alone.
+            $rel = strtolower( (string) self::attr_get( $attrs, 'rel' ) );
+            if ( ! preg_match( '/(^|\s)(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch)(\s|$)/', $rel ) ) {
+                return null;
+            }
+
+            return array_merge(
+                self::attr_remove( $attrs, array( 'href' ) ),
+                array(
+                    array( 'data-mbr-cc-blocked', 'true' ),
+                    array( 'data-mbr-cc-stylesheet', 'true' ),
+                    array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                    array( 'data-mbr-cc-href', $href ),
+                )
+            );
+        } );
+    }
+
+    /**
+     * Hold images — and every alternative source a browser could choose.
+     *
+     * CHANGED IN 2.6.0. Only src used to be replaced. srcset stayed live, and
+     * a browser chooses from srcset independently of src — on a high-density
+     * screen it fetches the 2x candidate and never looks at src at all.
+     * WordPress core's get_avatar() writes exactly that srcset, so the
+     * Gravatar hold added in 2.4.8 still leaked the visitor's IP address to
+     * Automattic on most phones and many laptops. <picture><source srcset> and
+     * <video><source src> are separate elements the old code never looked at,
+     * and lazy-loading plugins keep the real URL in data-src until their own
+     * script swaps it in, which would happen before consent.
+     *
+     * Now every source attribute on a matching <img> or <source> is moved to
+     * data-mbr-cc-held-{name}, and banner.js puts each one back. An <img> gets
+     * a transparent placeholder src so the layout does not move.
      */
     private function block_image_src( $html, $pattern, $category = 'marketing' ) {
         if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
@@ -636,31 +947,49 @@ class MBR_CC_Script_Blocker {
 
         $transparent = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
-        $regex = '/<img((?:\s[^>]*?)?)\s(?<![a-zA-Z0-9_-])src=(["\'])([^"\']*'
-               . preg_quote( $pattern, '/' ) . '[^"\']*)\2((?:[^>]*?)?)>/i';
+        return $this->rewrite_tags( $html, 'img|source', $pattern, function ( $attrs, $tag ) use ( $pattern, $category, $transparent ) {
+            if ( null !== self::attr_get( $attrs, 'data-mbr-cc-blocked' ) ) {
+                return null;
+            }
 
-        return preg_replace_callback(
-            $regex,
-            function ( $m ) use ( $category, $transparent ) {
-                $before = $m[1];
-                $url    = $m[3];
-                $after  = $m[4];
-
-                if ( false !== strpos( $before . $after, 'data-mbr-cc-blocked' ) ) {
-                    return $m[0];
+            // Does any source the browser might use point at the host?
+            $matched = false;
+            foreach ( self::$image_source_attrs as $name ) {
+                if ( self::value_contains( self::attr_get( $attrs, $name ), $pattern ) ) {
+                    $matched = true;
+                    break;
                 }
+            }
+            if ( ! $matched ) {
+                return null;
+            }
 
-                return '<img' . $before
-                    . ' src="' . $transparent . '"'
-                    . ' data-mbr-cc-blocked="true"'
-                    . ' data-mbr-cc-image="true"'
-                    . ' data-mbr-cc-category="' . esc_attr( $category ) . '"'
-                    . ' data-mbr-cc-src="' . esc_attr( $url ) . '"'
-                    . $after
-                    . '>';
-            },
-            $html
-        ) ?? $html;
+            // Hold every source, not just the matching one: a srcset mixing
+            // hosts would otherwise still resolve to the tracked candidate.
+            $held = array();
+            foreach ( self::$image_source_attrs as $name ) {
+                $value = self::attr_get( $attrs, $name );
+                if ( null !== $value ) {
+                    $held[] = array( 'data-mbr-cc-held-' . $name, $value );
+                }
+            }
+
+            $attrs = self::attr_remove( $attrs, self::$image_source_attrs );
+
+            if ( 'img' === $tag ) {
+                array_unshift( $attrs, array( 'src', $transparent ) );
+            }
+
+            return array_merge(
+                $attrs,
+                array(
+                    array( 'data-mbr-cc-blocked', 'true' ),
+                    array( 'data-mbr-cc-image', 'true' ),
+                    array( 'data-mbr-cc-category', esc_attr( $category ) ),
+                ),
+                $held
+            );
+        } );
     }
 
     // ─────────────────────────────────────────────────────────────────────

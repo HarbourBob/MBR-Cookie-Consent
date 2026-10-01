@@ -66,6 +66,7 @@ class MBR_CC_Settings {
         register_setting('mbr_cc_settings', 'mbr_cc_reject_button_color', $color);
         register_setting('mbr_cc_settings', 'mbr_cc_text_color', $color);
         register_setting('mbr_cc_settings', 'mbr_cc_revisit_button_text_color', $color);
+        register_setting('mbr_cc_settings', 'mbr_cc_revisit_button_text_color_mode', $text);
         register_setting('mbr_cc_settings', 'mbr_cc_show_reject_button', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_show_customize_button', $bool);
         register_setting('mbr_cc_settings', 'mbr_cc_show_close_button', $bool);
@@ -170,6 +171,48 @@ class MBR_CC_Settings {
     /**
      * AJAX: Save settings.
      */
+    /**
+     * Is this a policy URL the banner can actually link to?
+     *
+     * Deliberately NOT filter_var(..., FILTER_VALIDATE_URL). filter_var applies
+     * RFC 3986 to the host, which rejects addresses browsers and WordPress are
+     * perfectly happy with — an underscore in a hostname, and any
+     * internationalised domain (café.fr, exämple.com). The browser-side check
+     * accepted all of those, so the two validators disagreed: the field passed
+     * in the page, then the server refused the save and named no field. An en
+     * dash pasted from a word processor did the same thing.
+     *
+     * The test that matters is the one the banner performs when it renders the
+     * link, so this asks the same question WordPress does: does esc_url_raw
+     * keep it, restricted to http and https, and does it have a host.
+     *
+     * @param  string $url Trimmed candidate URL.
+     * @return bool
+     */
+    private static function is_valid_policy_url($url) {
+        if (!is_string($url) || $url === '') {
+            return false;
+        }
+        
+        // Reject anything with whitespace in it outright; esc_url_raw would
+        // silently strip it and store a subtly different address.
+        if (preg_match('/\s/', $url)) {
+            return false;
+        }
+        
+        $scheme = strtolower((string) wp_parse_url($url, PHP_URL_SCHEME));
+        
+        if (!in_array($scheme, array('http', 'https'), true)) {
+            return false;
+        }
+        
+        if (wp_parse_url($url, PHP_URL_HOST) === null) {
+            return false;
+        }
+        
+        return esc_url_raw($url, array('http', 'https')) !== '';
+    }
+    
     public function ajax_save_settings() {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         
@@ -184,8 +227,68 @@ class MBR_CC_Settings {
         // doubled the backslashes in front of a quote.
         $settings = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
         
-        if (empty($settings)) {
+        if (empty($settings) || !is_array($settings)) {
             wp_send_json_error(array('message' => 'No settings provided.'));
+        }
+
+        // Validate the enabled policy links, but do NOT abort the save.
+        //
+        // All eight tabs are one form with one Save button, and gatherSettings()
+        // sends every mbr_cc_ field on the page in a single request. Rejecting
+        // the whole request over one field therefore discarded the entire
+        // settings screen — banner text, colours, geolocation, content blocking,
+        // everything — and reported only "save failed". Worse, the invalid pair
+        // was usually already in the database, so the screen stayed unsaveable
+        // on every tab until someone guessed which field was at fault.
+        //
+        // A URL that will not do is now simply not written. Everything else
+        // saves, and the response names the field so the screen can say what
+        // was left alone and why.
+        $warnings = array();
+        
+        foreach (array('privacy' => __('Privacy Policy', 'mbr-cookie-consent'), 'cookie' => __('Cookie Policy', 'mbr-cookie-consent')) as $policy => $label) {
+            $enabled_key = 'show_' . $policy . '_policy_link';
+            $url_key = $policy . '_policy_url';
+            
+            // Only judge the pair when this request is actually setting it.
+            // A partial payload from another screen must not be failed over a
+            // stored value it never sent and cannot see.
+            if (!array_key_exists($enabled_key, $settings) && !array_key_exists($url_key, $settings)) {
+                continue;
+            }
+            
+            $enabled = array_key_exists($enabled_key, $settings)
+                ? $settings[$enabled_key]
+                : get_option('mbr_cc_' . $enabled_key, false);
+            $raw_url = array_key_exists($url_key, $settings)
+                ? $settings[$url_key]
+                : get_option('mbr_cc_' . $url_key, '');
+            
+            if (!rest_sanitize_boolean($enabled)) {
+                continue;
+            }
+            
+            $url = is_string($raw_url) ? trim($raw_url) : '';
+            
+            if (self::is_valid_policy_url($url)) {
+                $settings[$url_key] = $url;
+                continue;
+            }
+            
+            // Leave both halves of the pair as they are. Writing the checkbox
+            // without a usable URL would switch on a link the banner cannot
+            // render, and silently overwriting a good stored URL with a bad one
+            // is worse than declining the change.
+            unset($settings[$url_key], $settings[$enabled_key]);
+            
+            $warnings[] = array(
+                'field'   => $url_key,
+                /* translators: %s: Privacy Policy or Cookie Policy. */
+                'message' => sprintf(
+                    __('%s was left unchanged: enter a full http:// or https:// web address, or untick its checkbox. Everything else on this page was saved.', 'mbr-cookie-consent'),
+                    $label
+                ),
+            );
         }
         
         // Only keys the plugin recognises may be written. Previously any key
@@ -215,7 +318,31 @@ class MBR_CC_Settings {
             
             $option_key = 'mbr_cc_' . $short;
             
-            if ($importer) {
+            // A colour the sanitiser cannot parse must not wipe the one that is
+            // already stored. sanitize_hex_color() accepts hex and nothing else,
+            // so rgb(), rgba(), a named colour or a cleared field all reduce to
+            // an empty string — which is then written over a perfectly good
+            // setting. The screen afterwards shows an empty field, the front end
+            // silently falls back to the stylesheet's colour, and nothing
+            // anywhere reports that a value was discarded.
+            if ($type === 'color' && $importer) {
+                $raw = is_scalar($value) ? trim((string) $value) : '';
+                $clean = $importer->sanitize_value($value, $type);
+                
+                if ($clean === '' && $raw !== '') {
+                    $warnings[] = array(
+                        'field'   => $short,
+                        /* translators: %s: the value that was rejected. */
+                        'message' => sprintf(
+                            __('%s is not a colour this plugin can store, so that setting was left as it was. Colours must be hexadecimal, for example #ffffff.', 'mbr-cookie-consent'),
+                            esc_html($raw)
+                        ),
+                    );
+                    continue;
+                }
+                
+                $value = $clean;
+            } elseif ($importer) {
                 $value = $importer->sanitize_value($value, $type);
             } elseif (is_bool($value) || $value === 'true' || $value === 'false') {
                 $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
@@ -248,9 +375,12 @@ class MBR_CC_Settings {
         MBR_CC_Cache::flush('settings');
         
         wp_send_json_success(array(
-            'message' => 'Settings saved successfully.',
-            'applied' => $applied,
-            'skipped' => $skipped,
+            'message'  => $warnings
+                ? __('Settings saved, with one item left unchanged.', 'mbr-cookie-consent')
+                : __('Settings saved successfully.', 'mbr-cookie-consent'),
+            'applied'  => $applied,
+            'skipped'  => $skipped,
+            'warnings' => $warnings,
         ));
     }
     

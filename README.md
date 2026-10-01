@@ -1,18 +1,13 @@
-<div align="center">
-
-![MBR Cookie Consent](head.jpg)
-
 # MBR Cookie Consent
 
 ### Enterprise-grade privacy compliance for WordPress. Genuinely free, forever.
 
-**GDPR · UK DUAA · CCPA · 24 US state laws · LGPD · PIPEDA · Quebec Law 25 · Swiss nFADP<br>Australia Privacy Act · India DPDP · Vietnam PDPL · Indonesia UU PDP · Nigeria NDPA<br>China PIPL · South Korea PIPA · Saudi PDPL · South Africa POPIA · Global Privacy Control**
+**GDPR · UK DUAA · CCPA · 24 US state laws · LGPD · PIPEDA · Quebec Law 25 · Swiss nFADP<br>Australia Privacy Act · India DPDP · Vietnam PDPL · Indonesia UU PDP · Nigeria NDPA<br>China PIPL · South Korea PIPA · Saudi PDPL · South Africa POPIA · Chile Law 21.719 · Global Privacy Control**
 
 No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party logo on your banner.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-2.3.6-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
@@ -48,7 +43,7 @@ It is built the way I build everything: pure PHP, no Composer, no external depen
 | **Real script blocking** | Non-essential scripts and embeds are held at the server via output buffering and never execute until consent is given. Not a banner that hides and hopes. |
 | **Safe behind a page cache** | Every visitor is served an identical, fully-blocked page and their own choice is applied in the browser — so a cache can never serve one visitor's consent to another. *(v2.3.3)* |
 | **Server-side form gating** | Form submissions are blocked on the server until consent is granted — cannot be bypassed by disabling JavaScript. |
-| **Automatic regional compliance** | Sixteen detected privacy regions, each with the correct consent model applied automatically. |
+| **Automatic regional compliance** | Seventeen detected privacy regions, each with its own wording and button set applied automatically. |
 | **Consent Mode v2** | Google Consent Mode v2, Microsoft UET Consent Mode and Google Additional Consent, signalled the way the specification intends — denied default, then an update carrying the visitor's choice. |
 | **Global Privacy Control** | The GPC browser signal detected per visitor and honoured automatically, without banner interaction. |
 | **AI / LLM training disclosure** | Connecticut SB 1295 requires your privacy notice to state whether personal data trains large language models. Built in. *(v2.3.0)* |
@@ -85,10 +80,10 @@ It is built the way I build everything: pure PHP, no Composer, no external depen
 
 Visitor location is detected automatically and the correct consent model applied — one configuration, every jurisdiction.
 
-| Region | Law | Consent model | Since |
+| Region | Law | Legal model | Since |
 |---|---|---|---|
 | **EU / EEA** | GDPR + ePrivacy | Strict opt-in for all non-essential cookies | v1.6.0 |
-| **United Kingdom** | UK GDPR + DUAA 2025 | Analytics & functionality exempt (opt-out); advertising requires consent | v2.0.0 |
+| **United Kingdom** | UK GDPR + DUAA 2025 | Opt-in; five narrow PECR exemptions, statistics only where that is the sole purpose | v2.0.0 |
 | **Switzerland** | nFADP | Transparency-led, opt-out | v2.1.0 |
 | **United States** | CCPA/CPRA + state laws | Opt-out, with GPC honoured | v2.0.0 |
 | **Quebec** | Law 25 | Express opt-in | v2.1.0 |
@@ -103,9 +98,12 @@ Visitor location is detected automatically and the correct consent model applied
 | **South Korea** | PIPA | Specific, informed, prior consent | v2.3.0 |
 | **Saudi Arabia** | PDPL | Opt-in, Arabic banner heading by default | v2.3.0 |
 | **South Africa** | POPIA | Opt-in for electronic direct marketing (s.69) | v2.3.0 |
+| **Chile** | Law 21.719 (in force 1 Dec 2026) | Opt-in; free, informed, specific, unequivocal | v2.6.0 |
 | **Rest of world** | Best practice | Opt-in by default; configurable | v1.6.0 |
 
-> **US state laws:** 24 states have now enacted comprehensive privacy laws, 20 of them currently in effect. All follow the Virginia opt-out model, so no banner behaviour changes as more come into force.
+> **What the plugin actually does:** the *Legal model* column describes each law, not the banner. In every region, a visitor who has not yet chosen has every non-essential resource held until they do. The region decides the wording and which buttons appear — US visitors get the "Do Not Sell or Share" link in place of Reject, for example — not whether anything loads before a choice. That is deliberately stricter than the opt-out and notice regimes require, and it is what keeps one cached page correct for everyone.
+
+> **US state laws:** 24 states have now enacted comprehensive privacy laws, 20 of them currently in effect — counting Florida's narrower law; trackers that exclude it, including the IAPP, say 23 and 19. All follow the Virginia opt-out model, so no banner behaviour changes as more come into force. From 1 January 2027 California requires every browser to offer a built-in opt-out signal, which this plugin already honours as GPC.
 
 > **China PIPL — documented limitation:** PIPL requires *separate* standalone consent for cross-border transfers, plus a transfer mechanism (CAC assessment, standard contract, or certification). This plugin does **not** provide either. If you serve mainland China, handle that separately.
 
@@ -333,7 +331,7 @@ Blocks form submissions **server-side** until consent is granted — cannot be b
 Explicit opt-in for all non-essential cookies · clear information about usage · easy revocation · IP anonymisation · full audit log · granular category control · policy generators. EEA non-EU members (Iceland, Liechtenstein, Norway) included since v2.1.0.
 
 ### United Kingdom — UK GDPR + DUAA 2025
-Analytics, functionality, security and software-update cookies exempt from consent under DUAA Schedule A1 · transparency and easy opt-out still required · advertising still requires explicit consent · PECR fines up to £17.5M or 4% of global turnover · formal complaints procedure in force since 19 June 2026.
+Five narrow exemptions from consent under DUAA Schedule A1 · the statistical exemption applies only where the technology is used solely for that purpose, which rules out most third-party analytics (ICO guidance, 29 April 2026) · covers pixels, fingerprinting and web storage, not just cookies · advertising still requires explicit consent · PECR fines up to £17.5M or 4% of global turnover · formal complaints procedure in force since 19 June 2026. The plugin holds analytics until the visitor chooses; whether your own analytics qualifies for the exemption is a judgement about your site.
 
 ### United States — CCPA/CPRA + state laws
 "Do Not Sell or Share My Personal Information" link · GPC honoured automatically · California-required "Opt-Out Request Honored" confirmation · opt-out model · clear disclosure. 24 states enacted, 20 in effect; all follow the Virginia opt-out model. Connecticut SB 1295 adds AI training disclosure from 1 July 2026, with SB 4 following on 1 October 2026.
@@ -520,6 +518,12 @@ No Composer. No external packages. No CDN dependencies.
 - ✅ Client-side A/B assignment — the last piece of the page that varied by visitor on the server *(v2.3.5)*
 - ✅ Salted consent-log fingerprint *(v2.3.5)*
 - ✅ Cloudflare country detection that works on restored-visitor-IP hosts *(v2.3.6)*
+- ✅ Consent Doctor: configuration, server-observed and live browser checks *(v2.4.8)*
+- ✅ Image and stylesheet blocking — avatars, tracking pixels, web fonts *(v2.4.8)*
+- ✅ Chile Law 21.719 · UK wording corrected to what the banner actually does · compliance notes to September 2026 *(v2.6.0)*
+- ✅ External security audit: admin escaping, Multisite deletion scope, scanner SSRF hardening, attribute-accurate blocking including srcset *(v2.6.0)*
+- Global consent-log rate limiting, alongside the existing per-visitor limiter
+- A/B impressions and conversions tied to the variant the browser was actually assigned
 - Local / offline GeoIP database, so geolocation needs no third-party lookup at all
 - Selective / partial import (choose which sections to bring across)
 - Network-wide settings push for Multisite
@@ -528,6 +532,101 @@ No Composer. No external packages. No CDN dependencies.
 
 <details>
 <summary><h3>Changelog</h3></summary>
+
+### 2.6.0 — Security fixes from an external audit, Chile, and a corrected UK banner
+
+#### Security and consent integrity — from an external audit
+
+Every finding below was reproduced before it was fixed and has a regression test that fails on 2.5.0. Update promptly.
+
+- **Security:** scanned page content could run JavaScript in the administrator's browser. Scanner results — names and URLs taken from the HTML of the page scanned — were written into the admin screen unescaped, so a crafted script URL executed in the admin session. Everything on that screen is now escaped, and so is the import report, which displayed field names and a source URL straight from an uploaded settings file.
+- **Security:** on Multisite, a site administrator could delete other sites' consent records. The log table is shared across the network and pruning had no site condition. Pruning now only touches the current site; clearing the whole network is a separate action that requires a network administrator, checked in the database layer itself.
+- **Security:** the cookie scanner checked a URL's host but not its port, and followed redirects wherever they led. It now requires the site's own host and port, refuses URLs carrying credentials, fetches with WordPress's safe HTTP API, and follows at most three redirects, checking every hop against the site.
+- **Fix:** valid HTML could slip past blocking. Attributes written with spaces round the equals sign (src = "…") or without quotes (src=…) were not recognised, and a held script kept any type it already had — browsers use the first of two, so type="text/javascript" beat the added type="text/plain". Blocking now reads the attributes themselves, for scripts, stylesheets, images, iframes and video facades alike, and leaves exactly one inert type.
+- **Fix:** Gravatar avatars were still reaching Automattic before consent on high-resolution screens. Only src was held; srcset stayed live, and WordPress's own avatar markup includes a 2x srcset that phones and many laptops load instead of src. Every source an image can use is now held — src, srcset, picture and video source elements, and lazy-load attributes — and all of it is restored on consent.
+- **Fix:** Google Consent Mode could briefly report advertising consent for a visitor sending Global Privacy Control. A returning visitor's stored choice was sent before GPC was applied and corrected moments later; any tag in between was told the visitor had consented. GPC now shapes the very first update, and a site whose Consent Mode default is "granted" no longer hands a GPC visitor granted before they have chosen.
+- **Fix:** the consent log export stopped at 100 records without saying so — it reused the Logs screen's page size. It now exports every record, streamed in batches.
+- **Fix:** rules the scanner suggested for inline tracking code could never fire. The rule searched script bodies for a label such as "facebook-pixel", which appears in no script. It now uses a distinctive fragment actually found in the script. Ambiguous fragments such as "ga(" are no longer offered, since a rule on it would also hold any script calling omega().
+- **Fix:** JavaScript modules came back as classic scripts after consent, so their import and export statements failed. A script's original type is now recorded and restored.
+- **Fix:** an embedded iframe that already had a style attribute was not hidden while held, because the added style was a second, ignored copy. Its own style is now kept aside and restored.
+- **Fix:** on Multisite, the Consent Doctor counted every site's consent records, so it could tell one site its logging worked because another site's rows were arriving.
+- **Dev:** four new test suites (blocker and scanner, a PHP-to-browser restore round trip, Consent Mode, admin escaping) and eight new database checks. See tests/README.md.
+
+#### Regions and compliance notes
+
+- **New:** Chile is a dedicated privacy region. Law 21.719 enters into force on **1 December 2026**, replacing a 1999 law, and requires free, informed, specific and unequivocal consent with withdrawal as easy as giving it. Visitors in Chile already received the opt-in Rest of World banner, so nothing about what they can do changes — the region exists so the wording and compliance card describe the law that actually applies
+- **Fix:** the default UK banner wording told visitors analytics and preference cookies "fall under PECR exemptions". The banner has never applied any exemption — UK visitors have always had every non-necessary category held until they choose — and under the ICO's final guidance the statistical exemption only covers technology used *solely* for that purpose, which rules out most third-party analytics. The wording now says what the banner does. Your own UK or site-wide text is untouched
+- **Fix:** the UK region's developer documentation claimed analytics defaulted on for UK visitors. It never did. Corrected
+- **Update:** EU Digital Omnibus — the AI half is law (Regulation (EU) 2026/1744); the cookie half is still in first reading with no Council mandate and no trilogue
+- **Update:** US — California's Opt Me Out Act (browser opt-out signals from 1 January 2027), SB 923, AB 2246, the AB 1542 veto, SB 690 pending at release; Alabama has no GPC duty, Vermont does; Maryland HB 711; New Hampshire HB 1460; the state count now says it includes Florida
+- **Update:** Canada Bill C-36 (tabled, not law) · Australia Tranche 2 exposure draft and the Children's Code's missing commencement date · Brazil's ANPD cookie guidance and 2026–27 enforcement priorities · India's November date clarified as a Consent Manager date · Japan's APPI amendment enacted, still no banner required
+
+---
+
+### 2.5.0 — One colour setting, not two
+
+- **Change:** the floating button's text colour now follows the banner's **Text Color** by default. It previously had its own setting, sitting three fields along from Text Color in the same Colors block — the only three-wide row on the screen — with a near-identical label and the **opposite default**: banner text white, button black. Setting Text Color to white and expecting the button to follow is the obvious reading, and the button then stayed black with nothing to explain why. It caught the plugin's own author
+- **Change:** the setting moved out of the Colors block to sit with the other floating-button options, as a choice between *Match the banner Text Color* and *Use a different colour*. The colour field appears only when overriding
+- **Upgrading:** a site still holding the old default of black is indistinguishable from one that never touched the field, so it now inherits — the behaviour anyone in that position was trying to get. Any other colour was deliberate and is kept. If you deliberately chose black and your banner text is light, the button will follow the banner; switch to *Use a different colour* to restore it
+
+---
+
+### 2.4.9 — Floating button colour
+
+- **Fix:** the floating button's text and icon could stay black however the Floating Button Text Color was set. Three independent causes, all closed:
+  - `banner.css` carried the fallback as `color: #000000 !important`. The chosen colour is emitted with `!important` too, at identical specificity, so the winner depended on which stylesheet came last — and an asset combiner reordering them silently restored black
+  - the colour sanitiser accepts hexadecimal only, so `rgb()`, `rgba()`, a named colour or a cleared field stored an **empty string**, which reaches the page as `color: !important;` — not a declaration, so the browser discards it and the fallback applies. `get_option()`'s default never rescues an empty string, which is also why the settings field showed blank
+  - the colours travelled in an inline `<style>` block, which asset-combining plugins can collect stylesheets from and then discard
+- **Change:** the floating button's colours are written onto the button element itself, so they travel with the markup and outrank ordinary theme styling
+- **Change:** a colour the plugin cannot store no longer overwrites the one already saved. The rest of the page still saves, and the notice names the field and the value refused
+- **Change:** colour settings never emit an incomplete declaration; an unusable stored value falls back to the documented default and the settings screen shows it
+
+---
+
+### 2.4.8 — Consent Doctor, and two services that were never actually blocked
+
+**Consent Doctor**
+
+A new screen answering *"is my consent setup actually working?"* — grouped by how
+strong the evidence behind each check is, with the grouping enforced in code
+rather than implied:
+
+| Tier | What it is | Can it report "working"? |
+|---|---|---|
+| **Observed in a browser** | What a real page load actually requested | Yes |
+| **Observed on the server** | Rows written, lookups resolved, schema changes that took | Yes |
+| **Configuration** | What your settings say | **Never** |
+
+That last row is the point. Reading a setting tells you what the plugin *intends*
+to do, not what it did — and every serious fault this plugin has shipped was a
+case where the configuration was correct and the behaviour was not.
+
+- **New:** server-observed checks — whether consent logging is genuinely writing rows and when the last arrived, recent write failures, and which privacy region is actually being applied
+- **New:** configuration checks — blocking rule coverage, script blocking switched off, page exclusions that skip enforcement, competing consent plugins, duplicate Google tag rules, HTTPS, subdomain sharing, and whether your page cache is one the plugin can purge
+- **New:** a **live check** that loads a page in a hidden frame and records the network requests it actually makes, cross-referenced against your blocking rules. Runtime-injected scripts — most tag manager containers — never appear in a server-side audit at all
+- **New:** the live check can target any page, with suggestions drawn from your most-commented and most recently updated pages. Every finding names the page it came from, so a pass is never mistaken for a verdict on the site
+- **New:** it reports the conditions it ran under. A content blocker in your own browser suppresses the requests being measured, so a clean result under one means nothing — detected with a **control element**, so "nothing was measurable" is never mistaken for "a blocker was present", and findings are marked inconclusive rather than passed. Same for a page that had already been consented to
+- **Note:** it counts findings. It does not tell you that you are compliant, and is deliberately not written as though it could
+
+**Two services listed as blocked that never were**
+
+- **Fix:** **Google Fonts** was declared in the built-in service list with type `script`. It arrives as `<link rel="stylesheet">`, and there was **no stylesheet handling anywhere in the blocker** — zero matches for `<link` in the entire file. The rule was declared, listed in the UI, counted in the totals, and matched nothing. Every site using Google Fonts has been disclosing visitor IP addresses to Google before consent. Stylesheet blocking is now implemented; holding the stylesheet also stops `fonts.gstatic.com`, which the CSS fetches rather than the page
+- **Fix:** **custom rules could not block images.** All three available types rewrite `<script>` or `<iframe>`, so a rule against an image host was accepted, displayed, and could never fire. WordPress core emits Gravatar avatars as plain `<img>` on any comment thread, sending the visitor's IP to Automattic before consent. Tracking pixels are the same shape
+- **New:** custom rule types **Image** and **Stylesheet**; both restored in the browser on consent like every other held resource
+
+**Geolocation**
+
+- **New:** a resolved-just-now region is distinguished from one read from cache, with its age. A success is cached for 24 hours and a failure for five minutes, so sampling only when someone looks is biased heavily towards success — a provider failing one request in three would look healthy every time anyone checked
+- **New:** failed lookups are recorded, so an intermittent fault stays visible for a day rather than clearing itself from view in five minutes
+
+**Other**
+
+- **Fix:** settings could fail to save entirely. All eight tabs are one form with one Save button, so a validation failure on a single field discarded every setting on every tab. The unusable value is now simply not written, everything else saves, and the response names the field left alone
+- **Fix:** the browser and server disagreed on what counted as a valid policy URL — the server rejected underscored hostnames, internationalised domains and en dashes that the browser accepted
+- **Fix:** the settings error notice reports what the server actually said, including when the response is unreadable, which means a PHP error has been printed into it
+- **Fix:** the consent log schema upgrade could re-run `dbDelta` on every admin request indefinitely if the index could not be created
+
+---
 
 ### 2.3.6 — Cloudflare geolocation
 

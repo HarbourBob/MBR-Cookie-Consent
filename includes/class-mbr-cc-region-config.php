@@ -4,7 +4,7 @@
  * Adjusts banner behavior based on detected region
  *
  * @package MBR_Cookie_Consent
- * @version 2.3.0
+ * @version 2.6.0
  */
 
 // Exit if accessed directly.
@@ -76,6 +76,7 @@ class MBR_CC_Region_Config {
         'kr_pipa'     => array('korea'),
         'sa_pdpl'     => array('saudi'),
         'za_popia'    => array('southafrica'),
+        'cl_lppd'     => array('chile'),
     );
     
     /**
@@ -326,15 +327,23 @@ class MBR_CC_Region_Config {
      * it was published in the Official Journal on 6 October 2025. The 2002/58/EC
      * Directive (as amended) therefore remains the controlling instrument.
      *
-     * Digital Omnibus status (August 2026): the package split in two. The AI
-     * Omnibus was adopted by the Council on 29 June 2026; the Data Omnibus
-     * (GDPR/ePrivacy) remains in negotiation, and the Council's compromise
-     * text of 21 May 2026 (doc 9547/26) DELETED the relocation of cookie
-     * consent into GDPR Arts 88a/88b. Negotiations continue under the Irish
-     * Presidency with no agreed text; commentators expect final wording no
-     * earlier than late 2026 / early 2027. The Directive regime stays operative
-     * and single-click refusal, the six-month cooldown and the proposed
-     * low-risk exemptions remain proposals only — no action required yet.
+     * Digital Omnibus status (September 2026): the package split in two.
+     *   - The AI track is law: Regulation (EU) 2026/1744 entered into force
+     *     on 27 July 2026. It does not touch cookies.
+     *   - The data track (GDPR/ePrivacy, procedure 2025/0360(COD)) is still
+     *     in FIRST READING. In Parliament, the joint LIBE/ITRE draft report
+     *     of 22 June 2026 drew more than 1,750 amendments by the 15 July
+     *     deadline, and the co-rapporteurs left the cookie provisions to
+     *     inter-committee negotiation. In Council, a COREPER II vote on the
+     *     negotiating mandate was cancelled for lack of agreement, so no
+     *     trilogue has begun. The Presidency compromise text of 21 May 2026
+     *     (doc 9547/26) deleted the relocation of cookie consent into GDPR
+     *     Arts 88a/88b — a working text, not an agreed Council position.
+     * Final adoption is not expected before late 2026 at the earliest and the
+     * text may change substantially. The Directive regime stays operative;
+     * single-click refusal, the six-month cooldown, browser-level signals and
+     * the proposed low-risk exemptions remain proposals only — nothing to
+     * build for until there is a text.
      *
      * Note that the Digital Omnibus does not repeal the ePrivacy Directive even
      * if adopted, so a transitional period in which national implementations of
@@ -392,9 +401,35 @@ class MBR_CC_Region_Config {
      * required for the exempt categories. PECR fines now match UK GDPR levels:
      * up to £17.5M or 4% of global annual turnover.
      *
-     * The banner is still shown for transparency and to collect advertising
-     * consent. Analytics, preferences, and security toggles default ON because
-     * they fall within DUAA-exempt categories — a clear opt-out remains.
+     * The ICO's final guidance narrows the exemptions in two ways that matter
+     * for a consent banner:
+     *   - SOLE PURPOSE. The statistical exemption (and some others) applies
+     *     only where the technology is used for that purpose alone. A tag that
+     *     measures traffic AND feeds the vendor's own products or advertising
+     *     is multi-purpose and needs consent. Most third-party analytics is
+     *     therefore unlikely to qualify; first-party, aggregate-only
+     *     measurement may.
+     *   - SCOPE. Regulation 6 covers every storage and access technology —
+     *     pixels, fingerprinting, web storage, scripts and tags, link
+     *     decoration — not just cookies. The DUAA also brings in anyone who
+     *     "instigates" storage or access, not only whoever sets it.
+     * The ICO has signalled a future route for "privacy-preserving"
+     * advertising without consent, but for now advertising — including
+     * frequency capping and ad measurement — still requires it.
+     *
+     * CORRECTED IN 2.6.0 — this docblock used to say analytics, preferences
+     * and security toggles default ON for UK visitors because they fall
+     * within the DUAA exemptions. Nothing ever implemented that (the key it
+     * relied on was one of those removed in 2.3.4 for never being read), so
+     * UK visitors have always had every non-necessary category held until
+     * they choose. That is also the correct default: whether a given site's
+     * analytics qualifies for the exemption depends on how that site uses it,
+     * which is a judgement for the site owner, not a plugin default.
+     *
+     * The default UK banner wording was changed at the same time. It told
+     * visitors that analytics and preference cookies "fall under PECR
+     * exemptions", which was not what the banner did and, under the sole
+     * purpose test, is not true of most sites' analytics either.
      */
     private function get_uk_duaa_config() {
         return array(
@@ -407,7 +442,7 @@ class MBR_CC_Region_Config {
             // UK-specific text
             'banner_heading' => get_option('mbr_cc_geolocation_uk_heading', 'Your privacy choices'),
             'banner_description' => get_option('mbr_cc_geolocation_uk_description',
-                'We use cookies and similar technologies to improve your experience. Analytics and preference cookies fall under PECR exemptions introduced by the Data (Use and Access) Act 2025, with a simple means of objecting. Advertising cookies require your consent. You can manage or withdraw your choices at any time.'
+                'We use cookies and similar technologies, such as pixels and local storage. Those essential to the site are always on. Everything else, including analytics and advertising, is only used if you allow it. You can accept, reject or manage your choices, and change them at any time.'
             ),
             
             'enable_ccpa' => false,
@@ -427,6 +462,16 @@ class MBR_CC_Region_Config {
      * Privacy and Online Surveillance Act (1 Jan 2028). All four follow the
      * Virginia opt-out model, so no banner behaviour change is required —
      * opt-out link + GPC covers them.
+     *
+     * COUNTING. These figures count Florida's narrower Digital Bill of Rights.
+     * Trackers that leave Florida out (the IAPP among them) say 19 in effect
+     * and 23 enacted, with Vermont as the 23rd. Same laws, different basis —
+     * worth knowing when a client quotes the other number.
+     *
+     * GPC is not uniform across the new four. Alabama's Act imposes NO duty
+     * to honour a universal opt-out signal; Vermont's does. The plugin
+     * honours GPC for every US visitor regardless, which over-complies in
+     * Alabama and breaks nothing.
      *
      * Two of the four carry provisions worth noting beyond the banner:
      *   - Vermont requires privacy notices to state whether personal
@@ -451,6 +496,14 @@ class MBR_CC_Region_Config {
      *     from selling sensitive data, with no consumer-volume threshold at
      *     all. It therefore reaches businesses that sit well below the NJDPA's
      *     own applicability thresholds and would otherwise be out of scope.
+     *
+     * Further mid-2026 amendments in the same direction:
+     *   - Maryland HB 711 (effective 1 July 2026): sensitive data now includes
+     *     data a controller infers to indicate a sensitive characteristic.
+     *   - New Hampshire HB 1460 (signed 19 June 2026): prohibits selling the
+     *     personal data of a child under 13.
+     *   - New Jersey A5328 (signed 30 June 2026) also creates a data broker
+     *     registry with annual fees, alongside the sensitive-data sale ban.
      *
      * The direction of travel is that sensitive categories — precise location
      * above all — are moving from "opt-out with consent" to "may not be sold
@@ -518,6 +571,36 @@ class MBR_CC_Region_Config {
      * visibility is a stated priority. GPC handling is therefore not optional
      * in practice.
      *
+     * CALIFORNIA — OPT ME OUT ACT (AB 566, signed 8 October 2025), operative
+     * 1 January 2027. Every browser offered to Californians must include an
+     * easy-to-find setting that sends an opt-out preference signal to every
+     * site. Today GPC comes mostly from Firefox, Brave, DuckDuckGo and
+     * extensions; from 2027 it can come from any browser, so the share of
+     * visitors arriving with the signal set is likely to rise sharply. The
+     * plugin already honours GPC in the browser and shows the confirmation
+     * toast — nothing to change, but expect marketing consent rates among US
+     * visitors to fall, and do not mistake that for a fault.
+     *
+     * CALIFORNIA — 2026 SESSION (Governor's deadline 30 September 2026):
+     *   - SB 923, signed: from 1 January 2027 the deletion right reaches
+     *     information collected "from or about" a consumer, including from
+     *     third parties, and online-only businesses with a direct consumer
+     *     relationship must offer an online request method (web form or
+     *     portal), not just an email address.
+     *   - AB 2246, signed 10 September 2026: repeals and replaces the
+     *     Age-Appropriate Design Code Act with a "reasonable steps" duty to
+     *     prevent specified harms to children, including no dark patterns
+     *     steering children to give up privacy protections. As with Arkansas,
+     *     this plugin has no age-assurance layer.
+     *   - AB 1542, VETOED 27 September 2026: would have banned selling or
+     *     sharing sensitive personal information outright. The existing
+     *     "limit the use of my sensitive personal information" right stands.
+     *   - SB 690 (CIPA reform for website and app tracking claims) and
+     *     AB 2561 (operating-system and app privacy settings) were still on
+     *     the Governor's desk when this was written. CIPA is the statute
+     *     behind the wave of pixel and session-replay lawsuits, so SB 690's
+     *     outcome matters to any site running trackers — check it.
+     *
      * GPC signal handling is managed by class-mbr-cc-gpc-handler.php.
      */
     private function get_us_multi_config() {
@@ -542,6 +625,23 @@ class MBR_CC_Region_Config {
     
     /**
      * LGPD (Brazil) Configuration
+     *
+     * The LGPD has been in force since September 2020 and its text has barely
+     * moved; the regulator around it has. The ANPD became an independent
+     * regulatory agency with its own budget and staff in February 2026 (Law
+     * 15.352/2026). Its priority map for 2026-2027 (Resolution CD/ANPD
+     * 30/2025) puts the use of personal and sensitive data for advertising,
+     * and children's data under the Digital ECA (Law 15.211/2025), at the top
+     * of its enforcement list, and cookies sit on its regulatory agenda.
+     *
+     * The ANPD's cookie guidance treats consent as the appropriate basis for
+     * non-essential cookies, including analytics used for profiling and all
+     * advertising and cross-site tracking. Legitimate interest remains
+     * arguable for narrow operational uses only. Opt-in with granular
+     * categories is therefore the right configuration.
+     *
+     * The EU and Brazil agreed mutual adequacy in January 2026, which eases
+     * transfers between them but changes nothing about the banner.
      */
     private function get_lgpd_config() {
         return array(
@@ -563,6 +663,19 @@ class MBR_CC_Region_Config {
     
     /**
      * PIPEDA (Canada) Configuration
+     *
+     * PIPEDA still governs. Bill C-27 died on prorogation in January 2025, and
+     * its successor, Bill C-36 — the Protecting Privacy and Consumer Data Act
+     * (PPCDA) — was tabled on 15 June 2026. If enacted it would replace Part 1
+     * of PIPEDA, set more specific consent requirements (what is collected,
+     * why, the reasonably foreseeable consequences, and which third parties
+     * or kinds of third party receive it), create a Digital Safety and Data
+     * Protection Commission with order-making powers, and bring administrative
+     * penalties up to the greater of CA$10 million or 3% of global revenue,
+     * with higher maxima for offences. It is not law: second reading was
+     * expected in autumn 2026 and the text may change. Nothing to build for
+     * yet — but its consent language is closer to Quebec's than PIPEDA's, so
+     * the Quebec configuration is the better guide to where Canada is going.
      */
     private function get_pipeda_config() {
         return array(
@@ -592,9 +705,16 @@ class MBR_CC_Region_Config {
      *
      * - 13 November 2025: Data Protection Board established; administrative
      *   provisions in force.
-     * - 13 November 2026: Consent Manager registration opens (India-
-     *   incorporated entities only).
+     * - 13 November 2026: Rule 4 commences — registration becomes mandatory
+     *   for anyone operating as a Consent Manager (India-incorporated entities
+     *   only). This binds Consent Managers, not ordinary Data Fiduciaries; a
+     *   site using this plugin has no new obligation on that date.
      * - 13 May 2027: Full compliance mandatory for all Data Fiduciaries.
+     *
+     * In January 2026 MeitY floated compressing the 18-month runway to 12,
+     * which would pull the full compliance date forward to 13 November 2026.
+     * As of September 2026 no amendment had been notified, so 13 May 2027
+     * stands. Worth checking again before November.
      *
      * Substantive requirements:
      * - Standalone privacy notice in clear, plain language.
@@ -957,9 +1077,20 @@ class MBR_CC_Region_Config {
      * The Privacy and Other Legislation Amendment Act 2024 received Royal
      * Assent on 10 December 2024, with the bulk of provisions effective the
      * same day. Outstanding items include automated-decision-making
-     * transparency obligations and the Children's Online Privacy Code, both
-     * scheduled for 10 December 2026. A second tranche of reforms drawing on
-     * the 2023 Privacy Act Review Report is expected during 2026.
+     * transparency obligations (commencing 10 December 2026) and the
+     * Children's Online Privacy Code, which the OAIC must register by
+     * 10 December 2026 but whose commencement date has not been announced.
+     *
+     * TRANCHE 2. On 31 August 2026 the Attorney-General released an exposure
+     * draft of the Privacy Amendment (Personal Data Protection) Bill 2026,
+     * with submissions closing 18 September. It proposes a "fair and
+     * reasonable" test for all collection, use and disclosure, stronger
+     * consent standards, tighter restrictions on direct marketing including
+     * targeted advertising, a controller/processor split, restrictions on
+     * trading personal data, and a right of erasure aimed at large platforms.
+     * The small business exemption is NOT removed. It is a draft, not law;
+     * if enacted, the targeted-advertising rules are the part most likely to
+     * push Australia toward an opt-in posture for advertising cookies.
      *
      * The Privacy Act doesn't mandate cookie banners explicitly, but where
      * cookies collect personal information (which most analytics, advertising,
@@ -992,6 +1123,48 @@ class MBR_CC_Region_Config {
     }
     
     /**
+     * Chile (Law 21.719) Configuration
+     *
+     * NEW IN 2.6.0. Law 21.719 on the Protection of Personal Data was
+     * published on 13 December 2024 and enters into force on 1 December 2026,
+     * replacing Law 19.628 (1999). It is GDPR-aligned and consent-centric:
+     *   - Consent must be free, informed, specific and unequivocal, given by a
+     *     clear affirmative act. Pre-ticked boxes and passive mechanisms are
+     *     not valid.
+     *   - Withdrawal must be possible at any time, without justification, and
+     *     as simply as consent was given.
+     *   - It applies extraterritorially to anyone offering goods or services
+     *     to people in Chile or monitoring their behaviour there.
+     *   - A new Personal Data Protection Agency (APDP) supervises and
+     *     sanctions. Fines are tiered up to 20,000 UTM for very serious
+     *     infringements, with revenue-based caps for large entities.
+     *   - The Agency is expected to issue cookie-specific guidance. Nothing
+     *     had been published when this was written.
+     *
+     * Behaviour is identical to the Rest of World default, which was already
+     * opt-in, so visitors in Chile were never served a weaker banner. The
+     * region exists so the wording and the compliance card are accurate, and
+     * so there is somewhere to put the Agency's guidance when it arrives.
+     * Before 1 December 2026 the wording refers to a law not yet in force —
+     * a few weeks' anachronism in exchange for not shipping a date-switched
+     * release.
+     */
+    private function get_cl_lppd_config() {
+        return array(
+            'show_reject_button' => true,
+            'show_customize_button' => true,
+            // Spanish heading as a safe default; the description stays in
+            // English like the other non-English regions, so the auto-translate
+            // layer and the admin can localise it.
+            'banner_heading' => get_option('mbr_cc_geolocation_chile_heading', 'Valoramos tu privacidad'),
+            'banner_description' => get_option('mbr_cc_geolocation_chile_description',
+                'We use cookies and similar technologies. Under Chile\'s Personal Data Protection Law (Law 21.719), we ask for your free, informed and specific consent before setting non-essential cookies. You can accept, reject or manage your choices, and withdraw consent at any time.'
+            ),
+            'enable_ccpa' => false,
+        );
+    }
+    
+    /**
      * Default (Rest of World) Configuration
      *
      * CHANGED IN 2.3.0 — this now defaults to an opt-in posture.
@@ -1015,9 +1188,19 @@ class MBR_CC_Region_Config {
      * one: under the APPI and the Telecommunications Business Act's external
      * transmission rules, notice or an opt-out is generally sufficient and a
      * consent banner is not required. Serving an opt-in banner there costs
-     * conversion but breaks nothing. Watch the APPI amendment bill approved by
-     * Cabinet in April 2026 and now before the Diet, which would bring cookie
-     * and device identifiers into scope (expected to apply around 2028).
+     * conversion but breaks nothing. The APPI amendment passed the Diet on
+     * 10 July 2026 and was promulgated on 17 July 2026 (Act No. 56 of 2026).
+     * It regulates the misuse of "contactable" personally referable
+     * information — email addresses, phone numbers and cookie IDs that let
+     * someone reach a specific person — and introduces administrative
+     * surcharges. Most provisions commence within two years of promulgation,
+     * so around 2028. It does not introduce a cookie-consent requirement.
+     *
+     * Elsewhere in the long tail, opt-in is the correct answer rather than an
+     * over-compliant one: Thailand's PDPC consent guidelines call for prior
+     * consent, a clear "Reject all" and logging, and the UAE's federal PDPL
+     * treats consent as the basis for non-essential cookies while its
+     * executive regulations remain unpublished.
      *
      * CHANGED IN 2.3.4 — the implied-consent options this docblock used to
      * describe (mbr_cc_geolocation_default_require, mbr_cc_default_auto_accept)
@@ -1095,7 +1278,8 @@ class MBR_CC_Region_Config {
                     'Withdrawal of consent must be as easy as giving it',
                     'Applies in all 27 EU Member States plus Iceland, Liechtenstein and Norway (EEA)',
                     'Proposed ePrivacy Regulation withdrawn — announced 11 February 2025, approved 16 July 2025, published in the Official Journal 6 October 2025. The 2002/58/EC Directive remains in force',
-                    'Digital Omnibus: Council compromise text (21 May 2026) dropped the move of cookie rules into GDPR Arts 88a/88b — still in negotiation as of August 2026, final text expected no earlier than late 2026 / early 2027',
+                    'Digital Omnibus: the AI half is law (Regulation (EU) 2026/1744, in force 27 July 2026); the data half, which would move cookie rules into GDPR Arts 88a/88b, is still in first reading as of September 2026 — 1,750+ Parliament amendments, no Council mandate, no trilogue',
+                    'Presidency compromise text (21 May 2026) deleted the cookie relocation — a working text, not an agreed Council position',
                     'Single-click refusal, 6-month cooldown and low-risk exemptions remain proposals only — no action required',
                     'Browser-level consent signals not expected to be mandatory before ~2028 — monitor, no action required yet',
                 ),
@@ -1109,6 +1293,9 @@ class MBR_CC_Region_Config {
                     'PECR amendments effective 5 February 2026',
                     'ICO Storage and Access Technologies guidance finalised 29 April 2026',
                     'Five exempt categories: communications transmission, requested service, statistical analytics, appearance/functionality, software updates/emergency assistance',
+                    'Statistical exemption applies only where the technology is used solely for that purpose — most third-party analytics is unlikely to qualify',
+                    'Covers all storage and access technologies: pixels, fingerprinting, web storage, scripts, tags and link decoration, not just cookies',
+                    'Advertising, including frequency capping and ad measurement, still needs consent; the ICO has only signalled a future privacy-preserving route',
                     'Advertising/marketing cookies still require explicit consent',
                     'Clear information and a "simple means of objecting" required for exempt categories',
                     'PECR fines now match UK GDPR: up to £17.5M or 4% of turnover',
@@ -1134,6 +1321,14 @@ class MBR_CC_Region_Config {
                     'Maryland MODPA effective 1 October 2025 with strict data-minimisation rules',
                     '2026 session: Oklahoma SB 546 and Louisiana DPA effective 1 Jan 2027, Alabama PDPA (HB 351) 1 May 2027, Vermont DPOSA 1 Jan 2028 — all Virginia-model opt-out (24 enacted total)',
                     'Vermont DPOSA also requires privacy notices to state whether personal data trains large language models — the second state to do so after Connecticut',
+                    'Vermont requires universal opt-out signals (GPC) to be honoured; Alabama does not — the plugin honours GPC for every US visitor',
+                    'California Opt Me Out Act (AB 566), 1 January 2027: every browser must offer a built-in opt-out preference signal, so expect far more GPC traffic',
+                    'California SB 923 (signed September 2026, effective 1 January 2027): deletion reaches data collected "from or about" a consumer; online-only businesses must offer a web form for requests',
+                    'California AB 1542 (outright ban on selling or sharing sensitive personal information) vetoed 27 September 2026',
+                    'California AB 2246 (signed 10 September 2026) replaces the Age-Appropriate Design Code Act with a reasonable-steps duty to protect children',
+                    'Maryland HB 711 (1 July 2026): data inferred to indicate a sensitive characteristic is sensitive data',
+                    'New Hampshire HB 1460 (signed 19 June 2026): sale of personal data of children under 13 prohibited',
+                    'Counts include Florida; trackers that exclude it say 19 in effect and 23 enacted',
                     'Oklahoma: pseudonymous data counts as personal data where it can reasonably be linked to a person, which brings cookie identifiers into scope',
                     'Virginia amendment prohibiting the sale of precise geolocation data effective 1 July 2026',
                     'Maryland amendment (1 July 2026): precise geolocation widened to a 1,750-foot radius covering a consumer, mobile device or vehicle',
@@ -1176,7 +1371,8 @@ class MBR_CC_Region_Config {
                     'Quebec has separate Law 25 regime — handled as a distinct region',
                     'OPC guidelines allow opt-out for non-sensitive behavioural advertising if transparent and easy to decline',
                     'Opt-in required for sensitive data; avoid tracking children entirely',
-                    'Bill C-27 (the proposed CPPA) died in January 2025 — PIPEDA still governs, no successor in force',
+                    'Bill C-27 died in January 2025 — PIPEDA still governs',
+                    'Bill C-36 (Protecting Privacy and Consumer Data Act) tabled 15 June 2026 to replace PIPEDA Part 1 — not yet law; more specific consent disclosures, a new Commission, penalties up to CA$10M or 3% of global revenue',
                 ),
                 'penalties' => 'Up to $10 million CAD (PIPEDA); $10M per violation (CASL)',
             ),
@@ -1204,7 +1400,8 @@ class MBR_CC_Region_Config {
                     'Sensitive information requires opt-in consent',
                     'Statutory tort for serious invasions of privacy in force from 10 June 2025',
                     'Automated-decision-making transparency obligations from 10 December 2026',
-                    'Children\'s Online Privacy Code due by 10 December 2026',
+                    'Children\'s Online Privacy Code must be registered by 10 December 2026 — commencement date not yet announced',
+                    'Tranche 2 exposure draft (31 August 2026): "fair and reasonable" test, stronger consent, tighter direct marketing and targeted advertising rules — draft only, small business exemption retained',
                 ),
                 'penalties' => 'Up to AU$50 million, 30% of adjusted turnover, or 3x the benefit obtained',
             ),
@@ -1214,10 +1411,11 @@ class MBR_CC_Region_Config {
                 'requires_consent' => true,
                 'key_requirements' => array(
                     'Clear and specific consent required',
-                    'Must show legitimate purpose',
+                    'ANPD cookie guidance: consent is the basis for non-essential cookies, including advertising and cross-site tracking',
                     'Users can revoke consent',
                     'Data minimization required',
-                    'Similar to GDPR requirements',
+                    'ANPD an independent regulatory agency since February 2026 (Law 15.352/2026)',
+                    'ANPD 2026-2027 priorities: advertising use of sensitive data and children\'s data under the Digital ECA; cookies on the regulatory agenda',
                 ),
                 'penalties' => 'Up to 2% of revenue (max R$50 million per violation)',
             ),
@@ -1231,7 +1429,8 @@ class MBR_CC_Region_Config {
                     'Verifiable parental consent for minors',
                     'Data Protection Board operational from 13 November 2025',
                     'From 13 November 2026 the Board may hear complaints, conduct inquiries and levy penalties — enforcement powers arrive six months before full compliance is due',
-                    'Consent Manager registration opens 13 November 2026 (India-incorporated only)',
+                    'Rule 4 commences 13 November 2026: registration mandatory for Consent Managers (India-incorporated only) — no new duty for ordinary Data Fiduciaries on that date',
+                    'MeitY\'s proposal to pull full compliance forward to 13 November 2026 had not been notified as of September 2026',
                     'Full compliance mandatory by 13 May 2027 — notice, consent, security, breach reporting, rights and children\'s data',
                     '72-hour personal data breach notification',
                     'Automated deletion with proof required',
@@ -1338,6 +1537,20 @@ class MBR_CC_Region_Config {
                 ),
                 'penalties' => 'Administrative fines up to ZAR 10 million, plus criminal penalties including imprisonment',
             ),
+            'cl_lppd' => array(
+                'name' => 'Chile Law 21.719',
+                'law' => 'Ley 21.719 sobre Protección de Datos Personales (in force 1 December 2026)',
+                'requires_consent' => true,
+                'key_requirements' => array(
+                    'Enters into force 1 December 2026, replacing Law 19.628',
+                    'Consent must be free, informed, specific and unequivocal — no pre-ticked boxes or passive mechanisms',
+                    'Withdrawal at any time, without justification, as simply as consent was given',
+                    'Applies extraterritorially to anyone offering goods or services to, or monitoring, people in Chile',
+                    'New Personal Data Protection Agency (APDP) supervises and sanctions',
+                    'Cookie-specific guidance expected from the Agency — none published yet',
+                ),
+                'penalties' => 'Tiered fines up to 20,000 UTM for very serious infringements, with revenue-based caps for large entities',
+            ),
             'default' => array(
                 'name' => 'Rest of World — Safe Default (opt-in)',
                 'law' => 'No single regulation — conservative baseline',
@@ -1349,6 +1562,8 @@ class MBR_CC_Region_Config {
                     'Allow users to manage preferences',
                     'Respect user choices',
                     'Deliberately over-compliant in notice-based markets such as Japan',
+                    'Japan APPI amendment enacted July 2026 (Act No. 56 of 2026): cookie IDs usable to contact a person come into scope, mostly from ~2028 — no consent banner required',
+                    'Correct rather than over-compliant for Thailand (PDPC guidelines: opt-in, Reject all, logging) and the UAE',
                     'Existing installs keep their previous lenient settings — new installs get opt-in',
                 ),
                 'penalties' => 'Varies by jurisdiction',

@@ -180,6 +180,24 @@ class MBR_CC_GPC_Handler {
      *
      * @return array Category slugs to suppress.
      */
+    /**
+     * The site's GPC policy, for scripts that must act before banner.js.
+     *
+     * Constant across visitors — whether GPC handling is on and which
+     * categories a signal suppresses — so it is safe to write into a cached
+     * page. Whether a given visitor sent the signal is never included; that
+     * is read in their browser.
+     *
+     * @since 2.6.0
+     * @return array{enabled: bool, suppress: string[]}
+     */
+    public function get_client_policy() {
+        return array(
+            'enabled'  => $this->enabled,
+            'suppress' => array_values(array_map('strval', (array) $this->get_suppressed_categories())),
+        );
+    }
+
     private function get_suppressed_categories() {
         $defaults = array('marketing');
 

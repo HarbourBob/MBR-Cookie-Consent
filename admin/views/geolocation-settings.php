@@ -42,12 +42,12 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
 
 <div class="mbr-cc-settings-section">
     <h2><?php esc_html_e('Geolocation & Regional Compliance', 'mbr-cookie-consent'); ?></h2>
-    <p><?php esc_html_e('Automatically detect user location and apply appropriate privacy law requirements (EU/EEA GDPR, UK DUAA, US Multi-State/GPC, Quebec Law 25, PIPEDA, Switzerland nFADP, Australia Privacy Act, Brazil LGPD, India DPDP, etc.)', 'mbr-cookie-consent'); ?></p>
+    <p><?php esc_html_e('Automatically detect user location and apply appropriate privacy law requirements (EU/EEA GDPR, UK DUAA, US Multi-State/GPC, Quebec Law 25, PIPEDA, Switzerland nFADP, Australia Privacy Act, Brazil LGPD, India DPDP, Chile Law 21.719, etc.)', 'mbr-cookie-consent'); ?></p>
     
     <div class="mbr-cc-info-box" style="background: #f0f6fc; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">
         <p style="margin: 0;">
             <strong><?php esc_html_e('Your own banner text always wins.', 'mbr-cookie-consent'); ?></strong>
-            <?php esc_html_e('Each region ships suggested wording — the UK text mentions the PECR exemptions, the US text mentions opt-out rights, and so on. That wording is only used where you have left the banner heading and description at their defaults. If you have written your own text on the Settings screen, visitors see your text everywhere, in every region.', 'mbr-cookie-consent'); ?>
+            <?php esc_html_e('Each region ships suggested wording — the Quebec text is in French, the US text mentions opt-out rights, and so on. That wording is only used where you have left the banner heading and description at their defaults. If you have written your own text on the Settings screen, visitors see your text everywhere, in every region.', 'mbr-cookie-consent'); ?>
         </p>
         <p style="margin: 8px 0 0 0;">
             <?php esc_html_e('Buttons are different: which of Accept, Reject and the "Do Not Sell or Share" link appear is decided by the region, because that part is a legal requirement rather than a matter of wording.', 'mbr-cookie-consent'); ?>
@@ -292,11 +292,11 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 <?php esc_html_e('Separate regime since Feb 2026; ICO guidance finalised 29 Apr 2026', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
-                <li>✓ <?php esc_html_e('5 PECR exemptions (analytics, functionality, etc.)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('5 PECR exemptions — statistics only if that is the sole purpose', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('"Simple means of objecting" required', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Advertising still requires consent', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Purpose limitation enforced', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Complaints procedure by June 2026', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Covers pixels, fingerprinting and web storage, not just cookies', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Complaints procedure in force since 19 June 2026', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -310,7 +310,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 🇺🇸 <?php esc_html_e('US - Multi-State + GPC', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('20 states (IN, KY, RI added Jan 2026); MD MODPA effective Oct 2025', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('20 in effect, 24 enacted (counting Florida); browsers must send an opt-out signal from 1 Jan 2027', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
                 <li>✓ <?php esc_html_e('"Do Not Sell or Share" link (CCPA)', 'mbr-cookie-consent'); ?></li>
@@ -319,6 +319,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 <li>✓ <?php esc_html_e('Visible "Opt-Out Honored" toast (CA, mandatory Jan 2026)', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Sensitive data opt-in incl. neural data + under-16s (CA)', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('No false-urgency dark patterns (CA)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Expect much more GPC traffic once every browser offers it (CA AB 566)', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -332,14 +333,14 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 🇧🇷 <?php esc_html_e('Brazil - LGPD', 'mbr-cookie-consent'); ?>
             </h4>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
-                <?php esc_html_e('Brazil (similar to GDPR)', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('ANPD an independent agency since Feb 2026 — advertising is an enforcement priority', 'mbr-cookie-consent'); ?>
             </p>
             <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
-                <li>✓ <?php esc_html_e('Clear consent required', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Show legitimate purpose', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Consent for non-essential cookies (ANPD guidance)', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Specific purpose for each category', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Users can revoke consent', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Data minimization', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Similar to GDPR rules', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('2026-27 focus: ads using sensitive data, children', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -360,7 +361,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 <li>✓ <?php esc_html_e('Purpose before collection', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Implied consent only in low-risk cases', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('CASL treats cookies as programs', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Bill C-27 died Jan 2025 — PIPEDA still governs', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('PIPEDA still governs — Bill C-36 (PPCDA) tabled Jun 2026, not yet law', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -381,7 +382,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 <li>✓ <?php esc_html_e('Standalone privacy notice', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Verifiable parental consent for minors', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('72-hour breach notification', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Full compliance by 13 May 2027', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Board enforcement from 13 Nov 2026; full compliance by 13 May 2027', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -486,7 +487,8 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
                 <li>✓ <?php esc_html_e('APP 3 — collect only what is necessary', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('Sensitive information requires opt-in', 'mbr-cookie-consent'); ?></li>
                 <li>✓ <?php esc_html_e('ADM transparency from 10 Dec 2026', 'mbr-cookie-consent'); ?></li>
-                <li>✓ <?php esc_html_e('Children\'s Online Privacy Code by Dec 2026', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Children\'s Online Privacy Code registered by 10 Dec 2026', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Tranche 2 draft (Aug 2026) tightens targeted advertising', 'mbr-cookie-consent'); ?></li>
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
@@ -599,6 +601,27 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
             </p>
         </div>
         
+        <!-- Chile Law 21.719 -->
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #0039a6;">
+            <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                🇨🇱 <?php esc_html_e('Chile - Law 21.719', 'mbr-cookie-consent'); ?>
+            </h4>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">
+                <?php esc_html_e('In force 1 Dec 2026 — GDPR-aligned, new Data Protection Agency', 'mbr-cookie-consent'); ?>
+            </p>
+            <ul style="font-size: 13px; line-height: 1.8; margin: 0;">
+                <li>✓ <?php esc_html_e('Free, informed, specific, unequivocal consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('No pre-ticked boxes or passive consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Withdrawal as easy as giving consent', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Extraterritorial — covers sites serving Chile', 'mbr-cookie-consent'); ?></li>
+                <li>✓ <?php esc_html_e('Agency cookie guidance expected, not yet issued', 'mbr-cookie-consent'); ?></li>
+            </ul>
+            <p style="margin: 15px 0 0 0; padding: 10px; background: #fff3cd; border-radius: 4px; font-size: 12px;">
+                <strong><?php esc_html_e('Penalties:', 'mbr-cookie-consent'); ?></strong> 
+                <?php esc_html_e('Up to 20,000 UTM; revenue-based caps for large entities', 'mbr-cookie-consent'); ?>
+            </p>
+        </div>
+        
         <!-- Rest of World -->
         <div style="border: 1px solid #ddd; padding: 20px; border-radius: 6px; border-left: 4px solid #999;">
             <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
@@ -616,7 +639,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
             </ul>
             <p style="margin: 15px 0 0 0; padding: 10px; background: #f0f6fc; border-radius: 4px; font-size: 12px;">
                 <strong><?php esc_html_e('Note:', 'mbr-cookie-consent'); ?></strong> 
-                <?php esc_html_e('Deliberately over-compliant in notice-based markets such as Japan. Sites upgrading from an earlier version keep their previous settings.', 'mbr-cookie-consent'); ?>
+                <?php esc_html_e('Deliberately over-compliant in notice-based markets such as Japan, whose July 2026 APPI amendment still requires no banner. Sites upgrading from an earlier version keep their previous settings.', 'mbr-cookie-consent'); ?>
             </p>
         </div>
         
