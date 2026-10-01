@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ruleset name="MBR Cookie Consent">
+	<description>WordPress Coding Standards for MBR Cookie Consent. Code-quality, security and documentation rules are enforced; the plugin's own indentation and spacing style (four spaces, spaces inside parentheses and brackets only where the code already has them) is not.</description>
+
+	<file>.</file>
+	<exclude-pattern>/lib/*</exclude-pattern>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+	<exclude-pattern>/languages/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="basepath" value="."/>
+	<arg name="parallel" value="8"/>
+	<arg value="ps"/>
+
+	<config name="minimum_supported_wp_version" value="5.8"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<!--
+	Layout-only rules. The existing code base is indented with four spaces rather than tabs, so
+	enforcing these would mean re-indenting nearly every line of the plugin.
+	-->
+	<rule ref="WordPress">
+		<exclude name="Generic.WhiteSpace"/>
+		<exclude name="Generic.Formatting"/>
+		<exclude name="Generic.Functions.FunctionCallArgumentSpacing"/>
+		<exclude name="Universal.WhiteSpace"/>
+		<exclude name="Squiz.WhiteSpace"/>
+		<exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
+		<exclude name="Squiz.Functions.MultiLineFunctionDeclaration"/>
+		<exclude name="Squiz.PHP.EmbeddedPhp"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature"/>
+		<exclude name="NormalizedArrays.Arrays"/>
+		<exclude name="WordPress.WhiteSpace"/>
+		<exclude name="WordPress.Arrays.ArrayDeclarationSpacing"/>
+		<exclude name="WordPress.Arrays.ArrayIndentation"/>
+		<exclude name="WordPress.Arrays.ArrayKeySpacingRestrictions"/>
+		<exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement"/>
+	</rule>
+</ruleset>
