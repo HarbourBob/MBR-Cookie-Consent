@@ -43,9 +43,16 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Runs the Doctor checks that tell the site owner whether consent signals actually reach the page.
+ */
 class MBR_CC_Doctor {
 
-    /** @var MBR_CC_Doctor|null */
+    /**
+     * Shared instance.
+     *
+     * @var MBR_CC_Doctor|null
+     */
     private static $instance = null;
 
     // Evidence tiers, weakest first.
@@ -60,6 +67,11 @@ class MBR_CC_Doctor {
     const FAIL    = 'fail';     // Known broken.
     const UNKNOWN = 'unknown';  // Not enough evidence to say. A real answer.
 
+    /**
+     * Get the shared instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -67,6 +79,9 @@ class MBR_CC_Doctor {
         return self::$instance;
     }
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {}
 
     /**
@@ -238,7 +253,7 @@ class MBR_CC_Doctor {
     /**
      * Which region is actually being applied, and did anything detect it?
      *
-     * get_detection_source() exists precisely because a fallback presented as a
+     * The get_detection_source() method exists precisely because a fallback presented as a
      * detection is how a site sits in the wrong privacy regime indefinitely.
      */
     private function check_region() {
@@ -878,7 +893,11 @@ class MBR_CC_Doctor {
 
     // ── Presentation helpers ─────────────────────────────────────────────
 
-    /** @return array status => label */
+    /**
+     * Status labels.
+     *
+     * @return array status => label
+     */
     public static function status_labels() {
         return array(
             self::PASS    => __('Observed working', 'mbr-cookie-consent'),
@@ -889,7 +908,11 @@ class MBR_CC_Doctor {
         );
     }
 
-    /** @return array tier => label */
+    /**
+     * Tier labels.
+     *
+     * @return array tier => label
+     */
     public static function tier_labels() {
         return array(
             self::TIER_CONFIG  => __('Configuration', 'mbr-cookie-consent'),
@@ -898,7 +921,11 @@ class MBR_CC_Doctor {
         );
     }
 
-    /** @return array tier => one-line explanation of what that evidence is worth */
+    /**
+     * Tier descriptions.
+     *
+     * @return array tier => one-line explanation of what that evidence is worth
+     */
     public static function tier_descriptions() {
         return array(
             self::TIER_CONFIG  => __('What your settings say. This is what the plugin intends to do, not a record of it happening.', 'mbr-cookie-consent'),

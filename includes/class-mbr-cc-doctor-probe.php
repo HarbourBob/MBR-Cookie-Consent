@@ -29,15 +29,27 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Browser-side probe results for the Doctor screen.
+ */
 class MBR_CC_Doctor_Probe {
 
-    /** @var MBR_CC_Doctor_Probe|null */
+    /**
+     * Shared instance.
+     *
+     * @var MBR_CC_Doctor_Probe|null
+     */
     private static $instance = null;
 
     const FLAG        = 'mbr_cc_doctor_probe';
     const NONCE       = 'mbr_cc_doctor_probe';
     const RESULT_KEY  = 'mbr_cc_doctor_last_probe';
 
+    /**
+     * Get the shared instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -45,6 +57,9 @@ class MBR_CC_Doctor_Probe {
         return self::$instance;
     }
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {
         add_action('wp_enqueue_scripts', array($this, 'maybe_enqueue_probe'), 1);
         add_action('wp_ajax_mbr_cc_doctor_probe_result', array($this, 'ajax_store_probe'));
@@ -296,7 +311,11 @@ class MBR_CC_Doctor_Probe {
         return array('service' => '', 'category' => '', 'known' => false);
     }
 
-    /** @return array|false Last stored probe result. */
+    /**
+     * Last result.
+     *
+     * @return array|false Last stored probe result.
+     */
     public static function last_result() {
         $r = get_option(self::RESULT_KEY, false);
 

@@ -20,8 +20,16 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Optional A/B test of the banner position, with simple impression and conversion counters.
+ */
 class MBR_CC_AB_Testing {
 
+    /**
+     * Shared instance.
+     *
+     * @var self|null
+     */
     private static $instance = null;
 
     /** Cookie name used to persist variant assignment across page views. */
@@ -63,6 +71,9 @@ class MBR_CC_AB_Testing {
         'c' => array( 'position' => 'bottom', 'layout' => 'box-left' ),
     );
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {
         if ( ! get_option( 'mbr_cc_ab_testing_enabled', false ) ) {
             return;
@@ -99,6 +110,11 @@ class MBR_CC_AB_Testing {
         add_action( 'wp_ajax_mbr_cc_ab_reset_stats', array( $this, 'ajax_reset_stats' ) );
     }
 
+    /**
+     * Get the shared instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if ( null === self::$instance ) {
             self::$instance = new self();
@@ -116,7 +132,7 @@ class MBR_CC_AB_Testing {
      * correct while it ran on the server. The browser does the work now — see
      * enqueue_tracker().
      *
-     * current_variant() has gone with them. It read $_COOKIE, so every caller
+     * The current_variant() method has gone with them. It read $_COOKIE, so every caller
      * on the render path was a cache hazard by construction; the tracker script
      * reports the variant the browser actually applied instead.
      */
@@ -139,6 +155,9 @@ class MBR_CC_AB_Testing {
         return 'mbr_cc_ab_count_' . sanitize_key( $variant ) . '_' . sanitize_key( $field );
     }
 
+    /**
+     * Get stats.
+     */
     public static function get_stats() {
         self::migrate_legacy_stats();
 
@@ -388,6 +407,9 @@ class MBR_CC_AB_Testing {
 
     // ── Frontend tracker script ───────────────────────────────────────────
 
+    /**
+     * Enqueue the front-end tracker script.
+     */
     public function enqueue_tracker() {
         if ( is_admin() ) {
             return;
@@ -524,7 +546,11 @@ class MBR_CC_AB_Testing {
         wp_add_inline_script( 'mbr-cc-banner', $script );
     }
 
-    /** @return bool */
+    /**
+     * Is enabled.
+     *
+     * @return bool
+     */
     public static function is_enabled() {
         return (bool) get_option( 'mbr_cc_ab_testing_enabled', false );
     }

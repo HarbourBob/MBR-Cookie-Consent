@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 $network_admin = MBR_CC_Network_Admin::get_instance();
 $stats = $network_admin->get_network_stats();
 
-// Handle export request
+// Handle export request.
 if (isset($_GET['action']) && $_GET['action'] === 'export') {
     check_admin_referer('mbr-cc-export-network');
     $network_admin->export_network_consent_data();
@@ -96,7 +96,7 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         <h2><?php esc_html_e('Consent Timeline (Last 30 Days)', 'mbr-cookie-consent'); ?></h2>
         
         <?php
-        // Get daily consent counts for last 30 days
+        // Get daily consent counts for last 30 days.
         $daily_stats = $wpdb->get_results($wpdb->prepare(
             "SELECT DATE(timestamp) as date, COUNT(*) as count 
             FROM $table_name 

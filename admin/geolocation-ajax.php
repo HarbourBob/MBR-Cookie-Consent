@@ -101,6 +101,6 @@ function mbr_cc_ajax_clear_geo_cache() {
     wp_send_json_success('Cache cleared');
 }
 
-// Register AJAX handlers
+// Register AJAX handlers.
 add_action('wp_ajax_mbr_cc_test_geolocation', 'mbr_cc_ajax_test_geolocation');
 add_action('wp_ajax_mbr_cc_clear_geo_cache', 'mbr_cc_ajax_clear_geo_cache');

@@ -199,69 +199,69 @@ class MBR_CC_Privacy_Policy_Generator {
         
         $content = '';
         
-        // Introduction
+        // Introduction.
         $content .= $this->section_introduction($site_name, $last_updated);
         
-        // Information We Collect
+        // Information We Collect.
         $content .= $this->section_information_collected($features);
         
-        // How We Use Your Information
+        // How We Use Your Information.
         $content .= $this->section_how_we_use_information($features);
         
-        // Cookies and Tracking
+        // Cookies and Tracking.
         $content .= $this->section_cookies_tracking($features);
         
-        // Data Sharing
+        // Data Sharing.
         $content .= $this->section_data_sharing($features);
         
-        // Your Rights
+        // Your Rights.
         $content .= $this->section_your_rights($features);
         
-        // Data Security
+        // Data Security.
         $content .= $this->section_data_security();
         
-        // Third-Party Services
+        // Third-Party Services.
         if (!empty($features['third_party_services'])) {
             $content .= $this->section_third_party_services($features);
         }
         
-        // E-commerce specific
+        // E-commerce specific.
         if ($features['ecommerce']) {
             $content .= $this->section_ecommerce($features);
         }
         
-        // Email/Newsletter
+        // Email/Newsletter.
         if ($features['email_marketing']) {
             $content .= $this->section_email_marketing();
         }
         
-        // Children's Privacy
+        // Children's Privacy.
         $content .= $this->section_childrens_privacy();
         
-        // International Users
+        // International Users.
         if ($features['international']) {
             $content .= $this->section_international_users();
         }
         
-        // California Privacy Rights (CCPA)
+        // California Privacy Rights (CCPA).
         if ($features['ccpa']) {
             $content .= $this->section_ccpa();
         }
         
-        // GDPR Rights
+        // GDPR Rights.
         if ($features['gdpr']) {
             $content .= $this->section_gdpr();
         }
         
-        // AI / LLM training disclosure
+        // AI / LLM training disclosure.
         if ($features['ai_training']) {
             $content .= $this->section_ai_training();
         }
         
-        // Changes to Policy
+        // Changes to Policy.
         $content .= $this->section_changes_to_policy();
         
-        // Contact Information
+        // Contact Information.
         $content .= $this->section_contact($site_name, $admin_email);
         
         return $content;
@@ -292,46 +292,46 @@ class MBR_CC_Privacy_Policy_Generator {
             'third_party_services' => array(),
         );
         
-        // E-commerce detection
+        // E-commerce detection.
         $features['ecommerce'] = class_exists('WooCommerce') || class_exists('Easy_Digital_Downloads');
         
-        // Comments
+        // Comments.
         $features['comments'] = comments_open();
         
-        // User registration
+        // User registration.
         $features['registration'] = get_option('users_can_register');
         
-        // Analytics detection
+        // Analytics detection.
         $features['analytics'] = $this->has_google_analytics() || get_option('mbr_cc_google_consent_mode', false);
         
-        // Advertising detection
+        // Advertising detection.
         $features['advertising'] = $this->has_advertising();
         
-        // Email marketing
+        // Email marketing.
         $features['email_marketing'] = $this->has_email_marketing();
         
-        // Contact forms
+        // Contact forms.
         $features['contact_forms'] = $this->has_contact_forms();
         
-        // Social media
+        // Social media.
         $features['social_media'] = $this->has_social_media();
         
-        // GDPR (enabled by plugin features)
-        $features['gdpr'] = true; // Always include GDPR section
+        // GDPR (enabled by plugin features).
+        $features['gdpr'] = true; // Always include GDPR section.
         
-        // CCPA
+        // CCPA.
         $features['ccpa'] = get_option('mbr_cc_enable_ccpa', false);
         
-        // Google Consent Mode
+        // Google Consent Mode.
         $features['google_consent_mode'] = get_option('mbr_cc_google_consent_mode', false);
         
         // AI / LLM training disclosure (Connecticut SB 1295).
         $features['ai_training'] = get_option('mbr_cc_ai_training_enabled', false);
         
-        // International
+        // International.
         $features['international'] = get_option('mbr_cc_auto_translate', false);
         
-        // Third-party services
+        // Third-party services.
         $features['third_party_services'] = $this->detect_third_party_services();
         
         return $features;
@@ -343,7 +343,7 @@ class MBR_CC_Privacy_Policy_Generator {
      * @return bool Has Google Analytics.
      */
     private function has_google_analytics() {
-        // Check for common GA plugins or scripts
+        // Check for common GA plugins or scripts.
         $scripts = get_option('mbr_cc_blocked_scripts', array());
         foreach ($scripts as $script) {
             if (stripos($script['identifier'], 'google-analytics') !== false || 
@@ -393,8 +393,8 @@ class MBR_CC_Privacy_Policy_Generator {
      * @return bool Has contact forms.
      */
     private function has_contact_forms() {
-        return class_exists('WPCF7') || // Contact Form 7
-               class_exists('GFForms') || // Gravity Forms
+        return class_exists('WPCF7') || // Contact Form 7.
+               class_exists('GFForms') || // Gravity Forms.
                class_exists('Ninja_Forms') ||
                class_exists('Formidable');
     }
@@ -449,6 +449,9 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Introduction
+     *
+     * @param mixed $site_name Site name.
+     * @param mixed $last_updated Last updated.
      */
     private function section_introduction($site_name, $last_updated) {
         return '<p><strong>Last Updated:</strong> ' . $last_updated . '</p>
@@ -462,6 +465,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Information We Collect
+     *
+     * @param mixed $features Features.
      */
     private function section_information_collected($features) {
         $content = '<h2>1. Information We Collect</h2>
@@ -515,6 +520,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: How We Use Your Information
+     *
+     * @param mixed $features Features.
      */
     private function section_how_we_use_information($features) {
         $content = '<h2>2. How We Use Your Information</h2>
@@ -557,6 +564,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Cookies and Tracking
+     *
+     * @param mixed $features Features.
      */
     private function section_cookies_tracking($features) {
         $content = '<h2>3. Cookies and Tracking Technologies</h2>
@@ -594,6 +603,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Data Sharing
+     *
+     * @param mixed $features Features.
      */
     private function section_data_sharing($features) {
         $content = '<h2>4. How We Share Your Information</h2>
@@ -623,6 +634,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Your Rights
+     *
+     * @param mixed $features Features.
      */
     private function section_your_rights($features) {
         $admin_email = get_bloginfo('admin_email');
@@ -670,6 +683,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Third-Party Services
+     *
+     * @param mixed $features Features.
      */
     private function section_third_party_services($features) {
         $services = $features['third_party_services'];
@@ -692,6 +707,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: E-commerce
+     *
+     * @param mixed $features Features.
      */
     private function section_ecommerce($features) {
         return '<h2>8. Online Purchases and Payment Processing</h2>
@@ -918,6 +935,9 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Contact
+     *
+     * @param mixed $site_name Site name.
+     * @param mixed $admin_email Admin email.
      */
     private function section_contact($site_name, $admin_email) {
         return '<h2>17. Contact Us</h2>

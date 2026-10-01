@@ -160,6 +160,8 @@ class MBR_CC_Cookie_Scanner {
     }
     
     /**
+     * Default port for a URL scheme.
+     *
      * @param string $scheme http or https.
      * @return int
      */

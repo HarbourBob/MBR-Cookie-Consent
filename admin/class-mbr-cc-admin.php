@@ -344,7 +344,7 @@ class MBR_CC_Admin {
             true
         );
         
-        // Always enqueue settings JS and media library on plugin pages
+        // Always enqueue settings JS and media library on plugin pages.
         wp_enqueue_media();
         wp_enqueue_script(
             'mbr-cc-admin-settings',
@@ -415,10 +415,16 @@ class MBR_CC_Admin {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/categories.php';
     }
 
+    /**
+     * Render forms page.
+     */
     public function render_forms_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/form-integration.php';
     }
 
+    /**
+     * Render ab testing page.
+     */
     public function render_ab_testing_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/ab-testing.php';
     }

@@ -89,6 +89,8 @@ class MBR_CC_Network_Admin {
     
     /**
      * Enqueue admin assets.
+     *
+     * @param mixed $hook Hook.
      */
     public function enqueue_admin_assets($hook) {
         if (strpos($hook, 'mbr-cc-network') === false) {
@@ -265,24 +267,24 @@ class MBR_CC_Network_Admin {
         
         $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         
-        // Total consents across network
+        // Total consents across network.
         $total_consents = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
         
-        // Consents in last 30 days
+        // Consents in last 30 days.
         $recent_consents = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE timestamp >= %s",
             gmdate('Y-m-d H:i:s', strtotime('-30 days'))
         ));
         
-        // Acceptance rate
+        // Acceptance rate.
         $accepted = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE consent_given = 1");
         $acceptance_rate = $total_consents > 0 ? ($accepted / $total_consents) * 100 : 0;
         
-        // Sites with plugin active
+        // Sites with plugin active.
         $blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
         $total_sites = count($blog_ids);
         
-        // Consents by site
+        // Consents by site.
         $consents_by_site = $wpdb->get_results(
             "SELECT blog_id, COUNT(*) as count 
             FROM $table_name 
@@ -320,13 +322,13 @@ class MBR_CC_Network_Admin {
             return;
         }
         
-        // Set headers for CSV download
+        // Set headers for CSV download.
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="network-consent-logs-' . gmdate('Y-m-d') . '.csv"');
         
         $output = fopen('php://output', 'w');
         
-        // Add headers
+        // Add headers.
         fputcsv($output, array(
             'ID',
             'Blog ID',

@@ -86,9 +86,10 @@ class MBR_CC_Google_ACM {
      */
     public static function get_google_atp_providers() {
         // This is a sample list - in production, this should be fetched from Google's API.
+        // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- ends with a URL.
         // Reference: https://support.google.com/admanager/answer/9681920
         return array(
-            // Google ATP IDs (examples - these change frequently)
+            // Google ATP IDs (examples - these change frequently).
             '1' => 'Google Ads',
             '2' => 'DoubleClick',
             '3' => 'Google Analytics',
@@ -99,7 +100,7 @@ class MBR_CC_Google_ACM {
             '8' => 'Campaign Manager 360',
             '9' => 'Display & Video 360',
             '10' => 'Search Ads 360',
-            // More providers would be listed here in production
+            // More providers would be listed here in production.
         );
     }
     
@@ -111,7 +112,7 @@ class MBR_CC_Google_ACM {
      */
     public function generate_ac_string($consented_providers) {
         // AC String format: 1~{provider_ids}
-        // Example: 1~1.2.3.4.5
+        // Example: 1~1.2.3.4.5.
         
         if (empty($consented_providers)) {
             return '';
@@ -162,14 +163,14 @@ class MBR_CC_Google_ACM {
      */
     public function update_google_tags($ac_string) {
         // This would be handled in JavaScript to update Google tags.
-        // See assets/js/google-acm.js
+        // See assets/js/google-acm.js.
     }
     
     /**
      * Check if provider is consented.
      *
-     * @param int $provider_id Provider ID.
-     * @param string $ac_string AC String.
+     * @param int    $provider_id Provider ID.
+     * @param string $ac_string   AC String.
      * @return bool Is consented.
      */
     public function is_provider_consented($provider_id, $ac_string) {
@@ -205,7 +206,7 @@ class MBR_CC_Google_ACM {
             '/',
             $domain,
             is_ssl(),
-            true // httponly
+            true // httponly.
         );
     }
 }

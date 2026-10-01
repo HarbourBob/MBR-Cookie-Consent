@@ -19,14 +19,14 @@
  * their use of this plugin complies with applicable laws and should consult with legal
  * counsel regarding their specific compliance requirements.
  *
+ * @package MBR_Cookie_Consent
  */
-
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Buy Me a Coffee
+// Buy Me a Coffee.
 add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
     if ( ! function_exists( 'plugin_basename' ) || $file !== plugin_basename( __FILE__ ) ) {
         return $links;
@@ -96,6 +96,11 @@ function mbr_cc_colour_or($value, $fallback) {
     return $clean ? $clean : $fallback;
 }
 
+/**
+ * Mbr cc asset version.
+ *
+ * @param mixed $relative_path Path relative to the plugin directory.
+ */
 function mbr_cc_asset_version($relative_path) {
     $file = MBR_CC_PLUGIN_DIR . ltrim($relative_path, '/');
 
@@ -190,7 +195,7 @@ class MBR_Cookie_Consent {
         require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-settings.php';
         require_once MBR_CC_PLUGIN_DIR . 'admin/geolocation-ajax.php';
         
-        // Load network admin for multisite
+        // Load network admin for multisite.
         if (is_multisite()) {
             require_once MBR_CC_PLUGIN_DIR . 'admin/class-mbr-cc-network-admin.php';
         }
@@ -200,14 +205,14 @@ class MBR_Cookie_Consent {
      * Initialize WordPress hooks.
      */
     private function init_hooks() {
-        // Multisite-aware activation
+        // Multisite-aware activation.
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         
-        // Handle new site creation in multisite
+        // Handle new site creation in multisite.
         add_action('wpmu_new_blog', array($this, 'activate_new_site'), 10, 1);
         
-        // Handle site deletion in multisite
+        // Handle site deletion in multisite.
         add_action('delete_blog', array($this, 'delete_site_data'), 10, 1);
         
         add_action('plugins_loaded', array($this, 'init'));
@@ -260,7 +265,7 @@ class MBR_Cookie_Consent {
         // Initialize banner display.
         MBR_CC_Banner::get_instance();
         
-        // Initialize network admin (multisite only)
+        // Initialize network admin (multisite only).
         if (is_multisite() && is_network_admin()) {
             MBR_CC_Network_Admin::get_instance();
         }
@@ -297,12 +302,14 @@ class MBR_Cookie_Consent {
     
     /**
      * Plugin activation.
+     *
+     * @param bool $network_wide Network wide.
      */
     public function activate($network_wide = false) {
         global $wpdb;
         
         if (is_multisite() && $network_wide) {
-            // Network activation - activate for all sites
+            // Network activation - activate for all sites.
             $blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
             
             foreach ($blog_ids as $blog_id) {
@@ -311,10 +318,10 @@ class MBR_Cookie_Consent {
                 restore_current_blog();
             }
             
-            // Set network-wide default options
+            // Set network-wide default options.
             $this->set_network_default_options();
         } else {
-            // Single site activation
+            // Single site activation.
             $this->activate_single_site();
         }
     }
@@ -323,7 +330,7 @@ class MBR_Cookie_Consent {
      * Activate plugin for a single site.
      */
     private function activate_single_site() {
-        // Create database tables (network-wide tables)
+        // Create database tables (network-wide tables).
         MBR_CC_Database::create_tables();
         
         // Run version-gated migrations for existing installations FIRST, while
@@ -331,10 +338,10 @@ class MBR_Cookie_Consent {
         // install these are no-ops.
         $this->maybe_upgrade();
         
-        // Set default options for this site
+        // Set default options for this site.
         $this->set_default_options();
         
-        // Flush rewrite rules
+        // Flush rewrite rules.
         flush_rewrite_rules();
     }
     
@@ -359,11 +366,11 @@ class MBR_Cookie_Consent {
     public function delete_site_data($blog_id) {
         global $wpdb;
         
-        // Delete consent logs for this site
+        // Delete consent logs for this site.
         $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         $wpdb->delete($table_name, array('blog_id' => $blog_id), array('%d'));
         
-        // Note: We don't delete the tables themselves as they're network-wide
+        // Note: We don't delete the tables themselves as they're network-wide.
     }
     
     /**
@@ -494,7 +501,7 @@ class MBR_Cookie_Consent {
     /**
      * Upgrade routine for 2.3.5.
      *
-     * mbr_cc_wcag_compliance was registered with a text sanitiser, so the
+     * The mbr_cc_wcag_compliance option was registered with a text sanitiser, so the
      * settings screen stored the literal strings "true" and "false" instead of
      * a boolean. checked() compares stringified values, so "true" never matched
      * "1" and the box rendered clear on every page load after a save; and
@@ -918,12 +925,12 @@ class MBR_Cookie_Consent {
      * Set network-wide default options (multisite).
      */
     private function set_network_default_options() {
-        // Enable multisite mode
+        // Enable multisite mode.
         if (false === get_site_option('mbr_cc_multisite_enabled')) {
             add_site_option('mbr_cc_multisite_enabled', true);
         }
         
-        // Network-wide settings (can be overridden per-site)
+        // Network-wide settings (can be overridden per-site).
         $network_defaults = array(
             'network_banner_position' => 'bottom',
             'network_banner_layout' => 'bar',
