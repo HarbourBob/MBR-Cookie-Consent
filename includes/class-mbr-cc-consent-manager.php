@@ -190,7 +190,7 @@ class MBR_CC_Consent_Manager {
         // suppress a different decision. Legacy clients without IDs still work.
         $event_id = isset($_POST['event_id']) ? wp_unslash($_POST['event_id']) : '';
         if (!is_string($event_id) || ($event_id !== '' && !preg_match('/^[a-f0-9]{32}$/D', $event_id))) {
-            wp_send_json_error(array('message' => 'Invalid event ID.', 'retryable' => false), 400);
+            wp_send_json_error(array('message' => __('Invalid event ID.', 'mbr-cookie-consent'), 'retryable' => false), 400);
         }
         sort($categories_accepted);
         $event_key = $event_id === '' ? null : hash_hmac('sha256',
@@ -201,7 +201,7 @@ class MBR_CC_Consent_Manager {
         }
         if (!$this->can_log_consent()) {
             $this->record_log_health('throttled');
-            wp_send_json_error(array('message' => 'Consent log rate limit reached.', 'recorded' => false, 'retryable' => false), 429);
+            wp_send_json_error(array('message' => __('Consent log rate limit reached.', 'mbr-cookie-consent'), 'recorded' => false, 'retryable' => false), 429);
         }
         $log_id = $db->log_consent(array(
             'consent_given' => $consent_given,
@@ -213,12 +213,12 @@ class MBR_CC_Consent_Manager {
         if ($log_id) {
             $this->record_log_health('success');
             wp_send_json_success(array(
-                'message' => 'Consent saved successfully.',
+                'message' => __('Consent saved successfully.', 'mbr-cookie-consent'),
                 'recorded' => true,
             ));
         } else {
             $this->record_log_health('database_error');
-            wp_send_json_error(array('message' => 'Failed to save consent.', 'recorded' => false, 'retryable' => true), 503);
+            wp_send_json_error(array('message' => __('Failed to save consent.', 'mbr-cookie-consent'), 'recorded' => false, 'retryable' => true), 503);
         }
     }
 

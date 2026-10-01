@@ -228,7 +228,7 @@ class MBR_CC_Settings {
         $settings = isset($_POST['settings']) ? wp_unslash($_POST['settings']) : array();
         
         if (empty($settings) || !is_array($settings)) {
-            wp_send_json_error(array('message' => 'No settings provided.'));
+            wp_send_json_error(array('message' => __('No settings provided.', 'mbr-cookie-consent')));
         }
 
         // Validate the enabled policy links, but do NOT abort the save.
@@ -283,8 +283,8 @@ class MBR_CC_Settings {
             
             $warnings[] = array(
                 'field'   => $url_key,
-                /* translators: %s: Privacy Policy or Cookie Policy. */
                 'message' => sprintf(
+                    /* translators: %s: Privacy Policy or Cookie Policy. */
                     __('%s was left unchanged: enter a full http:// or https:// web address, or untick its checkbox. Everything else on this page was saved.', 'mbr-cookie-consent'),
                     $label
                 ),
@@ -332,8 +332,8 @@ class MBR_CC_Settings {
                 if ($clean === '' && $raw !== '') {
                     $warnings[] = array(
                         'field'   => $short,
-                        /* translators: %s: the value that was rejected. */
                         'message' => sprintf(
+                            /* translators: %s: the value that was rejected. */
                             __('%s is not a colour this plugin can store, so that setting was left as it was. Colours must be hexadecimal, for example #ffffff.', 'mbr-cookie-consent'),
                             esc_html($raw)
                         ),
