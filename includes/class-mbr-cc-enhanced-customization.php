@@ -270,14 +270,14 @@ class MBR_CC_Enhanced_Customization {
      */
     public function output_custom_css() {
         $custom_css = get_option('mbr_cc_custom_css', '');
-        
+
         if (empty($custom_css)) {
             return;
         }
-        
+
         // Sanitize CSS: wp_strip_all_tags() removes any HTML tags, neutralising a </style> breakout and leaving only CSS rules.
-        $custom_css = wp_strip_all_tags($custom_css);
-        
+        $custom_css = self::sanitize_custom_css($custom_css);
+
         ?>
         <!-- MBR Cookie Consent - Custom CSS -->
         <style id="mbr-cc-custom-css">
@@ -290,6 +290,26 @@ class MBR_CC_Enhanced_Customization {
     }
     
     /**
+     * Sanitize a custom-CSS value before it is stored or output.
+     *
+     * wp_strip_all_tags() alone neutralises a </style> breakout but leaves
+     * legacy IE-only constructs — expression() and url(javascript:...) — that
+     * some older browsers still execute as script from inside a stylesheet.
+     * Both are stripped defensively even though this value is only ever set
+     * by a manage_options-capable admin.
+     *
+     * @param string $css Raw CSS.
+     * @return string Sanitized CSS.
+     */
+    private static function sanitize_custom_css($css) {
+        $css = wp_strip_all_tags($css);
+        $css = preg_replace('/expression\s*\(/i', '', $css);
+        $css = preg_replace('/url\s*\(\s*[\'"]?\s*javascript:/i', 'url(', $css);
+
+        return $css;
+    }
+
+    /**
      * AJAX: Save custom CSS.
      */
     public function ajax_save_custom_css() {
@@ -300,10 +320,10 @@ class MBR_CC_Enhanced_Customization {
         }
         
         $custom_css = isset($_POST['custom_css']) ? wp_unslash($_POST['custom_css']) : '';
-        
+
         // Sanitize CSS.
-        $custom_css = wp_strip_all_tags($custom_css);
-        
+        $custom_css = self::sanitize_custom_css($custom_css);
+
         update_option('mbr_cc_custom_css', $custom_css);
         
         if (class_exists('MBR_CC_Cache')) {
