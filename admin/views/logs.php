@@ -17,6 +17,24 @@ $logs = $db->get_consent_logs(array('limit' => 100));
 
 <div class="wrap mbr-cc-admin-wrap">
     <h1><?php esc_html_e('Consent Logs', 'mbr-cookie-consent'); ?></h1>
+    <?php if (!$db->has_event_key()) : ?>
+        <div class="notice notice-error inline"><p><?php esc_html_e('The consent-log database upgrade is incomplete. Back up your database and ask your administrator to check database permissions and the PHP/database error log. Duplicate-safe logging requires the new event-key column and unique index.', 'mbr-cookie-consent'); ?></p></div>
+    <?php endif; ?>
+    <div class="notice notice-info inline">
+        <p><?php esc_html_e('Logging diagnostics (this site): visitor choices take effect even when evidence delivery fails. Times below are server observations, not proof that every browser request arrived.', 'mbr-cookie-consent'); ?></p>
+        <?php foreach (array('mbr_cc_log_last_success' => __('Last successful write', 'mbr-cookie-consent'), 'mbr_cc_log_last_failure' => __('Last observed write failure or rate limit', 'mbr-cookie-consent')) as $health_key => $health_label) : ?>
+            <?php $health = get_option($health_key, array()); ?>
+            <p><strong><?php echo esc_html($health_label); ?>:</strong>
+                <?php if (is_array($health) && !empty($health['time'])) : ?>
+                    <?php echo esc_html(wp_date('Y-m-d H:i:s T', (int) $health['time'])); ?>
+                    (<?php echo esc_html($health['status']); ?>)
+                <?php else : ?>
+                    <?php esc_html_e('None observed since upgrading to 2.3.7.', 'mbr-cookie-consent'); ?>
+                <?php endif; ?>
+            </p>
+        <?php endforeach; ?>
+        <p><?php esc_html_e('Blocked/offline browser requests cannot be observed here. Check browser console warnings and test a consent decision on your site. Diagnostic timestamps are sampled at most once per minute.', 'mbr-cookie-consent'); ?></p>
+    </div>
     
     <div class="mbr-cc-logs-filters">
         <div>

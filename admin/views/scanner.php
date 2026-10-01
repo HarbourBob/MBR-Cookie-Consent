@@ -126,6 +126,8 @@ $blocked_scripts = $blocker->get_blocked_scripts();
                             <option value="src"><?php esc_html_e('External (src)', 'mbr-cookie-consent'); ?></option>
                             <option value="inline"><?php esc_html_e('Inline', 'mbr-cookie-consent'); ?></option>
                             <option value="iframe"><?php esc_html_e('Iframe', 'mbr-cookie-consent'); ?></option>
+                            <option value="image"><?php esc_html_e('Image (avatar, tracking pixel)', 'mbr-cookie-consent'); ?></option>
+                            <option value="stylesheet"><?php esc_html_e('Stylesheet (web fonts, external CSS)', 'mbr-cookie-consent'); ?></option>
                         </select>
                     </td>
                 </tr>

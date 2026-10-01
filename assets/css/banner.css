@@ -559,15 +559,27 @@
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
-    color: #000000 !important;
-}
 
-.mbr-cc-revisit-consent span {
+    /* Fallback only, for when the inline custom CSS has not loaded.
+       Deliberately NOT !important: the colour you choose in the settings is
+       emitted inline with !important, and when both carried it the winner was
+       decided by which stylesheet happened to come last — so an asset-combining
+       performance plugin could reorder them and silently restore black text on
+       a button configured as white. Without !important here, your setting wins
+       whatever the order. */
     color: #000000;
 }
 
+.mbr-cc-revisit-consent span {
+    color: inherit;
+}
+
 .mbr-cc-revisit-consent svg {
-    stroke: #000000;
+    /* Only stroke. The icon's chips are fill="currentColor" so they follow the
+       button's colour on their own, while the outer ring is fill="none" — and a
+       CSS fill would override that presentation attribute and fill the ring in
+       solid. */
+    stroke: currentColor;
 }
 
 .mbr-cc-revisit-consent:hover {

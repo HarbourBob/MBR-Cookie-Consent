@@ -1,6 +1,29 @@
 (function($) {
     'use strict';
     
+    /**
+     * Escape a value for use in HTML text or a quoted attribute.
+     *
+     * Scanner results are not trusted input. Names, identifiers and types come
+     * from the HTML of the page that was scanned, so anybody able to influence
+     * that page — a comment, a compromised third-party script, a plugin that
+     * prints user content — could put markup in them. Before 2.6.0 they were
+     * concatenated into the results table unescaped, and a crafted script URL
+     * executed in the administrator's session. Every value interpolated into a
+     * string of HTML on this screen goes through here.
+     *
+     * @param {*} value
+     * @return {string}
+     */
+    function esc(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     var MbrCcAdmin = {
         
         init: function() {
@@ -67,8 +90,17 @@
             // Add scanned script to blocked list
             $(document).on('click', '.mbr-cc-add-script', function(e) {
                 e.preventDefault();
-                var data = $(this).data();
-                self.addBlockedScript(data);
+                // .attr(), not .data(): jQuery's .data() parses values that look
+                // like numbers or JSON, so an identifier of "123" arrived as a
+                // number and broke every .substring() downstream.
+                var $b = $(this);
+                self.addBlockedScript({
+                    name: $b.attr('data-name') || '',
+                    identifier: $b.attr('data-identifier') || '',
+                    type: $b.attr('data-type') || '',
+                    category: $b.attr('data-category') || '',
+                    $button: $b
+                });
             });
             
             // Add custom blocked script
@@ -285,6 +317,23 @@
             var self = this;
             var $button = $('#mbr-cc-save-settings');
             var settings = this.gatherSettings();
+
+            // Tidy up the policy URL fields, but never refuse to save.
+            //
+            // This used to abort the whole save when a policy URL looked wrong.
+            // Every tab is one form, so that meant a single field could stop
+            // the entire settings screen from saving — and the check disagreed
+            // with the server's in both directions, so it either blocked a URL
+            // the server would have accepted or waved through one it refused.
+            // The server now declines just that field and saves the rest, and
+            // reports back which field it left alone.
+            ['privacy', 'cookie'].forEach(function(policy) {
+                var field = document.getElementById(policy + '_policy_url');
+                if (!field) { return; }
+                field.value = field.value.trim();
+                field.setCustomValidity('');
+                settings[policy + '_policy_url'] = field.value;
+            });
             
             $button.prop('disabled', true).text('Saving...');
             
@@ -297,8 +346,28 @@
                     settings: settings
                 },
                 success: function(response) {
-                    if (response.success) {
-                        // Show success message
+                    if (response && response.success) {
+                        var warnings = (response.data && response.data.warnings) || [];
+                        if (warnings.length) {
+                            // Saved, but something was declined. Say so, show
+                            // the field and do NOT reload it away.
+                            var texts = warnings.map(function(w) { return w.message; }).join(' ');
+                            $('.wrap > h1').after(
+                                $('<div class="notice notice-warning is-dismissible"><p></p></div>').find('p').text(texts).end()
+                            );
+                            var first = document.getElementById(warnings[0].field);
+                            if (first) {
+                                var tabId = $(first).closest('.mbr-cc-tab-content').attr('id');
+                                if (tabId) {
+                                    $('.mbr-cc-tab-button').filter(function() {
+                                        return 'tab-' + $(this).data('tab') === tabId;
+                                    }).trigger('click');
+                                }
+                                first.focus();
+                            }
+                            $button.prop('disabled', false).text('Save Settings');
+                            return;
+                        }
                         var $notice = $('<div class="notice notice-success is-dismissible"><p>Settings saved successfully. Reloading...</p></div>');
                         $('.wrap > h1').after($notice);
                         
@@ -307,14 +376,34 @@
                             location.reload();
                         }, 1000);
                     } else {
-                        var $notice = $('<div class="notice notice-error is-dismissible"><p>Failed to save settings.</p></div>');
-                        $('.wrap > h1').after($notice);
+                        // Show what the server actually said. A bare "Failed to
+                        // save settings." with no reason cost a release cycle
+                        // to diagnose; anything the server returns is more
+                        // useful than that, including a non-JSON reply, which
+                        // means something upstream printed a PHP error.
+                        var detail = '';
+                        if (response && response.data && response.data.message) {
+                            detail = response.data.message;
+                        } else if (typeof response === 'string' && response.length) {
+                            detail = 'Unexpected server response: ' + $.trim(response).slice(0, 300);
+                        } else {
+                            detail = 'Failed to save settings, and the server gave no reason.';
+                        }
+                        $('.wrap > h1').after(
+                            $('<div class="notice notice-error is-dismissible"><p></p></div>').find('p').text(detail).end()
+                        );
                         $button.prop('disabled', false).text('Save Settings');
                     }
                 },
-                error: function() {
-                    var $notice = $('<div class="notice notice-error is-dismissible"><p>An error occurred.</p></div>');
-                    $('.wrap > h1').after($notice);
+                error: function(xhr) {
+                    var detail = 'Could not save settings: the request to the server failed';
+                    if (xhr && xhr.status) { detail += ' (HTTP ' + xhr.status + ')'; }
+                    if (xhr && xhr.responseText) {
+                        detail += '. Server said: ' + $.trim(xhr.responseText).slice(0, 300);
+                    }
+                    $('.wrap > h1').after(
+                        $('<div class="notice notice-error is-dismissible"><p></p></div>').find('p').text(detail).end()
+                    );
                     $button.prop('disabled', false).text('Save Settings');
                 }
             });
@@ -383,13 +472,13 @@
                         }
                     } else {
                         var errorMsg = response.data && response.data.message ? response.data.message : 'Scan failed. Please try again.';
-                        $results.html('<p class="error">' + errorMsg + '</p>');
+                        $results.html('<p class="error">' + esc(errorMsg) + '</p>');
                         $progress.hide();
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Scanner error:', xhr.responseText);
-                    $results.html('<p class="error">Scan failed. Error: ' + error + '. Please check the browser console for details.</p>');
+                    $results.html('<p class="error">Scan failed. Error: ' + esc(error) + '. Please check the browser console for details.</p>');
                     $progress.hide();
                 },
                 complete: function() {
@@ -403,17 +492,17 @@
         
         displaySinglePageResults: function(data) {
             var $results = $('#mbr-cc-scan-results');
-            var html = '<h3>Scan Results (' + data.count + ' items found)</h3>';
+            var html = '<h3>Scan Results (' + esc(data.count) + ' items found)</h3>';
             
             if (data.scripts && data.scripts.length > 0) {
                 html += '<h4>Scripts</h4><table class="widefat"><thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Action</th></tr></thead><tbody>';
                 
                 $.each(data.scripts, function(i, script) {
                     html += '<tr>';
-                    html += '<td>' + script.name + '</td>';
-                    html += '<td>' + script.type + '</td>';
-                    html += '<td>' + script.category + '</td>';
-                    html += '<td><button class="button mbr-cc-add-script" data-name="' + script.name + '" data-identifier="' + script.identifier + '" data-type="' + script.type + '" data-category="' + script.category + '">Add to Blocked List</button></td>';
+                    html += '<td>' + esc(script.name) + '</td>';
+                    html += '<td>' + esc(script.type) + '</td>';
+                    html += '<td>' + esc(script.category) + '</td>';
+                    html += '<td><button type="button" class="button mbr-cc-add-script" data-name="' + esc(script.name) + '" data-identifier="' + esc(script.identifier) + '" data-type="' + esc(script.type) + '" data-category="' + esc(script.category) + '">Add to Blocked List</button></td>';
                     html += '</tr>';
                 });
                 
@@ -425,9 +514,9 @@
                 
                 $.each(data.iframes, function(i, iframe) {
                     html += '<tr>';
-                    html += '<td>' + iframe.name + '</td>';
-                    html += '<td>' + iframe.category + '</td>';
-                    html += '<td><button class="button mbr-cc-add-script" data-name="' + iframe.name + '" data-identifier="' + iframe.identifier + '" data-type="iframe" data-category="' + iframe.category + '">Add to Blocked List</button></td>';
+                    html += '<td>' + esc(iframe.name) + '</td>';
+                    html += '<td>' + esc(iframe.category) + '</td>';
+                    html += '<td><button type="button" class="button mbr-cc-add-script" data-name="' + esc(iframe.name) + '" data-identifier="' + esc(iframe.identifier) + '" data-type="iframe" data-category="' + esc(iframe.category) + '">Add to Blocked List</button></td>';
                     html += '</tr>';
                 });
                 
@@ -445,7 +534,7 @@
             var $results = $('#mbr-cc-scan-results');
             var html = '<div class="mbr-cc-scan-summary" style="background: #fff; padding: 20px; margin: 20px 0; border-left: 4px solid #00a32a;">';
             html += '<h3>✓ Site-Wide Scan Complete</h3>';
-            html += '<p><strong>' + data.count + ' unique scripts/iframes found</strong> across ' + data.pages_scanned + ' pages</p>';
+            html += '<p><strong>' + esc(data.count) + ' unique scripts/iframes found</strong> across ' + esc(data.pages_scanned) + ' pages</p>';
             html += '</div>';
             
             var categories = data.by_category;
@@ -483,10 +572,11 @@
                     }
                     
                     html += '<tr>';
-                    html += '<td><strong>' + item.name + '</strong><br><small style="color: #666;">' + item.identifier.substring(0, 50) + (item.identifier.length > 50 ? '...' : '') + '</small></td>';
-                    html += '<td>' + item.type + '</td>';
-                    html += '<td title="' + foundOnTitle + '">' + foundOnText + '</td>';
-                    html += '<td><button class="button button-small mbr-cc-add-script" data-name="' + item.name + '" data-identifier="' + item.identifier + '" data-type="' + item.type + '" data-category="' + slug + '">Add to Blocked</button></td>';
+                    var ident = String(item.identifier || '');
+                    html += '<td><strong>' + esc(item.name) + '</strong><br><small style="color: #666;">' + esc(ident.substring(0, 50)) + (ident.length > 50 ? '...' : '') + '</small></td>';
+                    html += '<td>' + esc(item.type) + '</td>';
+                    html += '<td title="' + esc(foundOnTitle) + '">' + esc(foundOnText) + '</td>';
+                    html += '<td><button type="button" class="button button-small mbr-cc-add-script" data-name="' + esc(item.name) + '" data-identifier="' + esc(ident) + '" data-type="' + esc(item.type) + '" data-category="' + esc(slug) + '">Add to Blocked</button></td>';
                     html += '</tr>';
                 });
                 
@@ -502,7 +592,11 @@
         
         addBlockedScript: function(data) {
             var self = this;
-            var $button = $('.mbr-cc-add-script[data-identifier="' + data.identifier + '"]');
+            // Filter rather than build a selector: an identifier containing a
+            // quote or bracket made the old attribute selector throw.
+            var $button = data.$button || $('.mbr-cc-add-script').filter(function() {
+                return $(this).attr('data-identifier') === data.identifier;
+            });
             
             // Disable button and show loading state
             $button.prop('disabled', true).text('Adding...');
@@ -520,6 +614,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
+                        delete data.$button;
                         // Change button to success state
                         $button.text('✓ Added').css({
                             'background': '#00a32a',
@@ -531,7 +626,7 @@
                         self.addToBlockedList(data);
                         
                         // Show success notice at top
-                        var $notice = $('<div class="notice notice-success is-dismissible"><p><strong>' + data.name + '</strong> has been added to the blocked scripts list.</p></div>');
+                        var $notice = $('<div class="notice notice-success is-dismissible"><p><strong>' + esc(data.name) + '</strong> has been added to the blocked scripts list.</p></div>');
                         $('.wrap > h1').after($notice);
                         
                         // Auto-dismiss notice after 3 seconds
@@ -543,7 +638,7 @@
                     } else {
                         // Show error
                         $button.prop('disabled', false).text('Add to Blocked');
-                        var $notice = $('<div class="notice notice-error is-dismissible"><p>Failed to add script: ' + (response.data ? response.data.message : 'Unknown error') + '</p></div>');
+                        var $notice = $('<div class="notice notice-error is-dismissible"><p>Failed to add script: ' + esc(response.data ? response.data.message : 'Unknown error') + '</p></div>');
                         $('.wrap > h1').after($notice);
                     }
                 },
@@ -588,18 +683,19 @@
             console.log('Current blocked script count:', currentCount);
             
             // Create new script item HTML
-            var scriptHtml = '<div class="mbr-cc-script-item" data-index="' + currentCount + '" data-identifier="' + script.identifier + '">';
+            var identifier = String(script.identifier || '');
+            var scriptHtml = '<div class="mbr-cc-script-item" data-index="' + currentCount + '" data-identifier="' + esc(identifier) + '">';
             scriptHtml += '<div class="mbr-cc-script-info">';
-            scriptHtml += '<h4>' + script.name + '</h4>';
-            scriptHtml += '<p><strong>Type:</strong> ' + script.type + '</p>';
-            scriptHtml += '<p><strong>Category:</strong> ' + script.category + '</p>';
-            scriptHtml += '<p class="mbr-cc-script-meta"><code>' + script.identifier.substring(0, 80);
-            if (script.identifier.length > 80) {
+            scriptHtml += '<h4>' + esc(script.name) + '</h4>';
+            scriptHtml += '<p><strong>Type:</strong> ' + esc(script.type) + '</p>';
+            scriptHtml += '<p><strong>Category:</strong> ' + esc(script.category) + '</p>';
+            scriptHtml += '<p class="mbr-cc-script-meta"><code>' + esc(identifier.substring(0, 80));
+            if (identifier.length > 80) {
                 scriptHtml += '...';
             }
             scriptHtml += '</code></p>';
             if (script.description) {
-                scriptHtml += '<p>' + script.description + '</p>';
+                scriptHtml += '<p>' + esc(script.description) + '</p>';
             }
             scriptHtml += '</div>';
             scriptHtml += '<div class="mbr-cc-script-actions">';
@@ -727,7 +823,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        self.showNotice('Cookie policy page created! <a href="' + response.data.edit_link + '">Edit page</a>', 'success');
+                        self.showNotice('Cookie policy page created!', 'success', $('<a></a>').attr('href', response.data.edit_link).text('Edit page'));
                     } else {
                         self.showNotice(response.data.message, 'error');
                     }
@@ -1053,18 +1149,20 @@
 
         renderImportReport: function(data) {
             var lines = [];
-            lines.push('<strong>' + data.message + '</strong>');
+            // Everything here but the fixed sentences came out of the imported
+            // file, which is exactly the kind of file that gets emailed around.
+            lines.push('<strong>' + esc(data.message) + '</strong>');
 
             if (data.checksum_ok === false) {
                 lines.push('<span style="color:#b32d2e;">Note: the file\'s integrity checksum did not match. It may have been edited by hand. The settings were still imported.</span>');
             }
 
             if (data.skipped_count && data.skipped_count > 0) {
-                lines.push(data.skipped_count + ' unrecognised field(s) were ignored: <code>' + data.skipped.join('</code>, <code>') + '</code>');
+                lines.push(esc(data.skipped_count) + ' unrecognised field(s) were ignored: <code>' + $.map(data.skipped || [], esc).join('</code>, <code>') + '</code>');
             }
 
             if (data.source_url) {
-                lines.push('Source: ' + data.source_url);
+                lines.push('Source: ' + esc(data.source_url));
             }
 
             var $report = $('#mbr-cc-import-report');
@@ -1095,8 +1193,18 @@
             });
         },
 
-        showNotice: function(message, type) {
-            var $notice = $('<div class="notice notice-' + type + ' is-dismissible"><p>' + message + '</p></div>');
+        /**
+         * Show an admin notice. The message is text, never markup: server
+         * messages can echo back values that originated with a visitor or an
+         * imported file. Pass a jQuery element as $extra to append a link.
+         */
+        showNotice: function(message, type, $extra) {
+            var safeType = /^(success|error|warning|info)$/.test(type) ? type : 'info';
+            var $p = $('<p></p>').text(message === undefined || message === null ? '' : String(message));
+            if ($extra) {
+                $p.append(' ').append($extra);
+            }
+            var $notice = $('<div class="notice is-dismissible"></div>').addClass('notice-' + safeType).append($p);
             $('.wrap > h1').after($notice);
             
             setTimeout(function() {

@@ -306,7 +306,11 @@
 
     function onConsentSaved( consent ) {
         var hasBlocked = document.querySelector( '[data-mbr-cc-blocked="true"]' );
-        if ( hasBlocked ) {
+        if ( hasBlocked && !window._mbrCcSuppressReload ) {
+            if ( window.MbrCcConsent && window.MbrCcConsent.requestReload ) {
+                window.MbrCcConsent.requestReload();
+                return;
+            }
             // Small delay so the banner can finish its own save/close animation.
             setTimeout( function () {
                 window.location.reload();

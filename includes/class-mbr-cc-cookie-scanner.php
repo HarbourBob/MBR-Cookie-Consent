@@ -89,23 +89,141 @@ class MBR_CC_Cookie_Scanner {
             return false;
         }
         
-        if (!in_array(strtolower($parts['scheme']), array('http', 'https'), true)) {
+        $scheme = strtolower($parts['scheme']);
+        if (!in_array($scheme, array('http', 'https'), true)) {
             return false;
         }
         
-        $allowed = array(strtolower((string) wp_parse_url(home_url(), PHP_URL_HOST)));
+        // Credentials in a URL have no business in a scan of your own pages,
+        // and user@host forms are a classic way to confuse host checks.
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            return false;
+        }
         
-        if (is_multisite()) {
-            $allowed[] = strtolower((string) wp_parse_url(network_home_url(), PHP_URL_HOST));
-            
-            foreach (get_sites(array('number' => 200, 'fields' => 'ids')) as $site_id) {
-                $allowed[] = strtolower((string) wp_parse_url(get_home_url($site_id), PHP_URL_HOST));
+        $host = strtolower($parts['host']);
+        $port = isset($parts['port']) ? (int) $parts['port'] : self::default_port($scheme);
+        
+        // CHANGED IN 2.6.0: host AND port. Checking the hostname alone let
+        // https://yoursite:8081/ through, which is a different service on the
+        // same machine — an admin panel, a cache, a metrics endpoint — and the
+        // reason a scanner restricted to "this site" exists in the first place.
+        foreach ($this->allowed_origins() as $origin) {
+            if ($origin['host'] !== $host) {
+                continue;
+            }
+            // A site on the default port is reachable on either default port,
+            // because http → https is the redirect every site issues.
+            if (null === $origin['port']) {
+                if (in_array($port, array(80, 443), true)) {
+                    return true;
+                }
+            } elseif ($origin['port'] === $port) {
+                return true;
             }
         }
         
-        $allowed = array_filter(array_unique($allowed));
+        return false;
+    }
+    
+    /**
+     * Hosts (and explicit ports, if any) of this site and, on Multisite, the
+     * network's sites.
+     *
+     * @return array[] Each array( 'host' => string, 'port' => int|null ).
+     */
+    private function allowed_origins() {
+        $urls = array(home_url(), site_url());
         
-        return in_array(strtolower($parts['host']), $allowed, true);
+        if (is_multisite()) {
+            $urls[] = network_home_url();
+            foreach (get_sites(array('number' => 200, 'fields' => 'ids')) as $site_id) {
+                $urls[] = get_home_url($site_id);
+            }
+        }
+        
+        $origins = array();
+        foreach ($urls as $u) {
+            $p = wp_parse_url($u);
+            if (empty($p['host'])) {
+                continue;
+            }
+            $port = isset($p['port']) ? (int) $p['port'] : null;
+            // An explicit default port is the same as none.
+            if (in_array($port, array(80, 443), true)) {
+                $port = null;
+            }
+            $key = strtolower($p['host']) . ':' . (null === $port ? '' : $port);
+            $origins[$key] = array('host' => strtolower($p['host']), 'port' => $port);
+        }
+        
+        return array_values($origins);
+    }
+    
+    /**
+     * @param string $scheme http or https.
+     * @return int
+     */
+    private static function default_port($scheme) {
+        return 'https' === $scheme ? 443 : 80;
+    }
+    
+    /**
+     * Maximum redirects followed when fetching a page to scan.
+     */
+    const MAX_REDIRECTS = 3;
+    
+    /**
+     * Fetch one of this site's pages, following redirects only within it.
+     *
+     * Before 2.6.0 the URL was checked once and then fetched with
+     * wp_remote_get(), which follows up to five redirects wherever they lead.
+     * Any page on the site that redirects elsewhere — an open redirect in a
+     * plugin, a short-link, a login flow — carried the request past the check.
+     *
+     * Redirects are now followed here, one hop at a time, and every hop is
+     * checked against the same allowlist as the first. wp_safe_remote_get()
+     * adds WordPress's own protection on each request: it refuses private and
+     * loopback addresses for any host other than the site's own, and
+     * non-standard ports.
+     *
+     * @param string $url Absolute URL, already validated.
+     * @return array|WP_Error Response array or error.
+     */
+    private function fetch_local($url) {
+        for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
+            if (!$this->is_local_url($url)) {
+                return new WP_Error(
+                    'mbr_cc_external_url',
+                    0 === $hop
+                        ? __('The scanner can only scan pages on this site.', 'mbr-cookie-consent')
+                        : __('The page redirected off this site, so the scan stopped there.', 'mbr-cookie-consent')
+                );
+            }
+            
+            $response = wp_safe_remote_get($url, array(
+                'timeout'     => 10,
+                'redirection' => 0,
+            ));
+            
+            if (is_wp_error($response)) {
+                return $response;
+            }
+            
+            $code     = (int) wp_remote_retrieve_response_code($response);
+            $location = wp_remote_retrieve_header($response, 'location');
+            
+            if ($code < 300 || $code >= 400 || '' === $location || null === $location) {
+                return $response;
+            }
+            
+            if (is_array($location)) {
+                $location = end($location);
+            }
+            
+            $url = WP_Http::make_absolute_url($location, $url);
+        }
+        
+        return new WP_Error('mbr_cc_too_many_redirects', __('The page redirected too many times to scan.', 'mbr-cookie-consent'));
     }
     
     /**
@@ -328,10 +446,8 @@ class MBR_CC_Cookie_Scanner {
             );
         }
         
-        // Fetch page content.
-        $response = wp_remote_get($url, array(
-            'timeout' => 10,
-        ));
+        // Fetch page content, following redirects only within this site.
+        $response = $this->fetch_local($url);
         
         if (is_wp_error($response)) {
             return $response;
@@ -362,11 +478,27 @@ class MBR_CC_Cookie_Scanner {
     private function extract_scripts($html) {
         $scripts = array();
         
-        // Match external scripts with src attribute.
-        preg_match_all('/<script[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $html, $matches);
+        // Match external scripts with a src attribute, in any valid form:
+        // quoted either way, unquoted, and with or without spaces round "=".
+        // The previous expression required src="…" exactly, so a script the
+        // blocker could (now) hold was invisible to the scanner.
+        preg_match_all(
+            '/<script\b(?:[^>"\']|"[^"]*"|\'[^\']*\')*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'=<>`]+))/i',
+            $html,
+            $matches,
+            PREG_SET_ORDER
+        );
         
-        if (!empty($matches[1])) {
-            foreach ($matches[1] as $src) {
+        $sources = array();
+        foreach ($matches as $m) {
+            $value = '' !== $m[1] ? $m[1] : ('' !== ($m[2] ?? '') ? $m[2] : ($m[3] ?? ''));
+            if ('' !== $value) {
+                $sources[] = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+            }
+        }
+        
+        if (!empty($sources)) {
+            foreach ($sources as $src) {
                 $category = $this->categorize_script($src);
                 
                 $scripts[] = array(
@@ -379,24 +511,69 @@ class MBR_CC_Cookie_Scanner {
             }
         }
         
-        // Match inline scripts with common tracking patterns.
-        $patterns = array(
-            'google-analytics' => '/ga\(|gtag\(|GoogleAnalyticsObject/i',
-            'google-tag-manager' => '/googletagmanager\.com\/gtm\.js/i',
-            'facebook-pixel' => '/fbq\(|facebook\.com\/tr/i',
-            'google-ads' => '/googlesyndication\.com/i',
-            'hotjar' => '/hotjar/i',
+        // Inline scripts with common tracking patterns.
+        //
+        // CHANGED IN 2.6.0. The identifier stored with an inline rule is what
+        // the blocker searches script bodies for, literally. It used to be the
+        // service's label — "facebook-pixel" — which appears in no script, so
+        // the rule the scanner offered could never fire. And detection ran a
+        // regex over the whole page, so "ga(" in any text at all counted.
+        //
+        // Now each service lists distinctive literals, in order of preference,
+        // and the identifier is whichever one was actually found in an inline
+        // script body. Short, ambiguous fragments such as "ga(" are gone: as a
+        // literal rule it would also hold any script calling omega() or
+        // setMega(), which is breakage the site owner would never trace back.
+        // gtag( alone is avoided for the same reason — this plugin's own
+        // Consent Mode default is a gtag('consent', …) call.
+        $markers = array(
+            'google-analytics'   => array("gtag('config'", 'gtag("config"', 'GoogleAnalyticsObject', "ga('create'", 'ga("create"'),
+            'google-tag-manager' => array('googletagmanager.com/gtm.js'),
+            'facebook-pixel'     => array("fbq('init'", 'fbq("init"', 'connect.facebook.net', 'facebook.com/tr'),
+            'google-ads'         => array('googlesyndication.com', 'adsbygoogle'),
+            'hotjar'             => array('static.hotjar.com', 'hotjar.com'),
         );
         
-        foreach ($patterns as $name => $pattern) {
-            if (preg_match($pattern, $html)) {
-                $scripts[] = array(
-                    'type' => 'inline',
-                    'identifier' => $name,
-                    'name' => $this->format_script_name($name),
-                    'category' => $this->categorize_script($name),
-                    'description' => '',
-                );
+        preg_match_all(
+            '/<script\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>((?:(?!<\/script>)[\s\S])*)<\/script>/i',
+            $html,
+            $inline,
+            PREG_SET_ORDER
+        );
+        
+        $bodies = array();
+        foreach ($inline as $m) {
+            // Only inline scripts: a body next to a src is ignored by browsers.
+            if (preg_match('/(?<![\w-])src\s*=/i', $m[1])) {
+                continue;
+            }
+            if ('' !== trim($m[2])) {
+                $bodies[] = $m[2];
+            }
+        }
+        
+        foreach ($markers as $name => $literals) {
+            foreach ($literals as $literal) {
+                $found = false;
+                foreach ($bodies as $body) {
+                    // Exact match. The blocker matches case-insensitively, so
+                    // any literal found here is guaranteed to be found there.
+                    if (false !== strpos($body, $literal)) {
+                        $found = true;
+                        break;
+                    }
+                }
+                
+                if ($found) {
+                    $scripts[] = array(
+                        'type' => 'inline',
+                        'identifier' => $literal,
+                        'name' => $this->format_script_name($name),
+                        'category' => $this->categorize_script($name),
+                        'description' => '',
+                    );
+                    break;
+                }
             }
         }
         
@@ -412,7 +589,19 @@ class MBR_CC_Cookie_Scanner {
     private function extract_iframes($html) {
         $iframes = array();
         
-        preg_match_all('/<iframe[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $html, $matches);
+        preg_match_all(
+            '/<iframe\b(?:[^>"\']|"[^"]*"|\'[^\']*\')*?(?<![\w-])src\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'=<>`]+))/i',
+            $html,
+            $raw,
+            PREG_SET_ORDER
+        );
+        $matches = array(1 => array());
+        foreach ($raw as $m) {
+            $value = '' !== $m[1] ? $m[1] : ('' !== ($m[2] ?? '') ? $m[2] : ($m[3] ?? ''));
+            if ('' !== $value) {
+                $matches[1][] = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+            }
+        }
         
         if (!empty($matches[1])) {
             foreach ($matches[1] as $src) {

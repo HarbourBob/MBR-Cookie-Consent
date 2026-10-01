@@ -77,6 +77,14 @@ class MBR_CC_Consent_Manager {
             'reloadOnConsent' => (bool) get_option('mbr_cc_reload_on_consent', false),
             'cookieDomain' => apply_filters('mbr_cc_cookie_domain', ''),
             'cookiePath' => apply_filters('mbr_cc_cookie_path', '/'),
+            'queueKey' => 'mbr_cc_log_queue_' . get_current_blog_id() . '_' . substr(md5(home_url('/')), 0, 12),
+            // Deliberately narrow: never clear all cookies or browser storage.
+            // Integrators may add reviewed service-specific names. A trailing
+            // * denotes a prefix; required categories are excluded in JS.
+            'cleanupRules' => apply_filters('mbr_cc_withdrawal_cleanup_rules', array(
+                'analytics' => array('cookies' => array('_ga', '_ga_*', '_gid', '_gat', '_gat_*'), 'localStorage' => array(), 'sessionStorage' => array()),
+                'marketing' => array('cookies' => array('_gcl_au', '_gcl_aw', '_gcl_dc', '_fbp', '_fbc', '_uetvid', '_uetsid'), 'localStorage' => array('_uetvid', '_uetvid_exp', '_uetsid', '_uetsid_exp'), 'sessionStorage' => array()),
+            )),
         ));
     }
     
@@ -93,19 +101,9 @@ class MBR_CC_Consent_Manager {
         // Because the nonce is advisory, this endpoint is effectively open, so
         // the throttle below — not the nonce — is what stops the consent log
         // being flooded with junk rows.
-        $nonce_valid = isset( $_POST['nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'mbr_cc_consent_nonce' );
+        $nonce_valid = isset( $_POST['nonce'] ) && is_string($_POST['nonce']) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'mbr_cc_consent_nonce' );
         if ( ! $nonce_valid ) {
             $this->log_stale_nonce();
-        }
-        
-        if ( ! $this->can_log_consent() ) {
-            // Report success: the visitor's consent cookie is already set
-            // client-side and their experience is unaffected. Only the
-            // duplicate log row is being declined.
-            wp_send_json_success( array(
-                'message'   => 'Consent recorded.',
-                'throttled' => true,
-            ) );
         }
         
         $raw_consent = isset($_POST['consent']) ? wp_unslash($_POST['consent']) : '';
@@ -117,7 +115,7 @@ class MBR_CC_Consent_Manager {
         }
         
         $consent_data = json_decode($raw_consent, true);
-        $consent_method = isset($_POST['method']) ? sanitize_text_field(wp_unslash($_POST['method'])) : 'banner';
+        $consent_method = isset($_POST['method']) && is_string($_POST['method']) ? sanitize_text_field(wp_unslash($_POST['method'])) : 'banner';
         
         // Anything outside this list is recorded as 'other' rather than written
         // to the log verbatim.
@@ -179,21 +177,59 @@ class MBR_CC_Consent_Manager {
             $categories_accepted = array_values(array_unique($categories_accepted));
         }
         
-        // Log consent to database.
+        // A rejection/withdrawal is not optional consent, even though the
+        // necessary category remains enabled. Preserve categories separately.
+        $consent_given = count(array_diff($categories_accepted, array('necessary'))) > 0;
+        if ($consent_method === 'revoked') {
+            $consent_given = false;
+            $categories_accepted = array('necessary');
+        }
+
+        // Event IDs are not credentials or visitor IDs. Include the validated
+        // payload in the key so reusing an ID with different choices cannot
+        // suppress a different decision. Legacy clients without IDs still work.
+        $event_id = isset($_POST['event_id']) ? wp_unslash($_POST['event_id']) : '';
+        if (!is_string($event_id) || ($event_id !== '' && !preg_match('/^[a-f0-9]{32}$/D', $event_id))) {
+            wp_send_json_error(array('message' => 'Invalid event ID.', 'retryable' => false), 400);
+        }
+        sort($categories_accepted);
+        $event_key = $event_id === '' ? null : hash_hmac('sha256',
+            $event_id . '|' . $consent_method . '|' . wp_json_encode($categories_accepted), wp_salt('auth'));
         $db = MBR_CC_Database::get_instance();
+        if ($event_key && $db->find_event($event_key)) {
+            wp_send_json_success(array('recorded' => true, 'duplicate' => true));
+        }
+        if (!$this->can_log_consent()) {
+            $this->record_log_health('throttled');
+            wp_send_json_error(array('message' => 'Consent log rate limit reached.', 'recorded' => false, 'retryable' => false), 429);
+        }
         $log_id = $db->log_consent(array(
             'consent_given' => $consent_given,
             'categories_accepted' => $categories_accepted,
             'consent_method' => $consent_method,
+            'event_key' => $event_key,
         ));
         
         if ($log_id) {
+            $this->record_log_health('success');
             wp_send_json_success(array(
                 'message' => 'Consent saved successfully.',
-                'log_id' => $log_id,
+                'recorded' => true,
             ));
         } else {
-            wp_send_json_error(array('message' => 'Failed to save consent.'));
+            $this->record_log_health('database_error');
+            wp_send_json_error(array('message' => 'Failed to save consent.', 'recorded' => false, 'retryable' => true), 503);
+        }
+    }
+
+    /** Bounded diagnostic metadata, with no visitor identifiers or DB errors. */
+    private function record_log_health($status) {
+        $key = $status === 'success' ? 'mbr_cc_log_last_success' : 'mbr_cc_log_last_failure';
+        $previous = get_option($key, array());
+        // Limit extra option writes during traffic bursts; retain failures even
+        // after a later success so administrators can see intermittent issues.
+        if (!is_array($previous) || empty($previous['time']) || time() - (int) $previous['time'] >= 60) {
+            update_option($key, array('time' => time(), 'status' => $status), false);
         }
     }
     
@@ -311,17 +347,11 @@ class MBR_CC_Consent_Manager {
      * AJAX: Revoke consent.
      */
     public function ajax_revoke_consent() {
-        check_ajax_referer('mbr_cc_consent_nonce', 'nonce');
-        
-        // Log revocation.
-        $db = MBR_CC_Database::get_instance();
-        $db->log_consent(array(
-            'consent_given' => false,
-            'categories_accepted' => array(),
-            'consent_method' => 'revoked',
-        ));
-        
-        wp_send_json_success(array('message' => 'Consent revoked successfully.'));
+        // Same validation, throttling, idempotency and honest result as saves.
+        // This endpoint only records the action; the browser owns its choice.
+        $_POST['consent'] = '{"necessary":true}';
+        $_POST['method'] = 'revoked';
+        $this->ajax_save_consent();
     }
     
     /**
