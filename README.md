@@ -8,7 +8,6 @@ No premium tier. No upsells. No telemetry. No vendor lock-in. No third-party log
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-2.6.0-1a1f36?style=flat-square)](https://github.com/HarbourBob/mbr-cookie-consent/releases)
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-21759b?style=flat-square&logo=wordpress)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php)](https://php.net)
 [![License](https://img.shields.io/badge/license-GPL%20v2-green?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
