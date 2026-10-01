@@ -113,7 +113,7 @@ class MBR_CC_GPC_Handler {
     private function detect_gpc_signal() {
         // Check for the Sec-GPC header.
         // PHP normalises it to HTTP_SEC_GPC in $_SERVER.
-        if (isset($_SERVER['HTTP_SEC_GPC']) && $_SERVER['HTTP_SEC_GPC'] === '1') {
+        if (isset($_SERVER['HTTP_SEC_GPC']) && '1' === $_SERVER['HTTP_SEC_GPC']) {
             $this->gpc_detected = true;
             return;
         }
@@ -121,7 +121,7 @@ class MBR_CC_GPC_Handler {
         // Some proxies or CDNs may strip the header but pass it differently.
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
-            if (isset($headers['Sec-GPC']) && $headers['Sec-GPC'] === '1') {
+            if (isset($headers['Sec-GPC']) && '1' === $headers['Sec-GPC']) {
                 $this->gpc_detected = true;
             }
         }

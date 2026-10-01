@@ -126,7 +126,7 @@ function mbr_cc_request_is_cloudflare() {
     // header, so REMOTE_ADDR and the header agree.
     $cf_ip = mbr_cc_cloudflare_client_ip();
 
-    if ($cf_ip !== '' && $cf_ip === $remote) {
+    if ('' !== $cf_ip && $cf_ip === $remote) {
         return true;
     }
 
@@ -162,11 +162,11 @@ function mbr_cc_get_client_ip() {
 
     $mode = mbr_cc_get_proxy_mode();
 
-    if ($mode === 'none') {
+    if ('none' === $mode) {
         return $remote;
     }
 
-    if ($mode === 'auto') {
+    if ('auto' === $mode) {
         // Honour Cloudflare's header only when the request demonstrably came
         // through Cloudflare. Otherwise the header is forged and we ignore it.
         if (!mbr_cc_request_is_cloudflare()) {
@@ -175,7 +175,7 @@ function mbr_cc_get_client_ip() {
 
         $candidate = mbr_cc_cloudflare_client_ip();
 
-        if ($candidate !== '') {
+        if ('' !== $candidate) {
             return $candidate;
         }
 
@@ -198,7 +198,7 @@ function mbr_cc_get_client_ip() {
         $forwarded = wp_unslash($_SERVER['HTTP_X_REAL_IP']);
     }
 
-    if ($forwarded === '') {
+    if ('' === $forwarded) {
         return $remote;
     }
 
@@ -263,7 +263,7 @@ function mbr_cc_trusted_proxies() {
 
     $ranges = array();
 
-    if (is_string($configured) && $configured !== '') {
+    if (is_string($configured) && '' !== $configured) {
         $ranges = array_filter(array_map('trim', preg_split('/[\r\n,]+/', $configured)));
     } elseif (is_array($configured)) {
         $ranges = array_filter(array_map('trim', $configured));
@@ -367,7 +367,7 @@ function mbr_cc_ip_in_ranges($ip, $ranges) {
  * @return bool
  */
 function mbr_cc_ip_in_cidr($ip, $cidr) {
-    if (!is_string($cidr) || $cidr === '') {
+    if (!is_string($cidr) || '' === $cidr) {
         return false;
     }
 
@@ -382,7 +382,7 @@ function mbr_cc_ip_in_cidr($ip, $cidr) {
     $ip_bin     = @inet_pton($ip);
     $subnet_bin = @inet_pton(trim($subnet));
 
-    if ($ip_bin === false || $subnet_bin === false) {
+    if (false === $ip_bin || false === $subnet_bin) {
         return false;
     }
 
@@ -393,7 +393,7 @@ function mbr_cc_ip_in_cidr($ip, $cidr) {
 
     $max_bits = strlen($ip_bin) * 8;
 
-    if ($bits === null) {
+    if (null === $bits) {
         $bits = $max_bits;
     }
 
@@ -401,7 +401,7 @@ function mbr_cc_ip_in_cidr($ip, $cidr) {
         return false;
     }
 
-    if ($bits === 0) {
+    if (0 === $bits) {
         return true;
     }
 
@@ -441,11 +441,11 @@ function mbr_cc_anonymize_ip($ip) {
         // truncation for IPv6 — dropping only the last group is not enough.
         $bin = @inet_pton($ip);
 
-        if ($bin !== false) {
+        if (false !== $bin) {
             $bin = substr($bin, 0, 6) . str_repeat("\0", 10);
             $out = @inet_ntop($bin);
 
-            if ($out !== false) {
+            if (false !== $out) {
                 return $out;
             }
         }

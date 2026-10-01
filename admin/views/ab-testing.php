@@ -50,7 +50,7 @@ $total_impressions = array_sum( array_column( $stats, 'impressions' ) );
     <div class="mbr-cc-settings-section">
         <h2><?php esc_html_e( 'Results', 'mbr-cookie-consent' ); ?></h2>
 
-        <?php if ( $total_impressions === 0 ) : ?>
+        <?php if ( 0 === $total_impressions ) : ?>
             <p><?php esc_html_e( 'No data yet. Enable A/B testing and wait for visitors.', 'mbr-cookie-consent' ); ?></p>
         <?php else : ?>
             <table class="widefat" style="max-width:640px;">

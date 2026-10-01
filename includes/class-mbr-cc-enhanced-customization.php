@@ -201,7 +201,7 @@ class MBR_CC_Enhanced_Customization {
         global $pagenow;
         
         // WordPress login.
-        if ($pagenow === 'wp-login.php') {
+        if ('wp-login.php' === $pagenow) {
             return true;
         }
         

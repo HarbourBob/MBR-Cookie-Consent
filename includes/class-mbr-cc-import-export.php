@@ -538,7 +538,7 @@ class MBR_CC_Import_Export {
 
         $file = $_FILES['mbr_cc_import_file'];
 
-        if (!empty($file['error']) && (int) $file['error'] !== UPLOAD_ERR_OK) {
+        if (!empty($file['error']) && UPLOAD_ERR_OK !== (int) $file['error']) {
             wp_send_json_error(array('message' => __('The file failed to upload. Please try again.', 'mbr-cookie-consent')));
         }
 
@@ -552,7 +552,7 @@ class MBR_CC_Import_Export {
         }
 
         $raw = file_get_contents($tmp); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-        if ($raw === false || $raw === '') {
+        if (false === $raw || '' === $raw) {
             wp_send_json_error(array('message' => __('The file was empty.', 'mbr-cookie-consent')));
         }
 
@@ -579,7 +579,7 @@ class MBR_CC_Import_Export {
             return new WP_Error('mbr_cc_bad_json', __('This is not a valid settings file (could not read JSON).', 'mbr-cookie-consent'));
         }
 
-        if (!isset($data['format']) || $data['format'] !== self::FORMAT) {
+        if (!isset($data['format']) || self::FORMAT !== $data['format']) {
             return new WP_Error('mbr_cc_wrong_format', __('This file is not an MBR Cookie Consent settings export.', 'mbr-cookie-consent'));
         }
 
@@ -601,7 +601,7 @@ class MBR_CC_Import_Export {
 
         // Scalar settings.
         foreach ($incoming as $short => $value) {
-            if ($short === 'cookie_categories' || $short === 'blocked_scripts') {
+            if ('cookie_categories' === $short || 'blocked_scripts' === $short) {
                 continue; // Handled separately below.
             }
 
@@ -613,7 +613,7 @@ class MBR_CC_Import_Export {
             }
 
             $type = $this->resolve_sanitiser($short);
-            if ($type === null) {
+            if (null === $type) {
                 $skipped[] = $short;
                 continue;
             }
@@ -694,7 +694,7 @@ class MBR_CC_Import_Export {
                 continue;
             }
 
-            if ($previous === null) {
+            if (null === $previous) {
                 // The option did not exist before the import; remove it.
                 delete_option($option_key);
             } else {
@@ -786,7 +786,7 @@ class MBR_CC_Import_Export {
                 continue;
             }
             $key = sanitize_key($slug);
-            if ($key === '') {
+            if ('' === $key) {
                 continue;
             }
             $clean[$key] = array(
@@ -819,7 +819,7 @@ class MBR_CC_Import_Export {
             $name       = isset($script['name']) ? sanitize_text_field($script['name']) : '';
             $identifier = isset($script['identifier']) ? sanitize_text_field($script['identifier']) : '';
 
-            if ($name === '' || $identifier === '') {
+            if ('' === $name || '' === $identifier) {
                 continue;
             }
 

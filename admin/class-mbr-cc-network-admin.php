@@ -199,7 +199,7 @@ class MBR_CC_Network_Admin {
             // Unchecked checkboxes are absent from the POST body, so a boolean
             // has to be written as false rather than skipped — otherwise a
             // toggle could be switched on but never off.
-            if ($type === 'bool') {
+            if ('bool' === $type) {
                 update_site_option($key, isset($_POST[$key]) && (bool) wp_unslash($_POST[$key]));
                 continue;
             }

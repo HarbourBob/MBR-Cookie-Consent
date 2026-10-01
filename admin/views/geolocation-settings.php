@@ -29,7 +29,7 @@ $region_name = $geo->get_region_name();
 // detection: a site whose lookups all fail sits in the wrong privacy regime
 // indefinitely, and the only clue is a country that happens to look plausible.
 $detection_source = method_exists($geo, 'get_detection_source') ? $geo->get_detection_source() : 'provider';
-$is_fallback      = ($detection_source === 'default');
+$is_fallback      = ('default' === $detection_source);
 
 // Is the request reaching us through Cloudflare, and is the country header on?
 $behind_cloudflare = function_exists('mbr_cc_request_is_cloudflare') && mbr_cc_request_is_cloudflare();
@@ -87,7 +87,7 @@ $insecure_opt_in  = (bool) get_option('mbr_cc_allow_insecure_geo_lookup', false)
         </p>
     </div>
 
-    <?php if ($provider_setting === 'ip-api' && !$ipapi_key_set && !$insecure_opt_in) : ?>
+    <?php if ('ip-api' === $provider_setting && !$ipapi_key_set && !$insecure_opt_in) : ?>
         <div class="notice notice-warning inline" style="margin: 16px 0; padding: 10px 14px;">
             <p style="margin: 0 0 6px 0;">
                 <strong><?php esc_html_e('ip-api.com cannot be used as configured.', 'mbr-cookie-consent'); ?></strong>

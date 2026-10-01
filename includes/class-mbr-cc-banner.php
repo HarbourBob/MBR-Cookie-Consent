@@ -301,10 +301,10 @@ class MBR_CC_Banner {
             $custom_css .= self::build_glass_css($primary_color, $text_color);
         }
         
-        if ($dark_mode !== 'off') {
+        if ('off' !== $dark_mode) {
             $dark_css = self::build_dark_css($glass);
             
-            $custom_css .= ($dark_mode === 'auto')
+            $custom_css .= ('auto' === $dark_mode)
                 ? "\n@media (prefers-color-scheme: dark) {\n{$dark_css}\n}\n"
                 : "\n{$dark_css}\n";
         }
@@ -587,7 +587,7 @@ class MBR_CC_Banner {
         <?php if ($show_banner) : ?>
         
         <!-- Popup Overlay (for popup layout) -->
-        <?php if ($layout === 'popup') : ?>
+        <?php if ('popup' === $layout) : ?>
             <div id="mbr-cc-popup-overlay" class="mbr-cc-popup-overlay" style="display: none;" aria-hidden="true"></div>
         <?php endif; ?>
         

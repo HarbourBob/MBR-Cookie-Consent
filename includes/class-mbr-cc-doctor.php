@@ -61,7 +61,7 @@ class MBR_CC_Doctor {
     const UNKNOWN = 'unknown';  // Not enough evidence to say. A real answer.
 
     public static function get_instance() {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
         return self::$instance;
@@ -122,7 +122,7 @@ class MBR_CC_Doctor {
     private function result($id, $tier, $status, $title, $detail, $action = '') {
         // Enforce the rule rather than trusting every future caller to remember
         // it: configuration alone cannot report a behavioural pass.
-        if ($tier === self::TIER_CONFIG && $status === self::PASS) {
+        if (self::TIER_CONFIG === $tier && self::PASS === $status) {
             $status = self::NOTE;
         }
 
@@ -181,7 +181,7 @@ class MBR_CC_Doctor {
         $failure = get_option('mbr_cc_log_last_failure', array());
         $success = get_option('mbr_cc_log_last_success', array());
 
-        if ($total === 0) {
+        if (0 === $total) {
             $out[] = $this->result(
                 'logging_rows', self::TIER_SERVER, self::UNKNOWN,
                 __('No consent has been recorded yet', 'mbr-cookie-consent'),
@@ -324,7 +324,7 @@ class MBR_CC_Doctor {
 
         // A cached success is not an observation of current health, so it may
         // not claim one.
-        if ($status === self::PASS && $from_cache) {
+        if (self::PASS === $status && $from_cache) {
             $status = self::NOTE;
         }
 
@@ -350,7 +350,7 @@ class MBR_CC_Doctor {
         if (is_array($fallback) && !empty($fallback['time'])) {
             $age = time() - (int) $fallback['time'];
 
-            if ($age < DAY_IN_SECONDS && $status !== self::FAIL) {
+            if ($age < DAY_IN_SECONDS && self::FAIL !== $status) {
                 $out[] = $this->result(
                     'region_intermittent', self::TIER_SERVER, self::WARN,
                     __('A geolocation lookup fell back recently', 'mbr-cookie-consent'),

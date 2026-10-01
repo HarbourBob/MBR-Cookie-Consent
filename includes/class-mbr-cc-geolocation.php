@@ -325,11 +325,11 @@ class MBR_CC_Geolocation {
         }
         
         // Normalise return value to array form.
-        if (is_string($detected) && $detected !== '') {
+        if (is_string($detected) && '' !== $detected) {
             $detected = array('country' => $detected, 'region_code' => null);
         }
         
-        if (is_array($detected) && !empty($detected['country']) && $this->detection_source === 'default') {
+        if (is_array($detected) && !empty($detected['country']) && 'default' === $this->detection_source) {
             $this->detection_source = 'provider';
         }
         
@@ -369,7 +369,7 @@ class MBR_CC_Geolocation {
         // and the plaintext endpoint requires an explicit opt-in.
         $api_key = trim((string) get_option('mbr_cc_ipapi_key', ''));
 
-        if ($api_key !== '') {
+        if ('' !== $api_key) {
             $url = add_query_arg(
                 array(
                     'fields' => 'countryCode,region',
@@ -458,7 +458,7 @@ class MBR_CC_Geolocation {
         
         $country = isset($data['country_code']) ? $this->sanitize_country_code($data['country_code']) : '';
         
-        if ($country === '') {
+        if ('' === $country) {
             return false;
         }
         
@@ -501,7 +501,7 @@ class MBR_CC_Geolocation {
         $country = $this->sanitize_country_code(wp_unslash($_SERVER['HTTP_CF_IPCOUNTRY']));
         
         // Cloudflare sends XX for unknown and T1 for Tor exit nodes.
-        if ($country === '' || $country === 'XX' || $country === 'T1') {
+        if ('' === $country || 'XX' === $country || 'T1' === $country) {
             return false;
         }
         
@@ -514,7 +514,7 @@ class MBR_CC_Geolocation {
         if (!empty($_SERVER['HTTP_CF_REGION_CODE'])) {
             $region = $this->sanitize_region_code(wp_unslash($_SERVER['HTTP_CF_REGION_CODE']));
             
-            if ($region !== '') {
+            if ('' !== $region) {
                 $result['region_code'] = $region;
             }
         }
@@ -624,20 +624,20 @@ class MBR_CC_Geolocation {
         
         // Switzerland — Federal Act on Data Protection (revFADP / nFADP) effective 1 Sept 2023.
         // GDPR-equivalent in substance; treated separately to keep messaging accurate.
-        if ($country_code === 'CH') {
+        if ('CH' === $country_code) {
             return 'ch_nfadp';
         }
         
         // United States — multi-state privacy laws + GPC (20 states by 2026)
-        if ($country_code === 'US') {
+        if ('US' === $country_code) {
             return 'us_multi';
         }
         
         // Canada — Quebec Law 25 takes precedence over PIPEDA where region is detected.
         // Law 25 requires express opt-in for non-essential cookies and is materially
         // stricter than PIPEDA, so visitors confirmed to be in Quebec get the stricter regime.
-        if ($country_code === 'CA') {
-            if ($region_code === 'QC') {
+        if ('CA' === $country_code) {
+            if ('QC' === $region_code) {
                 return 'ca_quebec';
             }
             return 'pipeda';
@@ -645,17 +645,17 @@ class MBR_CC_Geolocation {
         
         // Australia — Privacy Act 1988 + Privacy and Other Legislation Amendment Act 2024.
         // APP-based regime; informed consent needed where cookies collect personal information.
-        if ($country_code === 'AU') {
+        if ('AU' === $country_code) {
             return 'au_privacy';
         }
         
         // Brazil — LGPD
-        if ($country_code === 'BR') {
+        if ('BR' === $country_code) {
             return 'lgpd';
         }
         
         // India — Digital Personal Data Protection Act 2023 (Rules notified Nov 2025)
-        if ($country_code === 'IN') {
+        if ('IN' === $country_code) {
             return 'india_dpdp';
         }
         
@@ -665,7 +665,7 @@ class MBR_CC_Geolocation {
         // easily withdrawable, with silence explicitly NOT constituting consent.
         // Applies extraterritorially to any entity processing Vietnamese residents'
         // data, so visitors detected in Vietnam get an opt-in banner.
-        if ($country_code === 'VN') {
+        if ('VN' === $country_code) {
             return 'vn_pdpl';
         }
         
@@ -674,7 +674,7 @@ class MBR_CC_Geolocation {
         // in January 2026. GDPR-style: explicit, purpose-specific, withdrawable
         // consent. Applies extraterritorially to processors of Indonesian
         // residents' data, so visitors detected in Indonesia get an opt-in banner.
-        if ($country_code === 'ID') {
+        if ('ID' === $country_code) {
             return 'id_pdp';
         }
         
@@ -682,32 +682,32 @@ class MBR_CC_Geolocation {
         // Implementation Directive (GAID), effective 19 September 2025. The
         // GAID explicitly requires a prominent homepage cookie notice with a
         // genuine accept/decline choice and no implied consent from browsing.
-        if ($country_code === 'NG') {
+        if ('NG' === $country_code) {
             return 'ng_ndpa';
         }
         
         // China — PIPL. Explicit opt-in for identifying cookies, plus separate
         // consent for sensitive data and cross-border transfers (the latter is
         // NOT handled by this plugin — see the region config docblock).
-        if ($country_code === 'CN') {
+        if ('CN' === $country_code) {
             return 'cn_pipl';
         }
         
         // South Korea — PIPA. Specific, informed, prior consent wherever cookie
         // data can identify a person; notice-then-opt-out is insufficient.
-        if ($country_code === 'KR') {
+        if ('KR' === $country_code) {
             return 'kr_pipa';
         }
         
         // Saudi Arabia — PDPL. Consent is the default lawful basis, and SDAIA
         // enforcement has been active since 2025.
-        if ($country_code === 'SA') {
+        if ('SA' === $country_code) {
             return 'sa_pdpl';
         }
         
         // South Africa — POPIA. Section 69 requires opt-in for electronic
         // direct marketing, which covers most remarketing cookie use.
-        if ($country_code === 'ZA') {
+        if ('ZA' === $country_code) {
             return 'za_popia';
         }
         
@@ -715,7 +715,7 @@ class MBR_CC_Geolocation {
         // informed, specific, unequivocal consent; withdrawal as easy as
         // giving it; extraterritorial. Behaves exactly like the opt-in
         // default it replaces — the region exists for accurate wording.
-        if ($country_code === 'CL') {
+        if ('CL' === $country_code) {
             return 'cl_lppd';
         }
         
@@ -829,7 +829,7 @@ class MBR_CC_Geolocation {
      * @return string One of 'cloudflare', 'provider', 'ipapi_fallback', 'default'.
      */
     public function get_detection_source() {
-        if ($this->country_code === null) {
+        if (null === $this->country_code) {
             $this->detect_location();
         }
         
@@ -843,7 +843,7 @@ class MBR_CC_Geolocation {
      * @return array
      */
     public function get_detection_diagnostics() {
-        if ($this->country_code === null) {
+        if (null === $this->country_code) {
             $this->detect_location();
         }
         
@@ -860,7 +860,7 @@ class MBR_CC_Geolocation {
      * Get detected country code
      */
     public function get_country() {
-        if ($this->country_code === null) {
+        if (null === $this->country_code) {
             $this->detect_location();
         }
         return $this->country_code;
@@ -875,7 +875,7 @@ class MBR_CC_Geolocation {
      * @return string|null
      */
     public function get_region_code() {
-        if ($this->country_code === null) {
+        if (null === $this->country_code) {
             $this->detect_location();
         }
         return $this->region_code;
@@ -998,7 +998,7 @@ class MBR_CC_Geolocation {
             'ccpa'       => 'United States (CCPA)',
         );
         
-        if ($region === null) {
+        if (null === $region) {
             $region = $this->get_region();
         }
         return isset($names[$region]) ? $names[$region] : $names['default'];

@@ -41,7 +41,7 @@ $categories = $manager->get_categories();
                         <th><label><?php esc_html_e('Settings', 'mbr-cookie-consent'); ?></label></th>
                         <td>
                             <label>
-                                <input type="checkbox" name="categories[<?php echo esc_attr($slug); ?>][required]" class="category-required" value="1" <?php checked(!empty($category['required'])); ?> <?php disabled($slug === 'necessary'); ?>>
+                                <input type="checkbox" name="categories[<?php echo esc_attr($slug); ?>][required]" class="category-required" value="1" <?php checked(!empty($category['required'])); ?> <?php disabled('necessary' === $slug); ?>>
                                 <?php esc_html_e('Always Required', 'mbr-cookie-consent'); ?>
                             </label>
                             <p class="description"><?php esc_html_e('If checked, users cannot disable this category.', 'mbr-cookie-consent'); ?></p>

@@ -219,9 +219,9 @@ class MBR_CC_IAB_TCF {
         // Check if geo-location detection is enabled.
         $gdpr_applies = get_option('mbr_cc_gdpr_applies', 'auto');
         
-        if ($gdpr_applies === 'yes') {
+        if ('yes' === $gdpr_applies) {
             return true;
-        } elseif ($gdpr_applies === 'no') {
+        } elseif ('no' === $gdpr_applies) {
             return false;
         }
         

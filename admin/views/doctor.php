@@ -192,7 +192,7 @@ $reviews  = $summary[MBR_CC_Doctor::WARN];
                     </span>
                 </p>
                 <p style="margin: 0; color: #3c434a;"><?php echo esc_html($check['detail']); ?></p>
-                <?php if ($check['action'] !== '') : ?>
+                <?php if ('' !== $check['action']) : ?>
                     <p style="margin: 6px 0 0 0; color: #50575e;">
                         <em><?php echo esc_html($check['action']); ?></em>
                     </p>

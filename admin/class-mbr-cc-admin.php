@@ -490,7 +490,7 @@ class MBR_CC_Admin {
         $db = MBR_CC_Database::get_instance();
         $deleted = $db->delete_old_logs($days);
         
-        if ($deleted === false) {
+        if (false === $deleted) {
             wp_send_json_error(array('message' => 'Failed to delete logs.'));
         }
         

@@ -114,7 +114,7 @@ class MBR_CC_Form_Integration {
         }
 
         // 'necessary' only — always pass (necessary cookies are always set).
-        if ( $required_category === 'necessary' ) {
+        if ( 'necessary' === $required_category ) {
             return true;
         }
 
@@ -212,7 +212,7 @@ class MBR_CC_Form_Integration {
         // Attach the error message to the first non-hidden field so GF
         // renders it inline. GF will not submit when is_valid is false.
         foreach ( $form['fields'] as &$field ) {
-            if ( $field->type !== 'hidden' ) {
+            if ( 'hidden' !== $field->type ) {
                 $field->failed_validation  = true;
                 $field->validation_message = $this->get_error_message();
                 break;

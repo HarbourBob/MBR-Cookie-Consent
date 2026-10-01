@@ -39,7 +39,7 @@ class MBR_CC_Doctor_Probe {
     const RESULT_KEY  = 'mbr_cc_doctor_last_probe';
 
     public static function get_instance() {
-        if (self::$instance === null) {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
         return self::$instance;
@@ -71,7 +71,7 @@ class MBR_CC_Doctor_Probe {
      * @return string
      */
     public function exempt_probe_from_optimisers($tag, $handle) {
-        if ($handle !== 'mbr-cc-doctor-probe' && $handle !== 'mbr-cc-doctor-reset') {
+        if ('mbr-cc-doctor-probe' !== $handle && 'mbr-cc-doctor-reset' !== $handle) {
             return $tag;
         }
 
@@ -213,7 +213,7 @@ class MBR_CC_Doctor_Probe {
         foreach ($requests as $req) {
             $host = isset($req['host']) ? strtolower(sanitize_text_field($req['host'])) : '';
 
-            if ($host === '') {
+            if ('' === $host) {
                 continue;
             }
 
@@ -279,7 +279,7 @@ class MBR_CC_Doctor_Probe {
 
         foreach ((array) get_option('mbr_cc_blocked_scripts', array()) as $script) {
             foreach ((array) $script as $key => $value) {
-                if (!is_string($value) || $value === '' || $key === 'name' || $key === 'category') {
+                if (!is_string($value) || '' === $value || 'name' === $key || 'category' === $key) {
                     continue;
                 }
 
@@ -356,14 +356,14 @@ class MBR_CC_Doctor_Probe {
 
         $target = esc_url_raw($target);
 
-        if ($target === '') {
+        if ('' === $target) {
             return $home;
         }
 
         $target_host = strtolower((string) wp_parse_url($target, PHP_URL_HOST));
         $home_host   = strtolower((string) wp_parse_url($home, PHP_URL_HOST));
 
-        if ($target_host === '' || $target_host !== $home_host) {
+        if ('' === $target_host || $target_host !== $home_host) {
             return $home;
         }
 
@@ -385,7 +385,7 @@ class MBR_CC_Doctor_Probe {
         $seen = array(home_url('/') => true);
 
         $add = function ($url, $label) use (&$out, &$seen) {
-            if ($url === '' || isset($seen[$url]) || count($out) >= 12) {
+            if ('' === $url || isset($seen[$url]) || count($out) >= 12) {
                 return;
             }
 

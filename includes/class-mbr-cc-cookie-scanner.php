@@ -55,7 +55,7 @@ class MBR_CC_Cookie_Scanner {
         $scan_type = isset($_POST['scan_type']) ? sanitize_text_field(wp_unslash($_POST['scan_type'])) : 'single';
         $url = isset($_POST['url']) ? esc_url_raw(wp_unslash($_POST['url'])) : home_url();
         
-        if ($scan_type === 'site-wide') {
+        if ('site-wide' === $scan_type) {
             $offset  = isset($_POST['offset']) ? max(0, (int) wp_unslash($_POST['offset'])) : 0;
             $results = $this->scan_entire_site($offset);
         } else {
@@ -79,7 +79,7 @@ class MBR_CC_Cookie_Scanner {
      * @return bool
      */
     private function is_local_url($url) {
-        if (!is_string($url) || $url === '') {
+        if (!is_string($url) || '' === $url) {
             return false;
         }
         

@@ -147,7 +147,7 @@ class MBR_CC_Google_ACM {
         $version = intval($parts[0]);
         $providers = $parts[1];
         
-        if ($version !== self::ACM_VERSION) {
+        if (self::ACM_VERSION !== $version) {
             return array();
         }
         

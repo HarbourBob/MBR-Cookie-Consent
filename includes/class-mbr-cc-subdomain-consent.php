@@ -98,7 +98,7 @@ class MBR_CC_Subdomain_Consent {
         // HTML for every subsequent visitor.
         $host = strtolower((string) wp_parse_url(home_url(), PHP_URL_HOST));
         
-        if ($host === '') {
+        if ('' === $host) {
             return '';
         }
         
