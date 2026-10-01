@@ -190,7 +190,7 @@ class MBR_CC_Settings {
      * @return bool
      */
     private static function is_valid_policy_url($url) {
-        if (!is_string($url) || $url === '') {
+        if (!is_string($url) || '' === $url) {
             return false;
         }
         
@@ -305,13 +305,13 @@ class MBR_CC_Settings {
         foreach ($settings as $key => $value) {
             $short = sanitize_key($key);
             
-            if ($short === '') {
+            if ('' === $short) {
                 continue;
             }
             
             $type = $importer ? $importer->resolve_sanitiser($short) : null;
             
-            if ($type === null) {
+            if (null === $type) {
                 $skipped[] = $short;
                 continue;
             }
@@ -325,11 +325,11 @@ class MBR_CC_Settings {
             // setting. The screen afterwards shows an empty field, the front end
             // silently falls back to the stylesheet's colour, and nothing
             // anywhere reports that a value was discarded.
-            if ($type === 'color' && $importer) {
+            if ('color' === $type && $importer) {
                 $raw = is_scalar($value) ? trim((string) $value) : '';
                 $clean = $importer->sanitize_value($value, $type);
                 
-                if ($clean === '' && $raw !== '') {
+                if ('' === $clean && '' !== $raw) {
                     $warnings[] = array(
                         'field'   => $short,
                         /* translators: %s: the value that was rejected. */
@@ -344,7 +344,7 @@ class MBR_CC_Settings {
                 $value = $clean;
             } elseif ($importer) {
                 $value = $importer->sanitize_value($value, $type);
-            } elseif (is_bool($value) || $value === 'true' || $value === 'false') {
+            } elseif (is_bool($value) || 'true' === $value || 'false' === $value) {
                 $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
             } elseif (is_numeric($value)) {
                 $value = intval($value);
@@ -356,7 +356,7 @@ class MBR_CC_Settings {
             $applied++;
         }
         
-        if ($applied === 0 && !empty($skipped)) {
+        if (0 === $applied && !empty($skipped)) {
             wp_send_json_error(array(
                 'message' => __('No recognised settings were supplied.', 'mbr-cookie-consent'),
                 'skipped' => $skipped,
@@ -525,13 +525,13 @@ class MBR_CC_Settings {
         foreach ($posted as $key => $value) {
             $short = sanitize_key($key);
             
-            if ($short === '' || !$importer) {
+            if ('' === $short || !$importer) {
                 continue;
             }
             
             $type = $importer->resolve_sanitiser($short);
             
-            if ($type === null) {
+            if (null === $type) {
                 continue;
             }
             

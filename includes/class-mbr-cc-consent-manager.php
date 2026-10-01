@@ -155,21 +155,21 @@ class MBR_CC_Consent_Manager {
         // log and, from there, the admin's CSV export.
         $known_categories = $this->get_known_category_slugs();
         
-        if (isset($consent_data['all']) && $consent_data['all'] === true) {
+        if (isset($consent_data['all']) && true === $consent_data['all']) {
             $consent_given = true;
             $categories_accepted = $known_categories;
-        } elseif (isset($consent_data['necessary']) && $consent_data['necessary'] === true) {
+        } elseif (isset($consent_data['necessary']) && true === $consent_data['necessary']) {
             $consent_given = true;
             
             // Collect accepted categories.
             foreach ($consent_data as $category => $accepted) {
-                if ($accepted !== true) {
+                if (true !== $accepted) {
                     continue;
                 }
                 
                 $slug = sanitize_key($category);
                 
-                if ($slug !== '' && in_array($slug, $known_categories, true)) {
+                if ('' !== $slug && in_array($slug, $known_categories, true)) {
                     $categories_accepted[] = $slug;
                 }
             }
@@ -180,7 +180,7 @@ class MBR_CC_Consent_Manager {
         // A rejection/withdrawal is not optional consent, even though the
         // necessary category remains enabled. Preserve categories separately.
         $consent_given = count(array_diff($categories_accepted, array('necessary'))) > 0;
-        if ($consent_method === 'revoked') {
+        if ('revoked' === $consent_method) {
             $consent_given = false;
             $categories_accepted = array('necessary');
         }
@@ -189,11 +189,11 @@ class MBR_CC_Consent_Manager {
         // payload in the key so reusing an ID with different choices cannot
         // suppress a different decision. Legacy clients without IDs still work.
         $event_id = isset($_POST['event_id']) ? wp_unslash($_POST['event_id']) : '';
-        if (!is_string($event_id) || ($event_id !== '' && !preg_match('/^[a-f0-9]{32}$/D', $event_id))) {
+        if (!is_string($event_id) || ('' !== $event_id && !preg_match('/^[a-f0-9]{32}$/D', $event_id))) {
             wp_send_json_error(array('message' => 'Invalid event ID.', 'retryable' => false), 400);
         }
         sort($categories_accepted);
-        $event_key = $event_id === '' ? null : hash_hmac('sha256',
+        $event_key = '' === $event_id ? null : hash_hmac('sha256',
             $event_id . '|' . $consent_method . '|' . wp_json_encode($categories_accepted), wp_salt('auth'));
         $db = MBR_CC_Database::get_instance();
         if ($event_key && $db->find_event($event_key)) {
@@ -224,7 +224,7 @@ class MBR_CC_Consent_Manager {
 
     /** Bounded diagnostic metadata, with no visitor identifiers or DB errors. */
     private function record_log_health($status) {
-        $key = $status === 'success' ? 'mbr_cc_log_last_success' : 'mbr_cc_log_last_failure';
+        $key = 'success' === $status ? 'mbr_cc_log_last_success' : 'mbr_cc_log_last_failure';
         $previous = get_option($key, array());
         // Limit extra option writes during traffic bursts; retain failures even
         // after a later success so administrators can see intermittent issues.
@@ -247,7 +247,7 @@ class MBR_CC_Consent_Manager {
             foreach (array_keys($categories) as $slug) {
                 $slug = sanitize_key($slug);
                 
-                if ($slug !== '') {
+                if ('' !== $slug) {
                     $slugs[] = $slug;
                 }
             }
@@ -287,7 +287,7 @@ class MBR_CC_Consent_Manager {
         
         $ip = function_exists('mbr_cc_get_client_ip') ? mbr_cc_get_client_ip() : '';
         
-        if ($ip === '') {
+        if ('' === $ip) {
             // No usable identity to throttle on. Allow the write rather than
             // silently dropping consent records on an oddly configured host.
             return true;
@@ -368,7 +368,7 @@ class MBR_CC_Consent_Manager {
         
         // The cookie is client-controlled and this runs on every page load, so
         // an oversized value is rejected before it reaches json_decode().
-        if (!is_string($raw) || $raw === '' || strlen($raw) > 2048) {
+        if (!is_string($raw) || '' === $raw || strlen($raw) > 2048) {
             return array();
         }
         
@@ -396,12 +396,12 @@ class MBR_CC_Consent_Manager {
         $consent = $this->get_user_consent();
         
         // Check for "accept all".
-        if (isset($consent['all']) && $consent['all'] === true) {
+        if (isset($consent['all']) && true === $consent['all']) {
             return true;
         }
         
         // Check specific category.
-        return isset($consent[$category]) && $consent[$category] === true;
+        return isset($consent[$category]) && true === $consent[$category];
     }
     
     /**

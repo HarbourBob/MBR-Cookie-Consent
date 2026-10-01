@@ -254,7 +254,7 @@ if (!defined('ABSPATH')) {
              * why. It caught the plugin's own author.
              */
             $mbr_cc_revisit_colour_mode = get_option('mbr_cc_revisit_button_text_color_mode', 'inherit');
-            $mbr_cc_revisit_custom = $mbr_cc_revisit_colour_mode === 'custom';
+            $mbr_cc_revisit_custom = 'custom' === $mbr_cc_revisit_colour_mode;
             ?>
             <div class="mbr-cc-form-row">
                 <div class="mbr-cc-form-field">

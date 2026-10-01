@@ -28,7 +28,7 @@ if (!defined('ABSPATH')) {
 
 // Buy Me a Coffee
 add_filter( 'plugin_row_meta', function ( $links, $file, $data ) {
-    if ( ! function_exists( 'plugin_basename' ) || $file !== plugin_basename( __FILE__ ) ) {
+    if ( ! function_exists( 'plugin_basename' ) || plugin_basename( __FILE__ ) !== $file ) {
         return $links;
     }
 
@@ -87,7 +87,7 @@ function mbr_cc_colour_or($value, $fallback) {
 
     $value = trim($value);
 
-    if ($value === '') {
+    if ('' === $value) {
         return $fallback;
     }
 
@@ -384,7 +384,7 @@ class MBR_Cookie_Consent {
     private function maybe_upgrade() {
         $stored_version = get_option('mbr_cc_version', '');
         
-        if ($stored_version === MBR_CC_VERSION) {
+        if (MBR_CC_VERSION === $stored_version) {
             return;
         }
         
@@ -402,27 +402,27 @@ class MBR_Cookie_Consent {
         }
         
         // 2.3.1 — geolocation lookups moved off plaintext HTTP.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.1', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.1', '<')) {
             $this->upgrade_to_231();
         }
         
         // 2.3.2 — plugin settings now win over WPML/Polylang in the default language.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.2', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.2', '<')) {
             $this->upgrade_to_232();
         }
         
         // 2.3.3 — unwind slashes accumulated by the unslashed AJAX save.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.3', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.3', '<')) {
             $this->upgrade_to_233();
         }
         
         // 2.3.4 — retire the withdrawn Google ACM option.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.4', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.4', '<')) {
             $this->upgrade_to_234();
         }
         
         // 2.3.5 — repair the WCAG option, stored as a string by a bad sanitiser.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.5', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.5', '<')) {
             $this->upgrade_to_235();
         }
         
@@ -432,7 +432,7 @@ class MBR_Cookie_Consent {
         // The $stored_version !== '' guard matches every step since 2.3.1: an
         // empty marker means a brand-new install, where activate_single_site()
         // has already built the current schema and there is nothing to migrate.
-        if ($stored_version !== '' && version_compare($stored_version, '2.3.7', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.3.7', '<')) {
             MBR_CC_Database::create_tables();
             
             if (!MBR_CC_Database::get_instance()->has_event_key()) {
@@ -453,7 +453,7 @@ class MBR_Cookie_Consent {
         
         // 2.5.0 — the floating button's text colour now follows the banner's
         // unless the site owner has chosen otherwise.
-        if ($stored_version !== '' && version_compare($stored_version, '2.5.0', '<')) {
+        if ('' !== $stored_version && version_compare($stored_version, '2.5.0', '<')) {
             $this->upgrade_to_250();
         }
         
@@ -486,7 +486,7 @@ class MBR_Cookie_Consent {
         $stored = get_option('mbr_cc_revisit_button_text_color', '');
         $stored = is_string($stored) ? strtolower(trim($stored)) : '';
         
-        $was_default = ($stored === '' || $stored === '#000000' || $stored === '#000');
+        $was_default = ('' === $stored || '#000000' === $stored || '#000' === $stored);
         
         update_option('mbr_cc_revisit_button_text_color_mode', $was_default ? 'inherit' : 'custom');
     }
@@ -607,7 +607,7 @@ class MBR_Cookie_Consent {
         
         // Flag it so the admin can surface a one-time notice explaining that
         // the shipped default changed but this site was left as it was.
-        if ($stored_version !== '') {
+        if ('' !== $stored_version) {
             update_option('mbr_cc_230_default_region_preserved', true);
         }
     }
@@ -643,7 +643,7 @@ class MBR_Cookie_Consent {
         $provider = get_option('mbr_cc_geolocation_provider', 'ip-api');
         $api_key  = trim((string) get_option('mbr_cc_ipapi_key', ''));
         
-        if ($provider !== 'ip-api' || $api_key !== '') {
+        if ('ip-api' !== $provider || '' !== $api_key) {
             return;
         }
         

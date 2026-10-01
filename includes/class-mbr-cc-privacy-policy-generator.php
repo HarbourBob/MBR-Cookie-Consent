@@ -93,7 +93,7 @@ class MBR_CC_Privacy_Policy_Generator {
         
         $post = get_post($page_id);
         
-        if (!$post || $post->post_type !== 'page') {
+        if (!$post || 'page' !== $post->post_type) {
             return new WP_Error(
                 'not_a_page',
                 __('The stored privacy policy page no longer exists.', 'mbr-cookie-consent')
@@ -888,7 +888,7 @@ class MBR_CC_Privacy_Policy_Generator {
 ';
         }
         
-        if ($detail !== '') {
+        if ('' !== $detail) {
             $content .= '<p>' . esc_html($detail) . '</p>
 
 ';

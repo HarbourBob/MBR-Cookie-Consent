@@ -494,7 +494,7 @@ class MBR_CC_Database {
      * @return mixed Escaped field value.
      */
     public static function escape_csv_field($value) {
-        if (!is_string($value) || $value === '') {
+        if (!is_string($value) || '' === $value) {
             return $value;
         }
 
@@ -502,7 +502,7 @@ class MBR_CC_Database {
         // spreadsheet parsers before the formula test, so test past them.
         $trimmed = ltrim($value, " \t\r\n");
 
-        if ($trimmed !== '' && strpos("=+-@\t\r", $trimmed[0]) !== false) {
+        if ('' !== $trimmed && false !== strpos("=+-@\t\r", $trimmed[0])) {
             return "'" . $value;
         }
 
@@ -519,7 +519,7 @@ class MBR_CC_Database {
         // through a proxy we trust. See includes/mbr-cc-ip.php.
         $ip = function_exists('mbr_cc_get_client_ip') ? mbr_cc_get_client_ip() : '';
 
-        return $ip !== '' ? $ip : '0.0.0.0';
+        return '' !== $ip ? $ip : '0.0.0.0';
     }
     
     /**

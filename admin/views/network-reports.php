@@ -14,7 +14,7 @@ $network_admin = MBR_CC_Network_Admin::get_instance();
 $stats = $network_admin->get_network_stats();
 
 // Handle export request
-if (isset($_GET['action']) && $_GET['action'] === 'export') {
+if (isset($_GET['action']) && 'export' === $_GET['action']) {
     check_admin_referer('mbr-cc-export-network');
     $network_admin->export_network_consent_data();
 }

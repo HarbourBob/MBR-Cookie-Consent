@@ -1261,7 +1261,7 @@ class MBR_CC_Region_Config {
      * Get region compliance info
      */
     public function get_compliance_info($region = null) {
-        if ($region === null) {
+        if (null === $region) {
             $region = $this->geo->get_region();
         }
         

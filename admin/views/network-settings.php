@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$updated = isset($_GET['updated']) && $_GET['updated'] === 'true';
+$updated = isset($_GET['updated']) && 'true' === $_GET['updated'];
 ?>
 
 <div class="wrap">
