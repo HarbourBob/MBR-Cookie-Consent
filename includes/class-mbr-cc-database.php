@@ -198,7 +198,11 @@ class MBR_CC_Database {
         return !empty($column) && !empty($index);
     }
 
-    /** Event keys are opaque HMACs and always scoped to the current site. */
+    /**
+     *  Event keys are opaque HMACs and always scoped to the current site.
+     *
+     * @param mixed $key Key.
+     */
     public function find_event($key) {
         global $wpdb;
         return $wpdb->get_var($wpdb->prepare(
@@ -327,7 +331,9 @@ class MBR_CC_Database {
     /**
      * Delete old consent logs.
      *
-     * @param int $days Delete logs older than X days.
+     * @param int   $days  Delete logs older than X days.
+     * @param mixed $scope Scope.
+     *
      * @return int|false Number of rows deleted or false on failure.
      */
     public function delete_old_logs($days = 365, $scope = null) {

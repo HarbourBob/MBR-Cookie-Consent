@@ -19,8 +19,8 @@
  * their use of this plugin complies with applicable laws and should consult with legal
  * counsel regarding their specific compliance requirements.
  *
+ * @package MBR_Cookie_Consent
  */
-
 
 if (!defined('ABSPATH')) {
     exit;
@@ -96,6 +96,11 @@ function mbr_cc_colour_or($value, $fallback) {
     return $clean ? $clean : $fallback;
 }
 
+/**
+ * Mbr cc asset version.
+ *
+ * @param mixed $relative_path Path relative to the plugin directory.
+ */
 function mbr_cc_asset_version($relative_path) {
     $file = MBR_CC_PLUGIN_DIR . ltrim($relative_path, '/');
 
@@ -297,6 +302,8 @@ class MBR_Cookie_Consent {
     
     /**
      * Plugin activation.
+     *
+     * @param bool $network_wide Network wide.
      */
     public function activate($network_wide = false) {
         global $wpdb;
@@ -494,7 +501,7 @@ class MBR_Cookie_Consent {
     /**
      * Upgrade routine for 2.3.5.
      *
-     * mbr_cc_wcag_compliance was registered with a text sanitiser, so the
+     * The mbr_cc_wcag_compliance option was registered with a text sanitiser, so the
      * settings screen stored the literal strings "true" and "false" instead of
      * a boolean. checked() compares stringified values, so "true" never matched
      * "1" and the box rendered clear on every page load after a save; and

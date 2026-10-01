@@ -79,9 +79,7 @@ class MBR_CC_Import_Export {
         add_action('wp_ajax_mbr_cc_revert_import', array($this, 'ajax_revert_import'));
     }
 
-    /* ---------------------------------------------------------------------
-     * Setting map (the allowlist + per-key sanitiser)
-     * ------------------------------------------------------------------- */
+    // Setting map (the allowlist + per-key sanitiser).
 
     /**
      * Canonical map of exportable/importable scalar settings.
@@ -168,13 +166,13 @@ class MBR_CC_Import_Export {
             // straight through, so the option held the four-character string
             // "true" rather than a boolean, and two things followed from it:
             //
-            //  - checked() compares (string) $checked === (string) $current, so
-            //    "true" was never equal to "1" and the box rendered clear on the
-            //    next page load however it had been left. Ticking it and saving
-            //    looked exactly like the save had failed.
-            //  - "false" is a non-empty string, so it is truthy in PHP. The
-            //    front-end guard in MBR_CC_I18n_Accessibility never fired and
-            //    the accessibility layer stayed on regardless of the setting.
+            // - checked() compares (string) $checked === (string) $current, so
+            // "true" was never equal to "1" and the box rendered clear on the
+            // next page load however it had been left. Ticking it and saving
+            // looked exactly like the save had failed.
+            // - "false" is a non-empty string, so it is truthy in PHP. The
+            // front-end guard in MBR_CC_I18n_Accessibility never fired and
+            // the accessibility layer stayed on regardless of the setting.
             //
             // The screen therefore reported the opposite of the truth in both
             // directions. upgrade_to_235() rewrites any stored string.
@@ -325,9 +323,7 @@ class MBR_CC_Import_Export {
         return null;
     }
 
-    /* ---------------------------------------------------------------------
-     * Export
-     * ------------------------------------------------------------------- */
+    // Export.
 
     /**
      * Settings that may be written from the settings screen but must never
@@ -518,9 +514,7 @@ class MBR_CC_Import_Export {
         exit;
     }
 
-    /* ---------------------------------------------------------------------
-     * Import
-     * ------------------------------------------------------------------- */
+    // Import.
 
     /**
      * AJAX: import settings from an uploaded JSON file.
@@ -727,9 +721,7 @@ class MBR_CC_Import_Export {
         return !empty($backup) && !empty($backup['values']);
     }
 
-    /* ---------------------------------------------------------------------
-     * Sanitisation
-     * ------------------------------------------------------------------- */
+    // Sanitisation.
 
     /**
      * Sanitise a single scalar value by its declared type.

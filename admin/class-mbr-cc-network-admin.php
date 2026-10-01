@@ -89,6 +89,8 @@ class MBR_CC_Network_Admin {
     
     /**
      * Enqueue admin assets.
+     *
+     * @param mixed $hook Hook.
      */
     public function enqueue_admin_assets($hook) {
         if (strpos($hook, 'mbr-cc-network') === false) {

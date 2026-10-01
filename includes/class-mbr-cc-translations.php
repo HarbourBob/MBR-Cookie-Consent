@@ -100,6 +100,11 @@ class MBR_CC_Translations {
         );
     }
 
+    /**
+     * Get the shared instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if (null === self::$instance) {
             self::$instance = new self();
@@ -107,6 +112,9 @@ class MBR_CC_Translations {
         return self::$instance;
     }
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {
         add_action('wp_enqueue_scripts', array($this, 'enqueue'), 15);
     }

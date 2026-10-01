@@ -183,7 +183,7 @@ class MBR_CC_Banner {
     /**
      * Read a colour option, guaranteeing something a browser will accept.
      *
-     * get_option()'s default only applies when the option does not exist. A
+     * The default passed to get_option() only applies when the option does not exist. A
      * stored empty string is a value, so it is returned as-is — and it reaches
      * the CSS below as "color: !important;", which is not a declaration. The
      * browser discards the whole line and the stylesheet's fallback applies,
@@ -217,10 +217,19 @@ class MBR_CC_Banner {
         return self::colour('mbr_cc_text_color', '#ffffff');
     }
 
+    /**
+     * Colour.
+     *
+     * @param mixed $option Option name.
+     * @param mixed $fallback Fallback value.
+     */
     public static function colour($option, $fallback) {
         return mbr_cc_colour_or(get_option($option, $fallback), $fallback);
     }
 
+    /**
+     * Build custom css.
+     */
     public static function build_custom_css() {
         $primary_color = self::colour('mbr_cc_primary_color', '#0073aa');
         $accept_color = self::colour('mbr_cc_accept_button_color', '#00a32a');
@@ -490,6 +499,8 @@ class MBR_CC_Banner {
     
     /**
      * Render the consent banner.
+     *
+     * @param bool $preview Preview.
      */
     public function render_banner($preview = false) {
         // Don't show on admin pages. The preview renders through this same

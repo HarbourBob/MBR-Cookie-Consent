@@ -449,6 +449,9 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Introduction
+     *
+     * @param mixed $site_name Site name.
+     * @param mixed $last_updated Last updated.
      */
     private function section_introduction($site_name, $last_updated) {
         return '<p><strong>Last Updated:</strong> ' . $last_updated . '</p>
@@ -462,6 +465,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Information We Collect
+     *
+     * @param mixed $features Features.
      */
     private function section_information_collected($features) {
         $content = '<h2>1. Information We Collect</h2>
@@ -515,6 +520,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: How We Use Your Information
+     *
+     * @param mixed $features Features.
      */
     private function section_how_we_use_information($features) {
         $content = '<h2>2. How We Use Your Information</h2>
@@ -557,6 +564,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Cookies and Tracking
+     *
+     * @param mixed $features Features.
      */
     private function section_cookies_tracking($features) {
         $content = '<h2>3. Cookies and Tracking Technologies</h2>
@@ -594,6 +603,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Data Sharing
+     *
+     * @param mixed $features Features.
      */
     private function section_data_sharing($features) {
         $content = '<h2>4. How We Share Your Information</h2>
@@ -623,6 +634,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Your Rights
+     *
+     * @param mixed $features Features.
      */
     private function section_your_rights($features) {
         $admin_email = get_bloginfo('admin_email');
@@ -670,6 +683,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Third-Party Services
+     *
+     * @param mixed $features Features.
      */
     private function section_third_party_services($features) {
         $services = $features['third_party_services'];
@@ -692,6 +707,8 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: E-commerce
+     *
+     * @param mixed $features Features.
      */
     private function section_ecommerce($features) {
         return '<h2>8. Online Purchases and Payment Processing</h2>
@@ -918,6 +935,9 @@ class MBR_CC_Privacy_Policy_Generator {
     
     /**
      * Section: Contact
+     *
+     * @param mixed $site_name Site name.
+     * @param mixed $admin_email Admin email.
      */
     private function section_contact($site_name, $admin_email) {
         return '<h2>17. Contact Us</h2>

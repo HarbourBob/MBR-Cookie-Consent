@@ -159,13 +159,13 @@ $reviews  = $summary[MBR_CC_Doctor::WARN];
         <p style="margin: 10px 0 0 0; color: #50575e; max-width: 46em;">
             <?php esc_html_e('Run it in a browser with no ad blocker. If an extension suppresses the requests, the result will look clean and mean nothing — the check detects this and says so.', 'mbr-cookie-consent'); ?>
         </p>
-        <?php /*
-            Positioned off-screen rather than display:none. A display:none frame
-            is not laid out, so every element inside it measures as zero-height —
-            which made the content-blocker bait look hidden on every single run —
-            and lazy-loaded embeds never request anything, so real leaks were
-            missed too. Off-screen keeps layout alive while staying invisible.
-        */ ?>
+        <?php
+        // Positioned off-screen rather than display:none. A display:none frame
+        // is not laid out, so every element inside it measures as zero-height —
+        // which made the content-blocker bait look hidden on every single run —
+        // and lazy-loaded embeds never request anything, so real leaks were
+        // missed too. Off-screen keeps layout alive while staying invisible.
+        ?>
         <iframe id="mbr-cc-doctor-frame"
                 style="position:fixed;left:-10000px;top:0;width:1280px;height:900px;border:0;visibility:visible;"
                 aria-hidden="true" tabindex="-1"

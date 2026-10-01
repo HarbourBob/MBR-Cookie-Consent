@@ -23,10 +23,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class MBR_CC_Script_Blocker {
 
-    /** @var MBR_CC_Script_Blocker|null */
+    /**
+     * Shared instance.
+     *
+     * @var MBR_CC_Script_Blocker|null
+     */
     private static $instance = null;
 
-    /** @var array Custom blocked-script entries from the database. */
+    /**
+     * Custom blocked-script entries from the database.
+     *
+     * @var array
+     */
     private $blocked_scripts = array();
 
     /**
@@ -162,6 +170,9 @@ class MBR_CC_Script_Blocker {
     // Singleton
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Get the shared instance.
+     */
     public static function get_instance() {
         if ( null === self::$instance ) {
             self::$instance = new self();
@@ -169,6 +180,9 @@ class MBR_CC_Script_Blocker {
         return self::$instance;
     }
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {
         // Hook at template_redirect priority 1 (before most plugins).
         add_action( 'template_redirect', array( $this, 'start_buffer' ), 1 );
@@ -228,10 +242,16 @@ class MBR_CC_Script_Blocker {
     // Output buffering
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Load the custom blocked-script entries from the database.
+     */
     private function load_blocked_scripts() {
         $this->blocked_scripts = get_option( 'mbr_cc_blocked_scripts', array() );
     }
 
+    /**
+     * Start buffer.
+     */
     public function start_buffer() {
         if ( is_admin() || wp_doing_ajax() ) {
             return;
@@ -284,6 +304,11 @@ class MBR_CC_Script_Blocker {
     // Built-in rules
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Block the built-in third-party scripts in the page HTML.
+     *
+     * @param mixed $html Html.
+     */
     private function apply_builtin_rules( $html ) {
         foreach ( self::$builtin_services as $category => $services ) {
             // Necessary scripts keep the site working and are never withheld.
@@ -322,6 +347,11 @@ class MBR_CC_Script_Blocker {
     // Custom (manually-added) rules
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Block the custom scripts configured by the site owner.
+     *
+     * @param mixed $html Html.
+     */
     private function apply_custom_rules( $html ) {
         foreach ( $this->blocked_scripts as $script ) {
             $category = $script['category'] ?? 'marketing';
@@ -420,7 +450,7 @@ class MBR_CC_Script_Blocker {
      * @param string   $html      Page HTML.
      * @param string   $names     Tag names as a regex alternation, e.g. 'img|source'.
      * @param string   $needle    Cheap pre-filter: tags not containing it are skipped.
-     * @param callable $callback  function( array $attrs, string $tag_name ): ?array
+     * @param callable $callback  function( array $attrs, string $tag_name ): ?array.
      * @return string
      */
     private function rewrite_tags( $html, $names, $needle, $callback ) {
@@ -526,6 +556,9 @@ class MBR_CC_Script_Blocker {
     /**
      * First value of an attribute, as the browser would see it, or null.
      * HTML keeps the first of duplicate attributes and ignores the rest.
+     *
+     * @param mixed $attrs Attrs.
+     * @param mixed $name Name.
      */
     private static function attr_get( $attrs, $name ) {
         foreach ( $attrs as $attr ) {
@@ -538,6 +571,9 @@ class MBR_CC_Script_Blocker {
 
     /**
      * Remove every occurrence of the named attributes.
+     *
+     * @param mixed $attrs Attrs.
+     * @param mixed $names Names.
      */
     private static function attr_remove( $attrs, $names ) {
         $names = array_map( 'strtolower', (array) $names );
@@ -548,6 +584,9 @@ class MBR_CC_Script_Blocker {
 
     /**
      * Does a raw attribute value contain the pattern, encoded or decoded?
+     *
+     * @param mixed $raw Raw.
+     * @param mixed $pattern Pattern.
      */
     private static function value_contains( $raw, $pattern ) {
         if ( null === $raw || '' === $pattern ) {
@@ -560,6 +599,8 @@ class MBR_CC_Script_Blocker {
     /**
      * Record a script's type if restoring it as classic JavaScript would be
      * wrong. Returns the attributes to add.
+     *
+     * @param mixed $type Type.
      */
     private static function type_marker( $type ) {
         if ( null === $type ) {
@@ -578,6 +619,10 @@ class MBR_CC_Script_Blocker {
 
     /**
      * Block <script src="…"> tags whose src contains $pattern.
+     *
+     * @param mixed  $html     HTML to process.
+     * @param mixed  $pattern  Pattern.
+     * @param string $category Category slug.
      */
     private function block_script_src( $html, $pattern, $category = 'marketing' ) {
         // Now that blocking runs for every visitor rather than only those
@@ -710,6 +755,11 @@ class MBR_CC_Script_Blocker {
      *   - Single or double quotes around src.
      *   - src appearing anywhere in the tag (not necessarily first).
      *   - Self-closing or paired iframes.
+     *
+     * @param mixed  $html         HTML to process.
+     * @param mixed  $pattern      Pattern.
+     * @param string $service_name Service name.
+     * @param string $category     Category slug.
      */
     private function block_iframe_src( $html, $pattern, $service_name = '', $category = 'marketing' ) {
         if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
@@ -939,6 +989,10 @@ class MBR_CC_Script_Blocker {
      * Now every source attribute on a matching <img> or <source> is moved to
      * data-mbr-cc-held-{name}, and banner.js puts each one back. An <img> gets
      * a transparent placeholder src so the layout does not move.
+     *
+     * @param mixed  $html     HTML to process.
+     * @param mixed  $pattern  Pattern.
+     * @param string $category Category slug.
      */
     private function block_image_src( $html, $pattern, $category = 'marketing' ) {
         if ( '' === $pattern || stripos( $html, $pattern ) === false ) {
@@ -996,6 +1050,11 @@ class MBR_CC_Script_Blocker {
     // CRUD — custom blocked-script entries (used by Scanner screen / AJAX)
     // ─────────────────────────────────────────────────────────────────────
 
+    /**
+     * Add a custom blocked script.
+     *
+     * @param mixed $script Script.
+     */
     public function add_blocked_script( $script ) {
         $defaults = array(
             'name'        => '',
@@ -1012,6 +1071,11 @@ class MBR_CC_Script_Blocker {
         return update_option( 'mbr_cc_blocked_scripts', $this->blocked_scripts );
     }
 
+    /**
+     * Remove blocked script.
+     *
+     * @param mixed $index Zero-based index.
+     */
     public function remove_blocked_script( $index ) {
         if ( ! isset( $this->blocked_scripts[ $index ] ) ) {
             return false;
@@ -1021,6 +1085,12 @@ class MBR_CC_Script_Blocker {
         return update_option( 'mbr_cc_blocked_scripts', $this->blocked_scripts );
     }
 
+    /**
+     * Update blocked script.
+     *
+     * @param mixed $index Zero-based index.
+     * @param mixed $script Script definition.
+     */
     public function update_blocked_script( $index, $script ) {
         if ( ! isset( $this->blocked_scripts[ $index ] ) ) {
             return false;
@@ -1029,10 +1099,16 @@ class MBR_CC_Script_Blocker {
         return update_option( 'mbr_cc_blocked_scripts', $this->blocked_scripts );
     }
 
+    /**
+     * Get blocked scripts.
+     */
     public function get_blocked_scripts() {
         return $this->blocked_scripts;
     }
 
+    /**
+     * Clear blocked scripts.
+     */
     public function clear_blocked_scripts() {
         $this->blocked_scripts = array();
         return delete_option( 'mbr_cc_blocked_scripts' );

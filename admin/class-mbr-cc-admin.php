@@ -415,10 +415,16 @@ class MBR_CC_Admin {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/categories.php';
     }
 
+    /**
+     * Render forms page.
+     */
     public function render_forms_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/form-integration.php';
     }
 
+    /**
+     * Render ab testing page.
+     */
     public function render_ab_testing_page() {
         require_once MBR_CC_PLUGIN_DIR . 'admin/views/ab-testing.php';
     }

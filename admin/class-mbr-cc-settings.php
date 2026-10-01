@@ -213,6 +213,9 @@ class MBR_CC_Settings {
         return esc_url_raw($url, array('http', 'https')) !== '';
     }
     
+    /**
+     * Ajax save settings.
+     */
     public function ajax_save_settings() {
         check_ajax_referer('mbr_cc_admin_nonce', 'nonce');
         

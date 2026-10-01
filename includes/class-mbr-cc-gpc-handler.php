@@ -31,6 +31,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Honours the Global Privacy Control signal sent by the visitor's browser.
+ */
 class MBR_CC_GPC_Handler {
 
     /**
@@ -198,6 +201,9 @@ class MBR_CC_GPC_Handler {
         );
     }
 
+    /**
+     * Get suppressed categories.
+     */
     private function get_suppressed_categories() {
         $defaults = array('marketing');
 

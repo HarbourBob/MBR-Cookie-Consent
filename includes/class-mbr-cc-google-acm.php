@@ -86,6 +86,7 @@ class MBR_CC_Google_ACM {
      */
     public static function get_google_atp_providers() {
         // This is a sample list - in production, this should be fetched from Google's API.
+        // phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar -- ends with a URL.
         // Reference: https://support.google.com/admanager/answer/9681920
         return array(
             // Google ATP IDs (examples - these change frequently).
@@ -168,8 +169,8 @@ class MBR_CC_Google_ACM {
     /**
      * Check if provider is consented.
      *
-     * @param int $provider_id Provider ID.
-     * @param string $ac_string AC String.
+     * @param int    $provider_id Provider ID.
+     * @param string $ac_string   AC String.
      * @return bool Is consented.
      */
     public function is_provider_consented($provider_id, $ac_string) {

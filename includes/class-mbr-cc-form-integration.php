@@ -17,13 +17,30 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Blocks form submissions that arrive without consent for the supported form plugins.
+ */
 class MBR_CC_Form_Integration {
 
+    /**
+     * Shared instance.
+     *
+     * @var self|null
+     */
     private static $instance = null;
 
-    /** @var string The error message shown when consent is missing. */
+    /**
+     * The error message shown when consent is missing.
+     *
+     * @var string
+     */
     private $error_message;
 
+    /**
+     * Get the shared instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if ( null === self::$instance ) {
             self::$instance = new self();
@@ -46,6 +63,9 @@ class MBR_CC_Form_Integration {
         return $this->error_message;
     }
 
+    /**
+     * Set up the hooks.
+     */
     private function __construct() {
         // Only hook when the feature is enabled.
         if ( ! get_option( 'mbr_cc_form_integration_enabled', false ) ) {
@@ -136,7 +156,7 @@ class MBR_CC_Form_Integration {
      * Mark the CF7 submission as spam, which is the only reliable way to
      * hard-stop CF7 before it sends mail or fires integrations.
      *
-     * @param  bool $spam
+     * @param  bool $spam Whether the submission has already been flagged as spam.
      * @return bool
      */
     public function block_cf7_spam( $spam ) {
@@ -158,9 +178,9 @@ class MBR_CC_Form_Integration {
      * Belt-and-braces fallback: abort just before CF7 sends the mail.
      * Returning false from wpcf7_before_send_mail prevents sending.
      *
-     * @param  WPCF7_ContactForm $cf7
+     * @param  WPCF7_ContactForm $cf7 The Contact Form 7 form being submitted.
      * @param  bool              $abort   Passed by reference.
-     * @param  WPCF7_Submission  $submission
+     * @param  WPCF7_Submission  $submission The current submission.
      * @return void
      */
     public function block_cf7_mail( $cf7, &$abort, $submission ) {
@@ -198,7 +218,7 @@ class MBR_CC_Form_Integration {
      * Block Gravity Forms by marking validation as failed.
      * Setting is_valid = false is the correct hard-stop for GF.
      *
-     * @param  array $validation_result
+     * @param  array $validation_result Validation result so far.
      * @return array
      */
     public function block_gravity_forms( $validation_result ) {
@@ -233,8 +253,8 @@ class MBR_CC_Form_Integration {
      * will carry. Our frontend JS reads this flag and shows a clean modal
      * instead of letting Elementor render any error UI.
      *
-     * @param \ElementorPro\Modules\Forms\Classes\Form_Record  $record
-     * @param \ElementorPro\Modules\Forms\Classes\Ajax_Handler $ajax_handler
+     * @param \ElementorPro\Modules\Forms\Classes\Form_Record  $record The submitted form record.
+     * @param \ElementorPro\Modules\Forms\Classes\Ajax_Handler $ajax_handler The AJAX response handler.
      */
     public function block_elementor_forms( $record, $ajax_handler ) {
         if ( $this->has_consent() ) {
@@ -286,7 +306,11 @@ class MBR_CC_Form_Integration {
 
     // ── Static helpers used by admin UI ───────────────────────────────────
 
-    /** @return bool */
+    /**
+     * Is enabled.
+     *
+     * @return bool
+     */
     public static function is_enabled() {
         return (bool) get_option( 'mbr_cc_form_integration_enabled', false );
     }

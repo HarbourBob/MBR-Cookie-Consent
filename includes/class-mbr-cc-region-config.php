@@ -12,6 +12,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Maps countries and regions to their consent regimes and default banner settings.
+ */
 class MBR_CC_Region_Config {
     
     /**
@@ -81,11 +84,15 @@ class MBR_CC_Region_Config {
     
     /**
      * Singleton instance
+     *
+     * @var self|null
      */
     private static $instance = null;
     
     /**
      * Geolocation instance
+     *
+     * @var object
      */
     private $geo;
     
@@ -1259,6 +1266,8 @@ class MBR_CC_Region_Config {
     
     /**
      * Get region compliance info
+     *
+     * @param mixed $region Region identifier.
      */
     public function get_compliance_info($region = null) {
         if ($region === null) {
@@ -1607,6 +1616,9 @@ add_action('plugins_loaded', function() {
 }, 10);
 
 // Helper function to get instance.
+/**
+ * Get the shared region configuration instance.
+ */
 function mbr_cc_region_config() {
     return MBR_CC_Region_Config::get_instance();
 }

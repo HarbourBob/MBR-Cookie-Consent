@@ -222,7 +222,11 @@ class MBR_CC_Consent_Manager {
         }
     }
 
-    /** Bounded diagnostic metadata, with no visitor identifiers or DB errors. */
+    /**
+     *  Bounded diagnostic metadata, with no visitor identifiers or DB errors.
+     *
+     * @param mixed $status Status.
+     */
     private function record_log_health($status) {
         $key = $status === 'success' ? 'mbr_cc_log_last_success' : 'mbr_cc_log_last_failure';
         $previous = get_option($key, array());
