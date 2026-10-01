@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Check if geolocation is available
+// Check if geolocation is available.
 if (!function_exists('mbr_cc_geolocation')) {
     echo '<div class="notice notice-error"><p>Geolocation feature not loaded. Please refresh the page.</p></div>';
     return;
@@ -20,7 +20,7 @@ if (!function_exists('mbr_cc_geolocation')) {
 $geo = mbr_cc_geolocation();
 $region_config = mbr_cc_region_config();
 
-// Get current detection
+// Get current detection.
 $current_country = $geo->get_country();
 $current_region = $geo->get_region();
 $region_name = $geo->get_region_name();

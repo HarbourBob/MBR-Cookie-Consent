@@ -344,7 +344,7 @@ class MBR_CC_Admin {
             true
         );
         
-        // Always enqueue settings JS and media library on plugin pages
+        // Always enqueue settings JS and media library on plugin pages.
         wp_enqueue_media();
         wp_enqueue_script(
             'mbr-cc-admin-settings',

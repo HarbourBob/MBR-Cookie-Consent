@@ -42,7 +42,7 @@ class MBR_CC_IAB_TCF {
      *
      * @var int
      */
-    const CMP_ID = 0; // Set to your registered CMP ID
+    const CMP_ID = 0; // Set to your registered CMP ID.
     
     /**
      * CMP Version.

@@ -52,7 +52,7 @@ class MBR_CC_Database {
      */
     private function __construct() {
         global $wpdb;
-        // Use base_prefix for multisite, regular prefix for single-site
+        // Use base_prefix for multisite, regular prefix for single-site.
         if (is_multisite()) {
             $this->consent_table = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         } else {
@@ -68,7 +68,7 @@ class MBR_CC_Database {
         
         $charset_collate = $wpdb->get_charset_collate();
         
-        // Use base_prefix for multisite, regular prefix for single-site
+        // Use base_prefix for multisite, regular prefix for single-site.
         if (is_multisite()) {
             $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
         } else {
@@ -224,7 +224,7 @@ class MBR_CC_Database {
             'user_id' => null,
             'date_from' => null,
             'date_to' => null,
-            'blog_id' => get_current_blog_id(), // Filter by current site
+            'blog_id' => get_current_blog_id(), // Filter by current site.
             'id_after' => null, // Keyset pagination for exports.
         );
         
@@ -238,7 +238,7 @@ class MBR_CC_Database {
             $values[] = (int) $args['id_after'];
         }
         
-        // Always filter by blog_id (critical for multisite)
+        // Always filter by blog_id (critical for multisite).
         if (!is_null($args['blog_id'])) {
             $where[]  = 'blog_id = %d';
             $values[] = $args['blog_id'];
@@ -293,14 +293,14 @@ class MBR_CC_Database {
         global $wpdb;
         
         $defaults = array(
-            'blog_id' => get_current_blog_id(), // Filter by current site
+            'blog_id' => get_current_blog_id(), // Filter by current site.
         );
         
         $args = wp_parse_args($args, $defaults);
         
         $where = array('1=1');
         
-        // Always filter by blog_id (critical for multisite)
+        // Always filter by blog_id (critical for multisite).
         if (!empty($args['blog_id'])) {
             $where[] = $wpdb->prepare('blog_id = %d', $args['blog_id']);
         }

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 
 global $wpdb;
 
-// Get all sites in network
+// Get all sites in network.
 $sites = get_sites(array(
     'number' => 999,
     'orderby' => 'path',
@@ -45,19 +45,19 @@ $table_name = $wpdb->base_prefix . 'mbr_cc_consent_logs';
                     $blog_id = $site->blog_id;
                     $blog_details = get_blog_details($blog_id);
                     
-                    // Get consent count for this site
+                    // Get consent count for this site.
                     $consent_count = $wpdb->get_var($wpdb->prepare(
                         "SELECT COUNT(*) FROM $table_name WHERE blog_id = %d",
                         $blog_id
                     ));
                     
-                    // Get last consent
+                    // Get last consent.
                     $last_consent = $wpdb->get_var($wpdb->prepare(
                         "SELECT timestamp FROM $table_name WHERE blog_id = %d ORDER BY timestamp DESC LIMIT 1",
                         $blog_id
                     ));
                     
-                    // Check if site has custom settings
+                    // Check if site has custom settings.
                     switch_to_blog($blog_id);
                     $has_custom = get_option('mbr_cc_banner_position') !== false;
                     restore_current_blog();

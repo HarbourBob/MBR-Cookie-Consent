@@ -102,11 +102,11 @@ class MBR_CC_Geolocation {
      * (Iceland, Liechtenstein, Norway), which apply GDPR via the EEA Agreement.
      */
     private $eu_countries = array(
-        // EU Member States
+        // EU Member States.
         'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
         'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
         'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
-        // EEA non-EU members (apply GDPR via EEA Agreement)
+        // EEA non-EU members (apply GDPR via EEA Agreement).
         'IS', 'LI', 'NO',
     );
     
@@ -132,7 +132,7 @@ class MBR_CC_Geolocation {
      */
     private function __construct() {
         // Don't detect in constructor - wait for get_region() to be called
-        // This ensures fresh detection per request, not cached in singleton
+        // This ensures fresh detection per request, not cached in singleton.
     }
     
     /**
@@ -175,7 +175,7 @@ class MBR_CC_Geolocation {
 
         $this->detected = true;
 
-        // Check if geolocation is enabled (constant or option)
+        // Check if geolocation is enabled (constant or option).
         $geo_enabled = defined('MBR_CC_FORCE_GEOLOCATION') && MBR_CC_FORCE_GEOLOCATION;
         if (!$geo_enabled) {
             $geo_enabled = get_option('mbr_cc_geolocation_enabled', false);
@@ -186,7 +186,7 @@ class MBR_CC_Geolocation {
             return;
         }
         
-        // Check cache first
+        // Check cache first.
         $cached = $this->get_cached_location();
         if ($cached) {
             $this->from_cache = true;
@@ -198,10 +198,10 @@ class MBR_CC_Geolocation {
             return;
         }
         
-        // Get user IP
+        // Get user IP.
         $ip = $this->get_user_ip();
         
-        // Detect country (and optional sub-national region) from IP
+        // Detect country (and optional sub-national region) from IP.
         $detection = $this->detect_country_from_ip($ip);
         $was_detected = true;
         if (is_array($detection)) {
@@ -214,7 +214,7 @@ class MBR_CC_Geolocation {
             $this->region_code  = null;
         }
         
-        // Determine privacy region
+        // Determine privacy region.
         $this->region = $this->determine_region($this->country_code, $this->region_code);
         
         // Cache the result. Genuine provider answers are cached for the full
@@ -302,7 +302,7 @@ class MBR_CC_Geolocation {
             return array('country' => $this->get_default_country(), 'region_code' => null, 'detected' => false);
         }
         
-        // Get API provider
+        // Get API provider.
         $provider = get_option('mbr_cc_geolocation_provider', self::DEFAULT_PROVIDER);
         
         $detected = false;
@@ -476,7 +476,7 @@ class MBR_CC_Geolocation {
      * we'll use it, otherwise we fall back to country-only detection.
      */
     private function detect_via_cloudflare() {
-        // Cloudflare adds CF-IPCountry header
+        // Cloudflare adds CF-IPCountry header.
         if (empty($_SERVER['HTTP_CF_IPCOUNTRY'])) {
             return false;
         }
@@ -611,7 +611,7 @@ class MBR_CC_Geolocation {
      * @return string Region key understood by MBR_CC_Region_Config.
      */
     private function determine_region($country_code, $region_code = null) {
-        // UK — UK GDPR + DUAA 2025 (separate from EU since Feb 2026)
+        // UK — UK GDPR + DUAA 2025 (separate from EU since Feb 2026).
         if (in_array($country_code, $this->uk_countries)) {
             return 'uk_duaa';
         }
@@ -628,7 +628,7 @@ class MBR_CC_Geolocation {
             return 'ch_nfadp';
         }
         
-        // United States — multi-state privacy laws + GPC (20 states by 2026)
+        // United States — multi-state privacy laws + GPC (20 states by 2026).
         if ($country_code === 'US') {
             return 'us_multi';
         }
@@ -649,12 +649,12 @@ class MBR_CC_Geolocation {
             return 'au_privacy';
         }
         
-        // Brazil — LGPD
+        // Brazil — LGPD.
         if ($country_code === 'BR') {
             return 'lgpd';
         }
         
-        // India — Digital Personal Data Protection Act 2023 (Rules notified Nov 2025)
+        // India — Digital Personal Data Protection Act 2023 (Rules notified Nov 2025).
         if ($country_code === 'IN') {
             return 'india_dpdp';
         }
@@ -1015,12 +1015,12 @@ class MBR_CC_Geolocation {
     }
 }
 
-// Initialize on plugins_loaded
+// Initialize on plugins_loaded.
 add_action('plugins_loaded', function() {
     MBR_CC_Geolocation::get_instance();
 }, 5);
 
-// Helper function to get instance
+// Helper function to get instance.
 function mbr_cc_geolocation() {
     return MBR_CC_Geolocation::get_instance();
 }

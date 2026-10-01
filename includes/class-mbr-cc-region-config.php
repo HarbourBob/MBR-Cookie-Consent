@@ -361,19 +361,19 @@ class MBR_CC_Region_Config {
      */
     private function get_eu_gdpr_config() {
         return array(
-            // Reject button must be equally prominent
+            // Reject button must be equally prominent.
             'show_reject_button' => true,
             
-            // Show customize/preferences button
+            // Show customize/preferences button.
             'show_customize_button' => true,
             
-            // EU-specific text (falls back to legacy eu_uk option keys)
+            // EU-specific text (falls back to legacy eu_uk option keys).
             'banner_heading' => get_option('mbr_cc_geolocation_eu_heading', get_option('mbr_cc_geolocation_eu_uk_heading', 'We value your privacy')),
             'banner_description' => get_option('mbr_cc_geolocation_eu_description', get_option('mbr_cc_geolocation_eu_uk_description',
                 'We use cookies to enhance your experience. By clicking "Accept", you consent to our use of cookies. You can manage your preferences or reject non-essential cookies.'
             )),
             
-            // No CCPA link for EU
+            // No CCPA link for EU.
             'enable_ccpa' => false,
         );
     }
@@ -433,13 +433,13 @@ class MBR_CC_Region_Config {
      */
     private function get_uk_duaa_config() {
         return array(
-            // Reject button equally prominent (for advertising consent)
+            // Reject button equally prominent (for advertising consent).
             'show_reject_button' => true,
             
-            // Show customize button so users can opt out of exempt categories
+            // Show customize button so users can opt out of exempt categories.
             'show_customize_button' => true,
             
-            // UK-specific text
+            // UK-specific text.
             'banner_heading' => get_option('mbr_cc_geolocation_uk_heading', 'Your privacy choices'),
             'banner_description' => get_option('mbr_cc_geolocation_uk_description',
                 'We use cookies and similar technologies, such as pixels and local storage. Those essential to the site are always on. Everything else, including analytics and advertising, is only used if you allow it. You can accept, reject or manage your choices, and change them at any time.'
@@ -605,17 +605,17 @@ class MBR_CC_Region_Config {
      */
     private function get_us_multi_config() {
         return array(
-            // Show "Do Not Sell or Share" link prominently (CCPA/CPRA mandate)
+            // Show "Do Not Sell or Share" link prominently (CCPA/CPRA mandate).
             'enable_ccpa' => true,
             'ccpa_link_text' => get_option('mbr_cc_ccpa_link_text', 'Do Not Sell or Share My Personal Information'),
             
-            // Reject button not typically needed — "Do Not Sell" covers opt-out
+            // Reject button not typically needed — "Do Not Sell" covers opt-out.
             'show_reject_button' => false,
             
-            // Show customize for granular control
+            // Show customize for granular control.
             'show_customize_button' => true,
             
-            // US-specific text (falls back to legacy ccpa option keys)
+            // US-specific text (falls back to legacy ccpa option keys).
             'banner_heading' => get_option('mbr_cc_geolocation_us_heading', get_option('mbr_cc_geolocation_ccpa_heading', 'Your Privacy Rights')),
             'banner_description' => get_option('mbr_cc_geolocation_us_description', get_option('mbr_cc_geolocation_ccpa_description',
                 'We use cookies and similar technologies. You can opt out of the sale or sharing of your personal information by clicking "Do Not Sell or Share My Personal Information". We honour Global Privacy Control (GPC) signals automatically.'
@@ -645,13 +645,13 @@ class MBR_CC_Region_Config {
      */
     private function get_lgpd_config() {
         return array(
-            // Equal reject button
+            // Equal reject button.
             'show_reject_button' => true,
             
-            // Show customize button
+            // Show customize button.
             'show_customize_button' => true,
             
-            // LGPD-specific text
+            // LGPD-specific text.
             'banner_heading' => get_option('mbr_cc_geolocation_lgpd_heading', 'Nós valorizamos sua privacidade'),
             'banner_description' => get_option('mbr_cc_geolocation_lgpd_description',
                 'Usamos cookies para melhorar sua experiência. Ao clicar em "Aceitar", você concorda com o uso de cookies.'
@@ -679,13 +679,13 @@ class MBR_CC_Region_Config {
      */
     private function get_pipeda_config() {
         return array(
-            // Show reject button
+            // Show reject button.
             'show_reject_button' => true,
             
-            // Show customize button
+            // Show customize button.
             'show_customize_button' => true,
             
-            // Canada-specific text
+            // Canada-specific text.
             'banner_heading' => get_option('mbr_cc_geolocation_pipeda_heading', 'Your Privacy Matters'),
             'banner_description' => get_option('mbr_cc_geolocation_pipeda_description',
                 'We use cookies to enhance your browsing experience. You can accept, reject, or customize your cookie preferences.'
@@ -730,13 +730,13 @@ class MBR_CC_Region_Config {
      */
     private function get_india_dpdp_config() {
         return array(
-            // Reject/withdraw must be as easy as giving consent
+            // Reject/withdraw must be as easy as giving consent.
             'show_reject_button' => true,
             
-            // Show granular categories
+            // Show granular categories.
             'show_customize_button' => true,
             
-            // India-specific text (English default; Hindi/regional can be set in admin)
+            // India-specific text (English default; Hindi/regional can be set in admin).
             'banner_heading' => get_option('mbr_cc_geolocation_india_heading', 'Your Privacy Matters'),
             'banner_description' => get_option('mbr_cc_geolocation_india_description',
                 'We use cookies and process personal data to improve your experience. Under India\'s Digital Personal Data Protection Act and the DPDP Rules 2025, we need your consent before processing non-essential data. You can withdraw consent at any time.'
@@ -767,10 +767,10 @@ class MBR_CC_Region_Config {
      */
     private function get_ca_quebec_config() {
         return array(
-            // Equal-prominence reject button
+            // Equal-prominence reject button.
             'show_reject_button' => true,
             
-            // Show customize for granular control
+            // Show customize for granular control.
             'show_customize_button' => true,
             
             // French-default messaging — site owners can override.
@@ -813,10 +813,10 @@ class MBR_CC_Region_Config {
      */
     private function get_vn_pdpl_config() {
         return array(
-            // Reject/withdraw must be at least as easy as giving consent
+            // Reject/withdraw must be at least as easy as giving consent.
             'show_reject_button' => true,
             
-            // Granular, per-purpose consent — show categories
+            // Granular, per-purpose consent — show categories.
             'show_customize_button' => true,
             
             // Vietnam-specific text. Vietnamese heading is a safe default; the
@@ -847,10 +847,10 @@ class MBR_CC_Region_Config {
      */
     private function get_id_pdp_config() {
         return array(
-            // Withdrawal must be available; keep reject equally prominent
+            // Withdrawal must be available; keep reject equally prominent.
             'show_reject_button' => true,
             
-            // Purpose-specific consent — show categories
+            // Purpose-specific consent — show categories.
             'show_customize_button' => true,
             
             // Indonesia-specific text. Indonesian heading is a safe default;
@@ -885,7 +885,7 @@ class MBR_CC_Region_Config {
      */
     private function get_ng_ndpa_config() {
         return array(
-            // A genuine decline option is mandatory, not a sub-layer link
+            // A genuine decline option is mandatory, not a sub-layer link.
             'show_reject_button' => true,
             
             'show_customize_button' => true,
@@ -928,7 +928,7 @@ class MBR_CC_Region_Config {
     private function get_cn_pipl_config() {
         return array(
             'show_reject_button' => true,
-            // Bundled consent is not acceptable — force granular categories
+            // Bundled consent is not acceptable — force granular categories.
             'show_customize_button' => true,
             
             'banner_heading' => get_option('mbr_cc_geolocation_china_heading', '我们重视您的隐私'),
@@ -1054,10 +1054,10 @@ class MBR_CC_Region_Config {
      */
     private function get_ch_nfadp_config() {
         return array(
-            // Reject button must be equally prominent
+            // Reject button must be equally prominent.
             'show_reject_button' => true,
             
-            // Show customize/preferences button
+            // Show customize/preferences button.
             'show_customize_button' => true,
             
             // Switzerland is multilingual (DE/FR/IT/RM); English is a safe default
@@ -1107,10 +1107,10 @@ class MBR_CC_Region_Config {
      */
     private function get_au_privacy_config() {
         return array(
-            // Reject available with clear prominence
+            // Reject available with clear prominence.
             'show_reject_button' => true,
             
-            // Show customize button for granular control
+            // Show customize button for granular control.
             'show_customize_button' => true,
             
             'banner_heading' => get_option('mbr_cc_geolocation_australia_heading', 'Your privacy choices'),
@@ -1601,12 +1601,12 @@ class MBR_CC_Region_Config {
     }
 }
 
-// Initialize on plugins_loaded
+// Initialize on plugins_loaded.
 add_action('plugins_loaded', function() {
     MBR_CC_Region_Config::get_instance();
 }, 10);
 
-// Helper function to get instance
+// Helper function to get instance.
 function mbr_cc_region_config() {
     return MBR_CC_Region_Config::get_instance();
 }
